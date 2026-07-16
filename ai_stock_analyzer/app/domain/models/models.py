@@ -42,6 +42,8 @@ class User(Base):
     subscription_tier: Mapped[str] = mapped_column(
         String(50), nullable=False, default="free"  # free | premium
     )
+    analysis_quota_used: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_quota_reset: Mapped[date | None] = mapped_column(Date, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

@@ -10,7 +10,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.api.routers import auth, stocks, analysis
+from app.core.rate_limiter import limiter, rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
+
+from app.core.cache import setup_redis_cache
+from app.core.logging import setup_logging
+import logging
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,8 +27,10 @@ async def lifespan(app: FastAPI):
     Kode setelah 'yield' dijalankan saat shutdown.
     """
     # ---- Startup ----
-    print(f"🚀 {settings.APP_NAME} starting up in '{settings.APP_ENV}' mode...")
-    # Sprint 2+: Di sini kita bisa melakukan inisialisasi koneksi DB atau warm-up cache
+    setup_logging()
+    logger = logging.getLogger(__name__)
+    logger.info(f"🚀 {settings.APP_NAME} starting up in '{settings.APP_ENV}' mode...")
+    await setup_redis_cache()
 
     yield
 
@@ -43,6 +52,11 @@ app = FastAPI(
     openapi_url="/openapi.json",
     lifespan=lifespan,
 )
+
+# ---- Rate Limiting ----
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # ---- CORS Middleware ----
 app.add_middleware(

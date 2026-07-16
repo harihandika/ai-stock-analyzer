@@ -10,12 +10,17 @@ from app.core.config import settings
 
 # ---- Async Engine ----
 # Pool size dan max_overflow bisa diatur sesuai kebutuhan production
+engine_kwargs = {
+    "echo": settings.DEBUG,
+}
+if "sqlite" not in settings.DATABASE_URL:
+    engine_kwargs["pool_size"] = 10
+    engine_kwargs["max_overflow"] = 20
+    engine_kwargs["pool_pre_ping"] = True
+
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=settings.DEBUG,       # Log SQL queries di mode DEBUG
-    pool_size=10,
-    max_overflow=20,
-    pool_pre_ping=True,        # Cek koneksi sebelum digunakan (handles dropped connections)
+    **engine_kwargs
 )
 
 # ---- Async Session Factory ----

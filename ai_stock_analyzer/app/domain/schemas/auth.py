@@ -28,6 +28,7 @@ class UserLoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     """Response token setelah login berhasil."""
     access_token: str = Field(..., description="JWT access token")
+    refresh_token: str | None = Field(None, description="JWT refresh token")
     token_type: str = Field(default="bearer", description="Tipe token")
 
 

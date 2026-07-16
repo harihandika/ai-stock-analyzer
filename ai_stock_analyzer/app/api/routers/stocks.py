@@ -11,11 +11,12 @@ Endpoints:
 - DELETE /stocks/watchlist/{ticker}   - Hapus saham dari watchlist
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select, desc
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, Response
+from sqlalchemy import select, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import get_db, get_current_active_user
+from app.core.rate_limiter import limiter
 from app.domain.models.models import (
     Stock, DailyPrice, TechnicalIndicator, AIAnalysis, Watchlist, User
 )
@@ -25,6 +26,8 @@ from app.domain.schemas.stocks import (
     StockAnalysisLatestResponse,
     WatchlistAddRequest,
     WatchlistResponse,
+    PaginatedResponse,
+    PaginationMeta,
 )
 import pandas as pd
 from app.infrastructure.market_data import fetch_stock_history_async, fetch_stock_info_async
@@ -32,25 +35,45 @@ from app.services.indicator_engine import calculate_indicators, detect_vpa_signa
 from app.services.pattern_engine import detect_double_bottom, detect_swing_points
 from app.services.wyckoff_engine import detect_wyckoff_accumulation
 from app.services.smc_engine import detect_fvg, detect_structure_breaks
+import math
 
 router = APIRouter(prefix="/stocks", tags=["Stocks"])
 
 
 @router.get(
     "",
-    response_model=list[StockResponse],
+    response_model=PaginatedResponse[StockResponse],
     summary="Dapatkan daftar saham yang didukung",
     description="Mengembalikan semua emiten saham yang aktif di database.",
 )
 async def list_stocks(
+    response: Response,
+    page: int = Query(1, ge=1, description="Nomor halaman"),
+    per_page: int = Query(20, ge=1, le=100, description="Jumlah item per halaman"),
     db: AsyncSession = Depends(get_db),
-) -> list[StockResponse]:
-    """Ambil semua saham aktif dari database."""
-    result = await db.execute(
-        select(Stock).where(Stock.is_active == True).order_by(Stock.ticker)
-    )
+) -> PaginatedResponse[StockResponse]:
+    """Ambil semua saham aktif dari database dengan pagination."""
+    # Count total
+    count_stmt = select(func.count()).select_from(Stock).where(Stock.is_active == True)
+    total = await db.scalar(count_stmt)
+    
+    # Get paginated data
+    offset = (page - 1) * per_page
+    stmt = select(Stock).where(Stock.is_active == True).order_by(Stock.ticker).offset(offset).limit(per_page)
+    result = await db.execute(stmt)
     stocks = result.scalars().all()
-    return [StockResponse.model_validate(s) for s in stocks]
+    
+    response.headers["X-Total-Count"] = str(total)
+    
+    return PaginatedResponse(
+        data=[StockResponse.model_validate(s) for s in stocks],
+        pagination=PaginationMeta(
+            page=page,
+            per_page=per_page,
+            total=total,
+            total_pages=math.ceil(total / per_page) if total > 0 else 1
+        )
+    )
 
 
 @router.post(
@@ -59,12 +82,18 @@ async def list_stocks(
     summary="Sinkronisasi data historis dan indikator (Manual/Admin)",
     description="Mengambil data dari yfinance, menghitung VPA & indikator teknikal, lalu menyimpannya ke database.",
 )
+@limiter.limit("20/hour")
 async def sync_stock_data(
+    request: Request,
     ticker: str,
     db: AsyncSession = Depends(get_db),
     # _: User = Depends(get_current_active_user), # Uncomment to secure
 ):
-    """Sinkronisasi data saham manual."""
+    """Sinkronisasi data saham manual via API."""
+    return await do_sync_stock(ticker, db)
+
+async def do_sync_stock(ticker: str, db: AsyncSession):
+    """Core logic for syncing stock data, safe to call from background tasks."""
     ticker_upper = ticker.upper()
     
     # 1. Pastikan stock ada di master
@@ -105,57 +134,61 @@ async def sync_stock_data(
         return None if pd.isna(val) else val
 
     # 4. Save to Database (DailyPrices and TechnicalIndicators)
-    from sqlalchemy import delete
-    await db.execute(delete(TechnicalIndicator).where(TechnicalIndicator.stock_ticker == ticker_upper))
-    await db.execute(delete(DailyPrice).where(DailyPrice.stock_ticker == ticker_upper))
-    
-    prices_to_insert = []
-    indicators_to_insert = []
-    
-    for _, row in df.iterrows():
-        dp = DailyPrice(
-            stock_ticker=ticker_upper,
-            trading_date=row['trading_date'],
-            open=clean_val(row['open']),
-            high=clean_val(row['high']),
-            low=clean_val(row['low']),
-            close=clean_val(row['close']),
-            volume=clean_val(row['volume'])
-        )
-        prices_to_insert.append(dp)
+    try:
+        from sqlalchemy import delete
+        await db.execute(delete(TechnicalIndicator).where(TechnicalIndicator.stock_ticker == ticker_upper))
+        await db.execute(delete(DailyPrice).where(DailyPrice.stock_ticker == ticker_upper))
         
-        ti = TechnicalIndicator(
-            stock_ticker=ticker_upper,
-            trading_date=row['trading_date'],
-            rsi_14=clean_val(row.get('rsi_14')),
-            ema_20=clean_val(row.get('ema_20')),
-            ema_50=clean_val(row.get('ema_50')),
-            ema_200=clean_val(row.get('ema_200')),
-            macd=clean_val(row.get('macd')),
-            macd_signal=clean_val(row.get('macd_signal')),
-            vwap=clean_val(row.get('vwap')),
-            atr_14=clean_val(row.get('atr_14')),
-            obv=clean_val(row.get('obv')),
-            stopping_volume=bool(clean_val(row.get('stopping_volume')) or False),
-            no_demand=bool(clean_val(row.get('no_demand')) or False),
-            climactic_volume=bool(clean_val(row.get('climactic_volume')) or False),
-            is_spring=bool(clean_val(row.get('is_spring')) or False),
-            wyckoff_phase=clean_val(row.get('wyckoff_phase')),
-            smc_patterns={
-                "bullish_fvg": bool(clean_val(row.get('bullish_fvg')) or False),
-                "bearish_fvg": bool(clean_val(row.get('bearish_fvg')) or False),
-                "fvg_size": float(clean_val(row.get('fvg_size')) or 0.0),
-                "bos": bool(clean_val(row.get('bos')) or False),
-                "choch": bool(clean_val(row.get('choch')) or False),
-                "swing_high": bool(clean_val(row.get('swing_high')) or False),
-                "swing_low": bool(clean_val(row.get('swing_low')) or False)
-            }
-        )
-        indicators_to_insert.append(ti)
+        prices_to_insert = []
+        indicators_to_insert = []
         
-    db.add_all(prices_to_insert)
-    db.add_all(indicators_to_insert)
-    await db.commit()
+        for _, row in df.iterrows():
+            dp = DailyPrice(
+                stock_ticker=ticker_upper,
+                trading_date=row['trading_date'],
+                open=clean_val(row['open']),
+                high=clean_val(row['high']),
+                low=clean_val(row['low']),
+                close=clean_val(row['close']),
+                volume=clean_val(row['volume'])
+            )
+            prices_to_insert.append(dp)
+            
+            ti = TechnicalIndicator(
+                stock_ticker=ticker_upper,
+                trading_date=row['trading_date'],
+                rsi_14=clean_val(row.get('rsi_14')),
+                ema_20=clean_val(row.get('ema_20')),
+                ema_50=clean_val(row.get('ema_50')),
+                ema_200=clean_val(row.get('ema_200')),
+                macd=clean_val(row.get('macd')),
+                macd_signal=clean_val(row.get('macd_signal')),
+                vwap=clean_val(row.get('vwap')),
+                atr_14=clean_val(row.get('atr_14')),
+                obv=clean_val(row.get('obv')),
+                stopping_volume=bool(clean_val(row.get('stopping_volume')) or False),
+                no_demand=bool(clean_val(row.get('no_demand')) or False),
+                climactic_volume=bool(clean_val(row.get('climactic_volume')) or False),
+                is_spring=bool(clean_val(row.get('is_spring')) or False),
+                wyckoff_phase=clean_val(row.get('wyckoff_phase')),
+                smc_patterns={
+                    "bullish_fvg": bool(clean_val(row.get('bullish_fvg')) or False),
+                    "bearish_fvg": bool(clean_val(row.get('bearish_fvg')) or False),
+                    "fvg_size": float(clean_val(row.get('fvg_size')) or 0.0),
+                    "bos": bool(clean_val(row.get('bos')) or False),
+                    "choch": bool(clean_val(row.get('choch')) or False),
+                    "swing_high": bool(clean_val(row.get('swing_high')) or False),
+                    "swing_low": bool(clean_val(row.get('swing_low')) or False)
+                }
+            )
+            indicators_to_insert.append(ti)
+            
+        db.add_all(prices_to_insert)
+        db.add_all(indicators_to_insert)
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database transaction failed: {str(e)}")
     
     return {
         "message": f"Sinkronisasi berhasil untuk {ticker_upper}",
@@ -166,17 +199,22 @@ async def sync_stock_data(
     }
 
 
+from fastapi_cache.decorator import cache
+
 @router.get(
     "/{ticker}/chart",
-    response_model=list[DailyPriceResponse],
+    response_model=PaginatedResponse[DailyPriceResponse],
     summary="Dapatkan data harga historis OHLCV",
-    description="Mengembalikan data time-series harga untuk charting.",
+    description="Mengembalikan data time-series harga untuk charting, dilengkapi pagination.",
 )
+@cache(expire=3600)  # Cache 1 jam
 async def get_stock_chart(
     ticker: str,
-    days: int = Query(default=100, ge=1, le=1825, description="Jumlah hari ke belakang (max 5 tahun)"),
+    response: Response,
+    page: int = Query(1, ge=1, description="Nomor halaman"),
+    per_page: int = Query(100, ge=1, le=1825, description="Jumlah data per halaman"),
     db: AsyncSession = Depends(get_db),
-) -> list[DailyPriceResponse]:
+) -> PaginatedResponse[DailyPriceResponse]:
     """Ambil data harga OHLCV historis untuk saham tertentu."""
     # Cek apakah saham ada
     stock_result = await db.execute(select(Stock).where(Stock.ticker == ticker.upper()))
@@ -187,17 +225,33 @@ async def get_stock_chart(
             detail=f"Saham dengan ticker '{ticker}' tidak ditemukan.",
         )
 
-    # Ambil data harga terbaru sejumlah 'days'
+    # Count total prices for this ticker
+    count_stmt = select(func.count()).select_from(DailyPrice).where(DailyPrice.stock_ticker == ticker.upper())
+    total = await db.scalar(count_stmt)
+
+    # Ambil data harga sesuai pagination, diurutkan desc lalu direverse
+    offset = (page - 1) * per_page
     prices_result = await db.execute(
         select(DailyPrice)
         .where(DailyPrice.stock_ticker == ticker.upper())
         .order_by(desc(DailyPrice.trading_date))
-        .limit(days)
+        .offset(offset)
+        .limit(per_page)
     )
     prices = prices_result.scalars().all()
+    
+    response.headers["X-Total-Count"] = str(total)
 
-    # Kembalikan dalam urutan kronologis (ascending)
-    return [DailyPriceResponse.model_validate(p) for p in reversed(prices)]
+    # Kembalikan dalam urutan kronologis (ascending) untuk chart
+    return PaginatedResponse(
+        data=[DailyPriceResponse.model_validate(p) for p in reversed(prices)],
+        pagination=PaginationMeta(
+            page=page,
+            per_page=per_page,
+            total=total,
+            total_pages=math.ceil(total / per_page) if total > 0 else 1
+        )
+    )
 
 
 @router.get(
@@ -206,6 +260,7 @@ async def get_stock_chart(
     summary="Dapatkan hasil analisis AI terbaru",
     description="Mengembalikan analisis VPA/Wyckoff dan rekomendasi AI terkini untuk sebuah saham.",
 )
+@cache(expire=86400) # Cache 24 jam
 async def get_latest_analysis(
     ticker: str,
     db: AsyncSession = Depends(get_db),

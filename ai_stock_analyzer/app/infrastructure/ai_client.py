@@ -28,8 +28,9 @@ async def call_claude_sonnet(system_prompt: str, user_prompt: str) -> dict:
     client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
     try:
+        model_name = getattr(settings, "AI_MODEL_OPERATIONAL", "claude-sonnet-4-20250514")
         response = await client.messages.create(
-            model="claude-3-sonnet-20240229", # Model terbaru standard untuk Sonnet 3
+            model=model_name,
             max_tokens=1024,
             system=system_prompt,
             messages=[
@@ -47,7 +48,14 @@ async def call_claude_sonnet(system_prompt: str, user_prompt: str) -> dict:
             end_idx = raw_text.rfind('}') + 1
             if start_idx != -1 and end_idx != 0:
                 json_str = raw_text[start_idx:end_idx]
-                return json.loads(json_str)
+                result = json.loads(json_str)
+                
+                # Ekstrak token usage
+                tokens_used = getattr(response.usage, "input_tokens", 0) + getattr(response.usage, "output_tokens", 0)
+                result["tokens_used"] = tokens_used
+                logger.info(f"Token usage: {tokens_used}")
+                
+                return result
             else:
                 raise ValueError("JSON object tidak ditemukan pada response Claude")
                 

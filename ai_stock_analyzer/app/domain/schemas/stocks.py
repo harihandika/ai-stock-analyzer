@@ -6,7 +6,22 @@ Mendefinisikan skema validasi input/output untuk data saham dan analisis.
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Generic, TypeVar, List
 from pydantic import BaseModel, Field
+
+T = TypeVar("T")
+
+class PaginationMeta(BaseModel):
+    """Metadata untuk pagination."""
+    page: int
+    per_page: int
+    total: int
+    total_pages: int
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    """Response generik untuk data berhalaman."""
+    data: List[T]
+    pagination: PaginationMeta
 
 
 # ---- Stock Schemas ----

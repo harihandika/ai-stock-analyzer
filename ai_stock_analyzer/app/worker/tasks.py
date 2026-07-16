@@ -11,7 +11,7 @@ from sqlalchemy import select
 from app.worker.celery_app import celery_app
 from app.infrastructure.database import AsyncSessionLocal
 from app.domain.models.models import Stock
-from app.api.routers.stocks import sync_stock_data # We need to separate sync logic from router in ideal world, but we'll adapt.
+from app.api.routers.stocks import do_sync_stock # We need to separate sync logic from router in ideal world, but we'll adapt.
 from app.services.ai_service import run_ai_analysis
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ async def _async_sync_and_analyze(ticker: str) -> dict:
         # However, calling router function directly requires mocking dependencies if it uses FastAPI Depends.
         # Wait, the sync_stock_data expects (ticker, db). Let's use it directly!
         try:
-            sync_res = await sync_stock_data(ticker=ticker, db=db)
+            sync_res = await do_sync_stock(ticker=ticker, db=db)
             logger.info(f"Sync selesai untuk {ticker}: {sync_res}")
         except Exception as e:
             logger.error(f"Gagal sync {ticker}: {e}")

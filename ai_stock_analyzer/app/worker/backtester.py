@@ -116,6 +116,38 @@ class Backtester:
             "reason": reason
         })
         
+    def get_results_dict(self) -> dict:
+        total_trades = len(self.trades)
+        if total_trades == 0:
+            return {
+                "ticker": self.ticker,
+                "period": self.period,
+                "total_trades": 0,
+                "win_rate": 0.0,
+                "avg_profit_pct": 0.0,
+                "max_drawdown_pct": 0.0,
+                "recent_trades": []
+            }
+            
+        wins = [t for t in self.trades if "WIN" in t["status"]]
+        losses = [t for t in self.trades if "LOSS" in t["status"]]
+        
+        win_rate = (len(wins) / total_trades) * 100
+        avg_profit = sum([t["profit_pct"] for t in self.trades]) / total_trades
+        max_drawdown = min([t["profit_pct"] for t in self.trades]) if losses else 0
+        
+        return {
+            "ticker": self.ticker,
+            "period": self.period,
+            "total_trades": total_trades,
+            "wins": len(wins),
+            "losses": len(losses),
+            "win_rate": round(win_rate, 2),
+            "avg_profit_pct": round(avg_profit, 2),
+            "max_drawdown_pct": round(max_drawdown, 2),
+            "recent_trades": self.trades[-10:]
+        }
+        
     def print_results(self):
         total_trades = len(self.trades)
         if total_trades == 0:

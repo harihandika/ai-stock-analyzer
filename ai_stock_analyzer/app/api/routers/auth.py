@@ -8,12 +8,13 @@ Endpoints:
 - GET  /auth/me      - Data pengguna yang sedang login
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import get_db, get_current_active_user
-from app.core.security import hash_password, verify_password, create_access_token
+from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token
+from app.core.rate_limiter import limiter
 from app.domain.models.models import User
 from app.domain.schemas.auth import (
     UserRegisterRequest,
@@ -33,8 +34,10 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
     summary="Registrasi pengguna baru",
     description="Mendaftarkan akun pengguna baru. Email harus unik.",
 )
+@limiter.limit("3/minute")
 async def register(
-    request: UserRegisterRequest,
+    request: Request,
+    user_request: UserRegisterRequest,
     db: AsyncSession = Depends(get_db),
 ) -> RegisterResponse:
     """
@@ -44,20 +47,20 @@ async def register(
     - Return data user (tanpa password)
     """
     # 1. Cek apakah email sudah terdaftar
-    result = await db.execute(select(User).where(User.email == request.email))
+    result = await db.execute(select(User).where(User.email == user_request.email))
     existing_user = result.scalar_one_or_none()
 
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Email '{request.email}' sudah terdaftar. Gunakan email lain atau login.",
+            detail=f"Email '{user_request.email}' sudah terdaftar. Gunakan email lain atau login.",
         )
 
     # 2. Buat user baru dengan password yang di-hash
     new_user = User(
-        email=request.email,
-        password_hash=hash_password(request.password),
-        full_name=request.full_name,
+        email=user_request.email,
+        password_hash=hash_password(user_request.password),
+        full_name=user_request.full_name,
         subscription_tier="free",
         is_active=True,
     )
@@ -77,8 +80,10 @@ async def register(
     summary="Login dan dapatkan JWT Access Token",
     description="Autentikasi pengguna dengan email dan password. Mengembalikan JWT token.",
 )
+@limiter.limit("5/minute")
 async def login_for_access_token(
-    request: UserLoginRequest,
+    request: Request,
+    user_request: UserLoginRequest,
     db: AsyncSession = Depends(get_db),
 ) -> TokenResponse:
     """
@@ -87,11 +92,11 @@ async def login_for_access_token(
     untuk semua endpoint yang membutuhkan autentikasi.
     """
     # 1. Cari user berdasarkan email
-    result = await db.execute(select(User).where(User.email == request.email))
+    result = await db.execute(select(User).where(User.email == user_request.email))
     user = result.scalar_one_or_none()
 
     # 2. Verifikasi password (gunakan pesan error generik untuk keamanan)
-    if not user or not verify_password(request.password, user.password_hash):
+    if not user or not verify_password(user_request.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email atau password salah.",
@@ -107,9 +112,66 @@ async def login_for_access_token(
 
     # 4. Buat JWT token dengan subject = user ID
     access_token = create_access_token(subject=str(user.id))
+    refresh_token = create_refresh_token(subject=str(user.id))
 
     return TokenResponse(
         access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",
+    )
+
+from pydantic import BaseModel
+from app.core.security import decode_refresh_token
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+@router.post(
+    "/refresh",
+    response_model=TokenResponse,
+    summary="Dapatkan Access Token baru menggunakan Refresh Token",
+    description="Menghasilkan JWT access token baru menggunakan refresh token yang valid.",
+)
+@limiter.limit("5/minute")
+async def refresh_token(
+    request: Request,
+    refresh_request: RefreshRequest,
+    db: AsyncSession = Depends(get_db),
+) -> TokenResponse:
+    """Menggunakan refresh token untuk mendapatkan access token baru."""
+    payload = decode_refresh_token(refresh_request.refresh_token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token tidak valid atau sudah kedaluwarsa.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
+    user_id_str = payload.get("sub")
+    if not user_id_str:
+        raise HTTPException(status_code=401, detail="Refresh token tidak valid.")
+        
+    import uuid
+    try:
+        user_id = uuid.UUID(user_id_str)
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Refresh token tidak valid.")
+        
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Pengguna tidak valid atau akun tidak aktif.",
+        )
+        
+    access_token = create_access_token(subject=str(user.id))
+    new_refresh_token = create_refresh_token(subject=str(user.id))
+    
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=new_refresh_token,
         token_type="bearer",
     )
 
