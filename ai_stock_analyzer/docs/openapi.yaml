@@ -1,0 +1,160 @@
+openapi: 3.0.3
+info:
+  title: AI Stock Analyzer API
+  description: API untuk mengambil data harga saham historis, indikator teknikal (VPA/Wyckoff), dan analisis/rekomendasi harian berbasis AI.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development server
+tags:
+  - name: Authentication
+    description: Endpoint otentikasi pengguna
+  - name: Stocks
+    description: Operasi terkait data emiten saham
+  - name: Analysis
+    description: Endpoint untuk mendapatkan hasil analisis teknikal dan AI
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /auth/token:
+    post:
+      tags:
+        - Authentication
+      summary: Login pengguna untuk mendapatkan JWT Token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login berhasil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                    example: bearer
+        '401':
+          description: Email atau password salah
+
+  /stocks:
+    get:
+      tags:
+        - Stocks
+      summary: Dapatkan daftar saham yang didukung
+      responses:
+        '200':
+          description: Berhasil mengambil daftar saham
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ticker:
+                      type: string
+                      example: "BBCA"
+                    company_name:
+                      type: string
+                      example: "Bank Central Asia Tbk"
+
+  /stocks/{ticker}/analysis/latest:
+    get:
+      tags:
+        - Analysis
+      summary: Dapatkan hasil analisis AI dan teknikal terbaru untuk sebuah saham
+      parameters:
+        - in: path
+          name: ticker
+          required: true
+          schema:
+            type: string
+          description: Ticker saham (e.g., BBCA)
+      responses:
+        '200':
+          description: Data analisis terbaru
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticker:
+                    type: string
+                    example: "BBCA"
+                  date:
+                    type: string
+                    format: date
+                  current_price:
+                    type: number
+                  wyckoff_phase:
+                    type: string
+                    example: "Phase C (Spring)"
+                  ai_recommendation:
+                    type: string
+                    example: "Buy"
+                  ai_summary:
+                    type: string
+                    example: "Berdasarkan analisis VPA, BBCA menunjukkan akumulasi volume yang signifikan di fase Spring. Sinyal kuat untuk Buy."
+        '404':
+          description: Saham tidak ditemukan
+
+  /stocks/{ticker}/chart:
+    get:
+      tags:
+        - Stocks
+      summary: Dapatkan data harga riwayat (OHLCV) untuk chart
+      parameters:
+        - in: path
+          name: ticker
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: days
+          schema:
+            type: integer
+            default: 100
+          description: Jumlah hari ke belakang
+      responses:
+        '200':
+          description: Data time-series OHLCV
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    date:
+                      type: string
+                      format: date
+                    open:
+                      type: number
+                    high:
+                      type: number
+                    low:
+                      type: number
+                    close:
+                      type: number
+                    volume:
+                      type: integer
