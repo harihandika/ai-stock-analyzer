@@ -3,6 +3,9 @@ AI Stock Analyzer - Test Configuration (conftest.py)
 Menyediakan fixtures yang dapat digunakan oleh semua test.
 """
 
+import os
+os.environ["TESTING"] = "1"  # Harus di-set sebelum import app agar rate limiter disabled
+
 import asyncio
 import pytest
 import pytest_asyncio
@@ -36,6 +39,7 @@ async def db_session():
     Ini memastikan test berjalan secara terisolasi.
     """
     async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     async with TestSessionLocal() as session:
@@ -55,6 +59,10 @@ async def client(db_session: AsyncSession):
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
+
+    from fastapi_cache import FastAPICache
+    from fastapi_cache.backends.inmemory import InMemoryBackend
+    FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
 
     async with AsyncClient(
         transport=ASGITransport(app=app),

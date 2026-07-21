@@ -24,7 +24,7 @@ async def test_get_stocks_empty(client: AsyncClient):
     """Test get stocks saat belum ada data."""
     response = await client.get("/api/v1/stocks")
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["data"] == []
 
 
 @pytest.mark.asyncio
@@ -77,9 +77,9 @@ async def test_get_stocks_list_after_sync(client: AsyncClient):
     response = await client.get("/api/v1/stocks")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) > 0
-    assert data[0]["ticker"] == "BBCA.JK"
-    assert data[0]["company_name"] == "Bank Central Asia Tbk"
+    assert len(data["data"]) > 0
+    assert data["data"][0]["ticker"] == "BBCA.JK"
+    assert data["data"][0]["company_name"] == "Bank Central Asia Tbk"
 
 
 @pytest.mark.asyncio
@@ -102,10 +102,10 @@ async def test_get_stock_chart(client: AsyncClient):
     response = await client.get("/api/v1/stocks/BBCA.JK/chart?days=30")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 30
-    assert "close" in data[0]
-    assert "volume" in data[0]
-    assert "trading_date" in data[0]
+    assert len(data["data"]) == 30
+    assert "close" in data["data"][0]
+    assert "volume" in data["data"][0]
+    assert "trading_date" in data["data"][0]
 
 
 @pytest.mark.asyncio

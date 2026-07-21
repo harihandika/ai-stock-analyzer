@@ -94,7 +94,7 @@ Setiap Task memiliki deskripsi fitur wajib, acceptance criteria, dan file output
 
 ---
 
-## Sprint 6: Backend Hardening & Improvements ⏳ NEXT
+## Sprint 6: Backend Hardening & Improvements ✅ DONE
 
 **Objective**: Memperkuat keamanan, memperbaiki bug yang ditemukan saat audit kode, menambahkan caching layer, dan meningkatkan kualitas production-readiness backend secara keseluruhan.
 
@@ -115,6 +115,24 @@ Setiap Task memiliki deskripsi fitur wajib, acceptance criteria, dan file output
 
 ---
 
+## Sprint 7: Frontend Web Application ⏳ NEXT
+**Fokus**: Membangun antarmuka modern, interaktif, dan premium menggunakan React, Vite, dan Vanilla CSS untuk berkomunikasi dengan FastAPI Backend.
+
+| Task | Fitur Wajib | Acceptance Criteria | Output File |
+|------|-------------|---------------------|-------------|
+| **7.1** Scaffold Frontend | Inisialisasi proyek `ai_stock_analyzer_frontend` menggunakan `Next.js` (React + TypeScript + App Router). Setup arsitektur folder (`src/components`, `src/app`, `src/services`, `src/styles`). | Aplikasi Next.js berhasil berjalan (npm run dev) dan routing navigasi dasar berfungsi tanpa error. | `package.json`, `src/app/layout.tsx`, `src/app/page.tsx` |
+| **7.2** Design System (CSS) | Membuat `src/app/globals.css` berisi CSS Variables (Warna Dark Mode premium, typografi modern Google Fonts 'Inter', efek glow, dan *glassmorphism* utilities). Tidak menggunakan Tailwind. | Komponen UI mewarisi *design system* yang konsisten dan estetik. | `src/app/globals.css` |
+| **7.3** API Client Layer | Konfigurasi instance Axios untuk komunikasi dengan Backend. Menyertakan mekanisme _interceptors_ untuk injeksi *Access Token* JWT otomatis ke header, dan *auto-refresh token* (panggil /auth/refresh) saat token kedaluwarsa. | Fungsi service (e.g. `login()`, `getChart()`) dapat dipanggil dan sukses merespons data dari localhost:8000. | `src/services/api.ts`, `src/services/auth.ts` |
+| **7.4** Komponen UI Dasar | Membuat komponen *reusable* premium: `Button` (animasi hover dinamis), `Card` (glassmorphism), `Input` (floating label / sleek border), dan `Loader` (animasi spinner/glow custom). | Komponen bisa di-_import_ dan digunakan dengan _props_ dinamis. | `src/components/ui/*.tsx` |
+| **7.5** Halaman Auth | Halaman Login dan Registrasi (*full-screen animated background*). Validasi input *real-time*, integrasi ke API auth backend, dan penyimpanan token di Local Storage/Cookies secara aman. | Pengguna dapat mendaftar, lalu login, dan sistem menyimpannya ke status terautentikasi (AuthContext). | `src/app/login/page.tsx`, `src/app/register/page.tsx`, `src/contexts/AuthContext.tsx` |
+| **7.6** Layout Utama | Komponen Layout untuk pengguna *logged-in*. Terdapat `Sidebar` / `Navbar` modern dengan navigasi (Dashboard, Watchlist, Settings). Profile dropdown menu di sudut atas. | Sidebar responsif dan layout membungkus konten utama (children). | `src/components/layout/AppLayout.tsx` |
+| **7.7** Halaman Dashboard | Halaman beranda dengan _greeting_ (nama user), kartu statistik (jumlah Watchlist, kuota AI tier-based), dan _search bar_ pencarian *ticker* saham dengan *autocomplete/debounce*. | Dashboard bisa mengambil data profil user (`/auth/me`) secara dinamis. | `src/app/dashboard/page.tsx` |
+| **7.8** Halaman Watchlist | Menampilkan daftar saham (Tabel/Grid interaktif) yang ada di watchlist pengguna (Hit API `/watchlist`). Terdapat tombol hapus saham dengan _smooth fade-out animation_. | Watchlist terhubung dengan *backend* secara *live*. | `src/app/watchlist/page.tsx` |
+| **7.9** Komponen Grafik Saham | Integrasi pustaka visualisasi (*Lightweight Charts* / *Recharts*) untuk merender Candlestick OHLCV data dari API `/stocks/{ticker}/chart`. Tampilkan overlay VWAP & EMA dengan estetik. (Render Client-Side). | Grafik dapat digeser/zoom (*interactive*), merender garis MA berwarna neon (glow). | `src/components/charts/StockChart.tsx` |
+| **7.10** Halaman Detail & AI Report | Halaman `/stock/[ticker]`. Memuat Grafik Saham (Task 7.9) di sisi atas. Di sisi bawah/samping terdapat "AI Insights Board" (panel premium untuk menampilkan hasil `/analysis/latest`). Ada animasi *typing/fade-in* saat data laporan AI dirender (menggunakan Markdown renderer). Terdapat tombol "Mulai Analisis Baru" / "Sync Data". | Visual halaman harus mencengangkan pengguna (WOW effect). Laporan AI (markdown) terurai (*parsed*) dengan gaya elegan (bold, list, bullet dengan aksen). | `src/app/stock/[ticker]/page.tsx`, `src/components/stock/AIReportCard.tsx` |
+
+---
+
 ## Ringkasan Deliverables per Sprint
 
 | Sprint | Jumlah Task | File Baru/Modifikasi | Status |
@@ -124,6 +142,7 @@ Setiap Task memiliki deskripsi fitur wajib, acceptance criteria, dan file output
 | **Sprint 3** | 5 task | ~4 file (Wyckoff + SMC engines) | ✅ Done |
 | **Sprint 4** | 8 task | ~8 file (AI client + Celery + prompts) | ✅ Done |
 | **Sprint 5** | 10 task | ~10 file (Docker + deploy + backtest) | ✅ Done |
-| **Sprint 6** | 12 task | ~15 file (hardening + caching + auth upgrade) | ⏳ Next |
+| **Sprint 6** | 12 task | ~15 file (hardening + caching + auth upgrade) | ✅ Done |
+| **Sprint 7** | 10 task | ~20 file (Frontend UI/UX) | ✅ Done |
 
-**Total Estimasi**: ~56 task, ~62 file
+**Total Estimasi**: ~66 task, ~82 file

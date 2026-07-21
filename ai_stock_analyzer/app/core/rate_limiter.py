@@ -9,8 +9,13 @@ from slowapi.errors import RateLimitExceeded
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 
+import os
+
+# Disable rate limiting saat testing agar pytest tidak terblokir
+_is_testing = os.getenv("TESTING", "").lower() in ("1", "true", "yes")
+
 # Inisialisasi Limiter dengan fungsi untuk mendapatkan IP address client
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=get_remote_address, enabled=not _is_testing)
 
 def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> Response:
     """Custom handler for RateLimitExceeded exception."""

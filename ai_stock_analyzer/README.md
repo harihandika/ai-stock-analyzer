@@ -26,22 +26,32 @@ Platform analisis saham berbasis AI yang menggunakan **Volume Price Analysis (VP
 
 ### 2. Clone & Setup Environment
 
+**PENTING**: Aplikasi ini membutuhkan **Python 3.12**. Jika laptop Anda memiliki versi yang lebih baru (misal 3.14), gunakan `uv` untuk memastikan virtual environment Anda terkunci di versi 3.12.
+
 ```bash
 # Clone repositori
 git clone <repo-url>
 cd ai_stock_analyzer
 
-# Buat virtual environment
-python -m venv .venv
+# Buat virtual environment dengan Python 3.12
+uv venv --python 3.12 .venv
 
-# Aktivasi (Windows)
+# Aktivasi Venv
+# (Wajib dilakukan SETIAP KALI Anda membuka jendela terminal baru)
+# Windows (PowerShell/CMD):
 .venv\Scripts\activate
 
-# Aktivasi (Linux/Mac)
+# Linux/Mac Asli:
 source .venv/bin/activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Git Bash di Windows:
+source .venv/Scripts/activate
+
+# Verifikasi versi Python (Pastikan muncul 3.12.x)
+python --version
+
+# Install dependencies (menggunakan uv agar lebih cepat)
+uv pip install --python .venv -r requirements.txt
 ```
 
 ### 3. Konfigurasi Environment

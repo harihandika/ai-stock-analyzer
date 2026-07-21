@@ -8,8 +8,8 @@ from app.core.config import settings
 
 celery_app = Celery(
     "ai_stock_worker",
-    broker=settings.REDIS_URL,
-    backend=settings.REDIS_URL,
+    broker="sqla+sqlite:///celery_broker.sqlite",
+    backend="db+sqlite:///celery_results.sqlite",
     include=["app.worker.tasks"],
 )
 
