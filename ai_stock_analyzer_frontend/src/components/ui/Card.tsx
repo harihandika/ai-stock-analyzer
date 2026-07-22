@@ -1,5 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
+import styles from './card.module.css';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'glass';
@@ -9,8 +10,8 @@ export function Card({ className, variant = 'default', children, ...props }: Car
   return (
     <div
       className={clsx(
-        'rounded-xl border border-[rgba(255,255,255,0.08)] overflow-hidden',
-        variant === 'default' ? 'bg-[#12141d]' : 'glass-card',
+        styles.card,
+        variant === 'glass' && styles.cardGlass,
         className
       )}
       {...props}
@@ -22,7 +23,7 @@ export function Card({ className, variant = 'default', children, ...props }: Car
 
 export function CardHeader({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={clsx('flex flex-col space-y-1.5 p-6', className)} {...props}>
+    <div className={clsx(styles.cardHeader, className)} {...props}>
       {children}
     </div>
   );
@@ -30,7 +31,7 @@ export function CardHeader({ className, children, ...props }: React.HTMLAttribut
 
 export function CardTitle({ className, children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h3 className={clsx('font-semibold text-lg leading-none tracking-tight text-white', className)} {...props}>
+    <h3 className={clsx(styles.cardTitle, className)} {...props}>
       {children}
     </h3>
   );
@@ -38,7 +39,7 @@ export function CardTitle({ className, children, ...props }: React.HTMLAttribute
 
 export function CardContent({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={clsx('p-6 pt-0', className)} {...props}>
+    <div className={clsx(styles.cardContent, className)} {...props}>
       {children}
     </div>
   );

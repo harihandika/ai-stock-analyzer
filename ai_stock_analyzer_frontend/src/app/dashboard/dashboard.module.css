@@ -1,0 +1,165 @@
+.dashboardContainer {
+  max-width: 1152px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcomeSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .welcomeSection {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+}
+
+.welcomeTitle {
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.welcomeSubtitle {
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.tierBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background-color: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.tierIcon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+}
+
+.tierText {
+  color: #fff;
+  text-transform: capitalize;
+  margin-left: 4px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.statCard1 {
+  border-top: 4px solid #3b82f6;
+}
+
+.statCard2 {
+  border-top: 4px solid #6366f1;
+}
+
+.statContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.statValue {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-top: 8px;
+  color: #fff;
+}
+
+.statLimit {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.statIconWrapper1 {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: rgba(59, 130, 246, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #60a5fa;
+}
+
+.statIconWrapper2 {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: rgba(99, 102, 241, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #818cf8;
+}
+
+.statIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+.emptyStateCard {
+  background-color: rgba(18, 20, 29, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.emptyStateContent {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.emptyStateDesc {
+  font-size: 0.875rem;
+  margin-top: 8px;
+}

@@ -1,0 +1,35 @@
+.card {
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+  background-color: #12141d;
+  color: #fff;
+}
+
+.cardGlass {
+  background-color: rgba(18, 20, 29, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.cardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 24px;
+}
+
+.cardTitle {
+  font-weight: 600;
+  font-size: 1.125rem;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  color: #fff;
+}
+
+.cardContent {
+  padding: 24px;
+  padding-top: 0;
+}
