@@ -35,6 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Failed to fetch user', error);
+      Cookies.remove('access_token');
+      Cookies.remove('refresh_token');
       setUser(null);
     } finally {
       setIsLoading(false);

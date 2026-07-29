@@ -25,6 +25,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifikasi password plaintext terhadap hash yang tersimpan di database."""
     return pwd_context.verify(plain_password, hashed_password)
 
+def hash_token(token: str) -> str:
+    """Hash token menggunakan SHA-256 untuk penyimpanan di DB."""
+    import hashlib
+    return hashlib.sha256(token.encode()).hexdigest()
 
 # ---- JWT Token ----
 

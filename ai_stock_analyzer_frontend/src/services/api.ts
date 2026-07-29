@@ -71,8 +71,8 @@ apiClient.interceptors.response.use(
       }
 
       try {
-        const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, null, {
-          headers: { Authorization: `Bearer ${refreshToken}` },
+        const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+          refresh_token: refreshToken,
         });
 
         const newAccessToken = data.access_token;
@@ -104,3 +104,20 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Sprint 10 API Functions
+export const logout = async (refreshToken: string) => {
+  return apiClient.post('/auth/logout', { refresh_token: refreshToken });
+};
+
+export const updatePassword = async (currentPw: string, newPw: string) => {
+  return apiClient.post('/auth/password', { current_password: currentPw, new_password: newPw });
+};
+
+export const getUserQuota = async () => {
+  return apiClient.get('/auth/me');
+};
+
+export const runBacktest = async (ticker: string, params: { years: number; target_profit_pct: number; stop_loss_pct: number }) => {
+  return apiClient.post(`/analysis/${ticker}/backtest`, params);
+};

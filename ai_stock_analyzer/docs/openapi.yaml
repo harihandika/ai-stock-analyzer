@@ -22,6 +22,30 @@ components:
 security:
   - bearerAuth: []
 paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register akun pengguna baru
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                full_name:
+                  type: string
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad Request
   /auth/token:
     post:
       tags:
@@ -50,12 +74,58 @@ paths:
                 properties:
                   access_token:
                     type: string
+                  refresh_token:
+                    type: string
                   token_type:
                     type: string
-                    example: bearer
         '401':
           description: Email atau password salah
-
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh Access Token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed
+        '401':
+          description: Token invalid
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout dan revoke token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Success
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Dapatkan profil pengguna saat ini
+      responses:
+        '200':
+          description: Success
   /stocks:
     get:
       tags:
@@ -63,61 +133,7 @@ paths:
       summary: Dapatkan daftar saham yang didukung
       responses:
         '200':
-          description: Berhasil mengambil daftar saham
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    ticker:
-                      type: string
-                      example: "BBCA"
-                    company_name:
-                      type: string
-                      example: "Bank Central Asia Tbk"
-
-  /stocks/{ticker}/analysis/latest:
-    get:
-      tags:
-        - Analysis
-      summary: Dapatkan hasil analisis AI dan teknikal terbaru untuk sebuah saham
-      parameters:
-        - in: path
-          name: ticker
-          required: true
-          schema:
-            type: string
-          description: Ticker saham (e.g., BBCA)
-      responses:
-        '200':
-          description: Data analisis terbaru
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ticker:
-                    type: string
-                    example: "BBCA"
-                  date:
-                    type: string
-                    format: date
-                  current_price:
-                    type: number
-                  wyckoff_phase:
-                    type: string
-                    example: "Phase C (Spring)"
-                  ai_recommendation:
-                    type: string
-                    example: "Buy"
-                  ai_summary:
-                    type: string
-                    example: "Berdasarkan analisis VPA, BBCA menunjukkan akumulasi volume yang signifikan di fase Spring. Sinyal kuat untuk Buy."
-        '404':
-          description: Saham tidak ditemukan
-
+          description: Success
   /stocks/{ticker}/chart:
     get:
       tags:
@@ -129,32 +145,123 @@ paths:
           required: true
           schema:
             type: string
-        - in: query
-          name: days
-          schema:
-            type: integer
-            default: 100
-          description: Jumlah hari ke belakang
       responses:
         '200':
-          description: Data time-series OHLCV
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    date:
-                      type: string
-                      format: date
-                    open:
-                      type: number
-                    high:
-                      type: number
-                    low:
-                      type: number
-                    close:
-                      type: number
-                    volume:
-                      type: integer
+          description: Success
+  /stocks/{ticker}/sync:
+    post:
+      tags:
+        - Stocks
+      summary: Sinkronisasi data saham dari yfinance
+      parameters:
+        - in: path
+          name: ticker
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+  /stocks/{ticker}/analysis/latest:
+    get:
+      tags:
+        - Analysis
+      summary: Dapatkan hasil analisis AI dan teknikal terbaru untuk sebuah saham
+      parameters:
+        - in: path
+          name: ticker
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+  /stocks/watchlist:
+    get:
+      tags:
+        - Stocks
+      summary: Dapatkan daftar watchlist pengguna
+      responses:
+        '200':
+          description: Success
+    post:
+      tags:
+        - Stocks
+      summary: Tambahkan saham ke watchlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ticker:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Created
+  /stocks/watchlist/{ticker}:
+    delete:
+      tags:
+        - Stocks
+      summary: Hapus saham dari watchlist
+      parameters:
+        - in: path
+          name: ticker
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+  /analysis/{ticker}:
+    post:
+      tags:
+        - Analysis
+      summary: Jalankan AI Analysis untuk saham
+      parameters:
+        - in: path
+          name: ticker
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+  /analysis/{ticker}/backtest:
+    post:
+      tags:
+        - Analysis
+      summary: Jalankan Backtest Strategi
+      parameters:
+        - in: path
+          name: ticker
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                years:
+                  type: integer
+                target_profit_pct:
+                  type: number
+                stop_loss_pct:
+                  type: number
+      responses:
+        '200':
+          description: Success
+  /analysis/health:
+    get:
+      tags:
+        - Analysis
+      summary: Cek status API eksternal (Claude/Redis)
+      responses:
+        '200':
+          description: Success

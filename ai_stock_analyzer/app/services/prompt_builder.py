@@ -15,7 +15,7 @@ def build_analysis_prompt(ticker: str, df: pd.DataFrame, latest_indicators: dict
         tuple(system_prompt, user_prompt)
     """
     
-    # 1. System Prompt (Instruksi Peran & Format)
+# 1. System Prompt (Instruksi Peran & Format)
     system_prompt = """You are an expert Smart Money Concept (SMC) and Volume Price Analysis (VPA) analyst for the Indonesian Stock Exchange (IDX).
 Your task is to analyze the provided technical data and provide a concise, high-probability trading recommendation.
 The user will provide technical data formatted as JSON.
@@ -23,8 +23,12 @@ The user will provide technical data formatted as JSON.
 Analyze the data based on:
 1. VPA anomalies (Stopping Volume, No Demand, Climactic Volume).
 2. Wyckoff Phases (Spring, SOS) - if available.
-3. SMC Patterns (FVG, BOS, CHoCH) - if available.
-4. Trend direction (EMA 50 vs EMA 200).
+3. SMC Patterns:
+   - FVG (Fair Value Gap), BOS, CHoCH.
+   - Order Blocks (Bullish/Bearish): Evaluate these as strong support/resistance zones for entry or exit.
+   - Liquidity Sweeps (Low/High): Treat these as confirmation of false breakouts and potential reversals.
+4. Classic Patterns (Cup & Handle, Bull Flag) as strong bullish continuation signals.
+5. Trend direction (EMA 50 vs EMA 200).
 
 Your response MUST be ONLY a raw JSON object (without markdown code blocks) with the following structure:
 {
@@ -68,12 +72,16 @@ Ensure output is in Bahasa Indonesia except for the recommendation standard (BUY
     else:
         trend = "Downtrend"
 
+    # Filter pola terbaru dari smc_patterns untuk mempermudah AI
+    raw_smc = latest_indicators.get("smc_patterns", {})
+    active_smc_patterns = {k: v for k, v in raw_smc.items() if v}
+
     # 3. User Prompt (Data Context)
     user_context = {
         "ticker": ticker,
         "current_price": recent_price_action[-1]["close"] if recent_price_action else 0,
         "macro_trend_ema50_vs_200": trend,
-        "latest_smc_patterns": latest_indicators.get("smc_patterns", {}),
+        "latest_smc_and_classic_patterns": active_smc_patterns,
         "latest_wyckoff": {
             "is_spring": latest_indicators.get("is_spring", False),
             "wyckoff_phase": latest_indicators.get("wyckoff_phase", None)

@@ -54,6 +54,7 @@ class User(Base):
 
     # Relationships
     watchlists: Mapped[list["Watchlist"]] = relationship("Watchlist", back_populates="user")
+    refresh_tokens: Mapped[list["RefreshToken"]] = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, email='{self.email}')>"
@@ -184,6 +185,9 @@ class AIAnalysis(Base):
     generated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    analyzed_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
 
     # Relationships
     stock: Mapped["Stock"] = relationship("Stock", back_populates="ai_analyses")
@@ -222,3 +226,33 @@ class Watchlist(Base):
 
     def __repr__(self) -> str:
         return f"<Watchlist(user_id={self.user_id}, ticker='{self.stock_ticker}')>"
+
+
+class RefreshToken(Base):
+    """
+    Menyimpan hash dari refresh token untuk mendukung revokasi (logout)
+    dan mencegah token reuse.
+    """
+    __tablename__ = "refresh_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    is_revoked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="refresh_tokens")
+
+    def __repr__(self) -> str:
+        return f"<RefreshToken(user_id={self.user_id}, is_revoked={self.is_revoked})>"

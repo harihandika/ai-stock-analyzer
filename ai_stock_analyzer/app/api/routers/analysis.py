@@ -82,7 +82,7 @@ async def trigger_ai_analysis(
     # ---------------------------
         
     try:
-        response = await run_ai_analysis(ticker_upper, db)
+        response = await run_ai_analysis(ticker_upper, db, analyzed_by=current_user.id)
         return {
             "message": f"AI Analysis untuk {ticker_upper} selesai dijalankan.",
             "result": response

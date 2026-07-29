@@ -67,6 +67,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ---- Correlation ID Middleware ----
+import uuid as _uuid
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import Request, Response
+
+class CorrelationIdMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next) -> Response:
+        correlation_id = request.headers.get("X-Correlation-ID", str(_uuid.uuid4()))
+        request.state.correlation_id = correlation_id
+        response = await call_next(request)
+        response.headers["X-Correlation-ID"] = correlation_id
+        return response
+
+app.add_middleware(CorrelationIdMiddleware)
+
 # ---- Routers ----
 API_PREFIX = "/api/v1"
 

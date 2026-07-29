@@ -1,0 +1,30 @@
+{
+  "exclude": [
+    "alloydb-omni-access-control",
+    "alloydb-omni-container",
+    "alloydb-omni-data",
+    "alloydb-omni-health",
+    "alloydb-omni-kubernetes",
+    "alloydb-omni-monitor",
+    "alloydb-omni-optimize",
+    "alloydb-omni-performance",
+    "alloydb-omni-replication",
+    "alloydb-postgres-access-management",
+    "alloydb-postgres-admin",
+    "alloydb-postgres-data",
+    "alloydb-postgres-health",
+    "alloydb-postgres-monitor",
+    "alloydb-postgres-optimize",
+    "alloydb-postgres-replication",
+    "cloud-sql-sqlserver-admin",
+    "cloud-sql-sqlserver-data",
+    "cloud-sql-sqlserver-lifecycle",
+    "cloud-sql-sqlserver-monitor",
+    "gcp-spark",
+    "gcp-dataflow",
+    "federate-lakehouse-catalog",
+    "dataform-bigquery",
+    "gcp-composer-troubleshooting",
+    "gcp-managed-airflow-migrations"
+  ]
+}

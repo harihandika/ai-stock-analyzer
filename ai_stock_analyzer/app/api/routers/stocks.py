@@ -32,9 +32,9 @@ from app.domain.schemas.stocks import (
 import pandas as pd
 from app.infrastructure.market_data import fetch_stock_history_async, fetch_stock_info_async
 from app.services.indicator_engine import calculate_indicators, detect_vpa_signals
-from app.services.pattern_engine import detect_double_bottom, detect_swing_points
+from app.services.pattern_engine import detect_double_bottom, detect_swing_points, detect_cup_and_handle, detect_bull_flag
 from app.services.wyckoff_engine import detect_wyckoff_accumulation
-from app.services.smc_engine import detect_fvg, detect_structure_breaks
+from app.services.smc_engine import detect_fvg, detect_structure_breaks, detect_order_blocks, detect_liquidity_sweep
 import math
 
 router = APIRouter(prefix="/stocks", tags=["Stocks"])
@@ -50,16 +50,22 @@ async def list_stocks(
     response: Response,
     page: int = Query(1, ge=1, description="Nomor halaman"),
     per_page: int = Query(20, ge=1, le=100, description="Jumlah item per halaman"),
+    q: str | None = Query(None, description="Pencarian ticker atau nama perusahaan"),
     db: AsyncSession = Depends(get_db),
 ) -> PaginatedResponse[StockResponse]:
     """Ambil semua saham aktif dari database dengan pagination."""
+    # Build base condition
+    condition = Stock.is_active == True
+    if q:
+        condition = condition & (Stock.ticker.ilike(f"%{q}%") | Stock.company_name.ilike(f"%{q}%"))
+
     # Count total
-    count_stmt = select(func.count()).select_from(Stock).where(Stock.is_active == True)
+    count_stmt = select(func.count()).select_from(Stock).where(condition)
     total = await db.scalar(count_stmt)
     
     # Get paginated data
     offset = (page - 1) * per_page
-    stmt = select(Stock).where(Stock.is_active == True).order_by(Stock.ticker).offset(offset).limit(per_page)
+    stmt = select(Stock).where(condition).order_by(Stock.ticker).offset(offset).limit(per_page)
     result = await db.execute(stmt)
     stocks = result.scalars().all()
     
@@ -126,9 +132,23 @@ async def do_sync_stock(ticker: str, db: AsyncSession):
     # 4. Detect patterns (Classic, Wyckoff, SMC)
     df = detect_swing_points(df, window=5)
     double_bottoms = detect_double_bottom(df)
+    cup_and_handles = detect_cup_and_handle(df)
+    bull_flags = detect_bull_flag(df)
+    
+    # Tandai di dataframe jika pattern selesai pada hari tersebut
+    df['has_cup_and_handle'] = False
+    for p in cup_and_handles:
+        df.loc[df.index == p['handle_end_date'], 'has_cup_and_handle'] = True
+        
+    df['has_bull_flag'] = False
+    for p in bull_flags:
+        df.loc[df.index == p['flag_end'], 'has_bull_flag'] = True
+    
+    df = detect_liquidity_sweep(df)
     df = detect_wyckoff_accumulation(df)
     df = detect_fvg(df)
     df = detect_structure_breaks(df)
+    df = detect_order_blocks(df)
 
     def clean_val(val):
         return None if pd.isna(val) else val
@@ -178,7 +198,15 @@ async def do_sync_stock(ticker: str, db: AsyncSession):
                     "bos": bool(clean_val(row.get('bos')) or False),
                     "choch": bool(clean_val(row.get('choch')) or False),
                     "swing_high": bool(clean_val(row.get('swing_high')) or False),
-                    "swing_low": bool(clean_val(row.get('swing_low')) or False)
+                    "swing_low": bool(clean_val(row.get('swing_low')) or False),
+                    "bullish_ob": bool(clean_val(row.get('bullish_ob')) or False),
+                    "bearish_ob": bool(clean_val(row.get('bearish_ob')) or False),
+                    "ob_high": float(clean_val(row.get('ob_high')) or 0.0),
+                    "ob_low": float(clean_val(row.get('ob_low')) or 0.0),
+                    "liq_sweep_low": bool(clean_val(row.get('liq_sweep_low')) or False),
+                    "liq_sweep_high": bool(clean_val(row.get('liq_sweep_high')) or False),
+                    "has_cup_and_handle": bool(clean_val(row.get('has_cup_and_handle')) or False),
+                    "has_bull_flag": bool(clean_val(row.get('has_bull_flag')) or False)
                 }
             )
             indicators_to_insert.append(ti)
@@ -194,7 +222,9 @@ async def do_sync_stock(ticker: str, db: AsyncSession):
         "message": f"Sinkronisasi berhasil untuk {ticker_upper}",
         "total_days_synced": len(df),
         "patterns_detected": {
-            "double_bottoms": len(double_bottoms)
+            "double_bottoms": len(double_bottoms),
+            "cup_and_handles": len(cup_and_handles),
+            "bull_flags": len(bull_flags)
         }
     }
 
