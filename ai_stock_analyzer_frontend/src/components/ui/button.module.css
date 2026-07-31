@@ -59,6 +59,16 @@
   background-color: rgba(255, 255, 255, 0.05);
 }
 
+.outline {
+  background-color: transparent;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.outline:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
 /* Sizes */
 .sm {
   padding: 6px 12px;
