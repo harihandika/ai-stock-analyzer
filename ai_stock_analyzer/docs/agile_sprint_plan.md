@@ -144,5 +144,8 @@ Setiap Task memiliki deskripsi fitur wajib, acceptance criteria, dan file output
 | **Sprint 5** | 10 task | ~10 file (Docker + deploy + backtest) | ✅ Done |
 | **Sprint 6** | 12 task | ~15 file (hardening + caching + auth upgrade) | ✅ Done |
 | **Sprint 7** | 10 task | ~20 file (Frontend UI/UX) | ✅ Done |
+| **Sprint 8** | 4 task  | ~10 file (Security & Caching, Refresh Token) | ✅ Done |
+| **Sprint 9** | 4 task  | ~6 file (Intelligence & SMC/Pattern Engine) | ✅ Done |
+| **Sprint 10**| 5 task  | ~15 file (Frontend Polish, Backtest UI, OpenAPI) | ✅ Done |
 
-**Total Estimasi**: ~66 task, ~82 file
+**Total Estimasi Akhir**: Seluruh 10 Sprint telah diselesaikan (Production-Ready).

@@ -66,3 +66,15 @@ Render versi gratis akan "tertidur" jika tidak ada aktivitas selama 15 menit. Ag
 4. Set interval ping setiap 10 menit.
 
 Aplikasi Anda sekarang sudah berjalan di cloud dan akan menganalisis saham secara otomatis setiap pukul 17:30 WIB!
+
+## 6. Deploy Frontend ke Vercel (Next.js)
+Karena kita memiliki frontend berbasis Next.js (`ai_stock_analyzer_frontend`), tempat terbaik dan gratis untuk melakukan deployment adalah **Vercel**.
+1. Pastikan seluruh kode frontend Anda sudah di-push ke GitHub.
+2. Buka [Vercel.com](https://vercel.com/) dan login dengan GitHub.
+3. Klik **Add New... > Project**.
+4. Import repositori GitHub AI Stock Analyzer Anda.
+5. Pada bagian **Root Directory**, klik **Edit** dan pilih folder `ai_stock_analyzer_frontend` karena aplikasi Next.js berada di dalam folder tersebut.
+6. Pada bagian **Environment Variables**, tambahkan:
+   - `NEXT_PUBLIC_API_URL`: URL Backend Render Anda (contoh: `https://ai-stock-xxx.onrender.com/api/v1`)
+7. Klik **Deploy**. Tunggu beberapa menit hingga proses build selesai.
+8. Aplikasi Frontend interaktif Anda kini bisa diakses secara publik lewat domain dari Vercel!

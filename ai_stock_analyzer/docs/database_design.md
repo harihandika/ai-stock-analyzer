@@ -19,6 +19,15 @@ erDiagram
         datetime created_at
     }
 
+    REFRESH_TOKENS {
+        uuid id PK
+        uuid user_id FK
+        string token_hash
+        datetime expires_at
+        boolean is_revoked
+        datetime created_at
+    }
+
     STOCKS {
         string ticker PK
         string company_name
@@ -58,6 +67,7 @@ erDiagram
         text ai_summary
         string recommendation "Buy|Hold|Wait"
         int confidence_score
+        uuid analyzed_by FK
         datetime generated_at
     }
 
@@ -68,7 +78,9 @@ erDiagram
         datetime added_at
     }
 
+    USERS ||--o{ REFRESH_TOKENS : "owns"
     USERS ||--o{ WATCHLISTS : "has"
+    USERS ||--o{ AI_ANALYSES : "triggers (optional)"
     STOCKS ||--o{ WATCHLISTS : "included in"
     STOCKS ||--o{ DAILY_PRICES : "has price history"
     STOCKS ||--o{ TECHNICAL_INDICATORS : "has technical data"
