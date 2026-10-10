@@ -82,6 +82,62 @@ async def list_stocks(
     )
 
 
+@router.get(
+    "/{ticker}/price",
+    status_code=status.HTTP_200_OK,
+    summary="Ambil harga real-time dari yfinance",
+    description="Mengambil harga terkini langsung dari yfinance tanpa perlu data historis tersimpan.",
+)
+@limiter.limit("60/minute")
+async def get_realtime_price(
+    request: Request,
+    ticker: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Ambil harga real-time dari yfinance."""
+    try:
+        ticker_upper = ticker.upper()
+        # Ambil nama emiten dari DB jika ada
+        company_name = ticker_upper
+        stock_result = await db.execute(select(Stock).where(Stock.ticker == ticker_upper))
+        stock = stock_result.scalar_one_or_none()
+        if stock and stock.company_name:
+            company_name = stock.company_name
+
+        current_price = 0
+        previous_close = 0
+        
+        # 1. Coba dari history 5d (paling reliabel di yfinance untuk IHSG/US)
+        df = await fetch_stock_history_async(ticker_upper, period="5d")
+        if not df.empty and len(df) > 0:
+            current_price = float(df.iloc[-1]['close'])
+            if len(df) > 1:
+                previous_close = float(df.iloc[-2]['close'])
+            else:
+                previous_close = float(df.iloc[-1]['open'])
+        else:
+            # Fallback ke stock info
+            info = await fetch_stock_info_async(ticker_upper)
+            current_price = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose") or 0
+            previous_close = info.get("previousClose") or info.get("regularMarketPreviousClose") or current_price
+            if not stock or not stock.company_name:
+                company_name = info.get("longName") or info.get("shortName") or ticker_upper
+
+        change = current_price - previous_close if current_price and previous_close else 0
+        change_percent = (change / previous_close * 100) if previous_close else 0
+        
+        return {
+            "ticker": ticker_upper,
+            "company_name": company_name,
+            "current_price": current_price,
+            "previous_close": previous_close,
+            "change": round(change, 2),
+            "change_percent": round(change_percent, 2),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal mengambil harga: {str(e)}")
+
+
 @router.post(
     "/{ticker}/sync",
     status_code=status.HTTP_200_OK,
@@ -262,19 +318,47 @@ async def get_stock_chart(
     # Ambil data harga sesuai pagination, diurutkan desc lalu direverse
     offset = (page - 1) * per_page
     prices_result = await db.execute(
-        select(DailyPrice)
+        select(DailyPrice, TechnicalIndicator)
+        .outerjoin(
+            TechnicalIndicator,
+            (DailyPrice.stock_ticker == TechnicalIndicator.stock_ticker) &
+            (DailyPrice.trading_date == TechnicalIndicator.trading_date)
+        )
         .where(DailyPrice.stock_ticker == ticker.upper())
         .order_by(desc(DailyPrice.trading_date))
         .offset(offset)
         .limit(per_page)
     )
-    prices = prices_result.scalars().all()
+    rows = prices_result.all()
     
     response.headers["X-Total-Count"] = str(total)
 
+    data = []
+    for price, ind in reversed(rows):
+        p_dict = {
+            "trading_date": price.trading_date,
+            "open": price.open,
+            "high": price.high,
+            "low": price.low,
+            "close": price.close,
+            "volume": price.volume,
+        }
+        if ind:
+            p_dict["ema_20"] = ind.ema_20
+            p_dict["ema_50"] = ind.ema_50
+            p_dict["ema_200"] = ind.ema_200
+            p_dict["rsi_14"] = ind.rsi_14
+            p_dict["macd"] = ind.macd
+            p_dict["macd_signal"] = ind.macd_signal
+            p_dict["stopping_volume"] = ind.stopping_volume
+            p_dict["no_demand"] = ind.no_demand
+            p_dict["is_spring"] = ind.is_spring
+            p_dict["climactic_volume"] = ind.climactic_volume
+        data.append(DailyPriceResponse(**p_dict))
+
     # Kembalikan dalam urutan kronologis (ascending) untuk chart
     return PaginatedResponse(
-        data=[DailyPriceResponse.model_validate(p) for p in reversed(prices)],
+        data=data,
         pagination=PaginationMeta(
             page=page,
             per_page=per_page,

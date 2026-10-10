@@ -1,5 +1,6 @@
-import React, { InputHTMLAttributes, forwardRef } from 'react';
+import React, { InputHTMLAttributes, forwardRef, useState } from 'react';
 import clsx from 'clsx';
+import { Eye, EyeOff } from 'lucide-react';
 import styles from './input.module.css';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -9,7 +10,10 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, icon, ...props }, ref) => {
+  ({ className, label, error, icon, type, ...props }, ref) => {
+    const [showPassword, setShowPassword] = useState(false);
+    const isPassword = type === 'password';
+
     return (
       <div className={styles.wrapper}>
         {label && (
@@ -25,14 +29,26 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
           <input
             ref={ref}
+            type={isPassword ? (showPassword ? 'text' : 'password') : type}
             className={clsx(
               styles.input,
               icon && styles.withIcon,
+              isPassword && styles.withPasswordToggle,
               error && styles.errorInput,
               className
             )}
             {...props}
           />
+          {isPassword && (
+            <button
+              type="button"
+              className={styles.passwordToggle}
+              onClick={() => setShowPassword(!showPassword)}
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          )}
         </div>
         {error && (
           <span className={styles.errorText}>{error}</span>

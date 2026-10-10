@@ -10,6 +10,7 @@ import { Star, RefreshCw, AlertTriangle, TrendingUp, TrendingDown, Play } from '
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiClient } from '@/services/api';
+import { useToast } from '@/contexts/ToastContext';
 import clsx from 'clsx';
 
 // Load chart only on client side to avoid SSR issues with canvas
@@ -26,6 +27,7 @@ export default function StockDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isAddingWatchlist, setIsAddingWatchlist] = useState(false);
+  const { addToast } = useToast();
   
   const [chartData, setChartData] = useState<any[]>([]);
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
@@ -48,7 +50,18 @@ export default function StockDetailPage() {
           open: p.open,
           high: p.high,
           low: p.low,
-          close: p.close
+          close: p.close,
+          volume: p.volume,
+          ema20: p.ema_20,
+          ema50: p.ema_50,
+          ema200: p.ema_200,
+          rsi: p.rsi_14,
+          macd: p.macd,
+          macdSignal: p.macd_signal,
+          stoppingVolume: p.stopping_volume,
+          noDemand: p.no_demand,
+          isSpring: p.is_spring,
+          climacticVolume: p.climactic_volume
         }));
         setChartData(formattedChart);
       } else {
@@ -113,9 +126,10 @@ export default function StockDetailPage() {
     try {
       await apiClient.post(`/stocks/${ticker}/sync`);
       await fetchData(); // re-fetch after sync
+      addToast('success', 'Analisis ulang AI berhasil dilakukan.');
     } catch (error) {
       console.error("Gagal sinkronisasi data", error);
-      alert("Gagal melakukan analisis ulang. Silakan coba lagi nanti.");
+      addToast('error', 'Gagal melakukan analisis ulang. Silakan coba lagi nanti.');
     } finally {
       setIsSyncing(false);
     }
@@ -128,12 +142,12 @@ export default function StockDetailPage() {
         ticker: ticker,
         notes: 'Added from stock detail page'
       });
-      alert('Berhasil ditambahkan ke Watchlist!');
+      addToast('success', 'Berhasil ditambahkan ke Watchlist!');
     } catch (error: any) {
       if (error.response?.status === 409) {
-        alert('Saham ini sudah ada di Watchlist Anda.');
+        addToast('warning', 'Saham ini sudah ada di Watchlist Anda.');
       } else {
-        alert('Gagal menambahkan ke Watchlist.');
+        addToast('error', 'Gagal menambahkan ke Watchlist.');
       }
     } finally {
       setIsAddingWatchlist(false);
@@ -146,6 +160,42 @@ export default function StockDetailPage() {
   const priceChange = currentPrice - previousPrice;
   const percentChange = previousPrice ? (priceChange / previousPrice) * 100 : 0;
   const isPositive = priceChange >= 0;
+
+  // Filter chart data based on timeframe
+  const getFilteredData = () => {
+    if (chartData.length === 0) return [];
+    const latestDate = new Date(chartData[chartData.length - 1].time);
+    let cutoffDate = new Date(latestDate);
+    
+    switch (activeTimeframe) {
+      case '1D':
+      case '1H':
+        // For 1D/1H on daily data, show the last 5 days so it's not just a single dot
+        cutoffDate.setDate(cutoffDate.getDate() - 5);
+        break;
+      case '1W':
+        cutoffDate.setDate(cutoffDate.getDate() - 7);
+        break;
+      case '1M':
+        cutoffDate.setMonth(cutoffDate.getMonth() - 1);
+        break;
+      case '3M':
+        cutoffDate.setMonth(cutoffDate.getMonth() - 3);
+        break;
+      case '6M':
+        cutoffDate.setMonth(cutoffDate.getMonth() - 6);
+        break;
+      case '1Y':
+      default:
+        // Show all available data up to 1 year
+        cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
+        break;
+    }
+    
+    return chartData.filter(d => new Date(d.time) >= cutoffDate);
+  };
+  
+  const filteredChartData = getFilteredData();
 
   return (
     <AppLayout>
@@ -219,13 +269,13 @@ export default function StockDetailPage() {
             <Card variant="glass" className="p-1 border border-slate-800/50 shadow-2xl bg-black/20 backdrop-blur-xl">
               <div className="p-5 border-b border-slate-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <h3 className="text-lg font-bold text-white tracking-wide">Grafik Pergerakan Historis</h3>
-                <div className="flex bg-slate-900/50 p-1 rounded-lg border border-slate-800">
-                  {['1W', '1M', '3M', '6M', '1Y'].map(tf => (
+                <div className="flex flex-wrap gap-1 bg-slate-900/50 p-1 rounded-lg border border-slate-800">
+                  {['1D', '1H', '1W', '1M', '3M', '6M', '1Y'].map(tf => (
                     <button 
                       key={tf} 
                       onClick={() => setActiveTimeframe(tf)}
                       className={clsx(
-                        "px-4 py-1.5 text-xs font-semibold rounded-md transition-all duration-200",
+                        "px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200",
                         activeTimeframe === tf 
                           ? "bg-indigo-500/20 text-indigo-300 shadow-sm" 
                           : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
@@ -239,9 +289,9 @@ export default function StockDetailPage() {
               <div className="p-5">
                 {isLoading ? (
                   <div className="h-[450px] flex items-center justify-center text-slate-500 animate-pulse">Mensinkronisasi Data Pasar...</div>
-                ) : chartData.length > 0 ? (
+                ) : filteredChartData.length > 0 ? (
                   <div className="h-[450px]">
-                    <StockChart data={chartData} />
+                    <StockChart data={filteredChartData} />
                   </div>
                 ) : (
                   <div className="h-[450px] flex flex-col items-center justify-center text-slate-400 bg-slate-900/20 rounded-lg border border-dashed border-slate-800">

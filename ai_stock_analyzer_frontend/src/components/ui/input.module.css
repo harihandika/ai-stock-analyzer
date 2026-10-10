@@ -58,6 +58,34 @@
   padding-left: 40px;
 }
 
+.withPasswordToggle {
+  padding-right: 40px;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.passwordToggle:hover {
+  color: #ffffff;
+}
+
+.passwordToggle:focus {
+  outline: none;
+}
+
 .errorInput {
   border-color: #f43f5e;
 }

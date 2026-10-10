@@ -7,6 +7,7 @@ import { login as apiLogin } from '@/api/auth';
 import styles from './login.module.css';
 import { LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Input } from '@/components/ui/Input';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -50,26 +51,24 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
-            <label htmlFor="email" className={styles.label}>Email Address</label>
-            <input
+            <Input
+              label="Email Address"
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={styles.input}
               placeholder="you@example.com"
               required
             />
           </div>
 
           <div className={styles.inputGroup}>
-            <label htmlFor="password" className={styles.label}>Password</label>
-            <input
+            <Input
+              label="Password"
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={styles.input}
               placeholder="••••••••"
               required
             />

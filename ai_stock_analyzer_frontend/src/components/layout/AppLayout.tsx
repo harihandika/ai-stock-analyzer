@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { LayoutDashboard, LineChart, Star, Settings, LogOut, Search, Bell, User as UserIcon, Moon } from 'lucide-react';
+import { LayoutDashboard, LineChart, Star, Settings, LogOut, Search, Bell, User as UserIcon, Moon, Menu } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { apiClient } from '@/services/api';
@@ -23,6 +23,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -97,8 +98,16 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className={styles.layoutContainer}>
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-10 md:hidden backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
-      <aside className={styles.sidebar}>
+      <aside className={clsx(styles.sidebar, isMobileMenuOpen && styles.mobileOpen)}>
         <div className={styles.sidebarHeader}>
           <div className={styles.logoIcon}>
             <LineChart width={20} height={20} color="#60a5fa" />
@@ -141,7 +150,14 @@ export function AppLayout({ children }: AppLayoutProps) {
       <main className={styles.mainContent}>
         {/* Top Header */}
         <header className={styles.topHeader}>
-          <form ref={searchRef} onSubmit={handleSearch} className={styles.searchForm}>
+          <div className="flex items-center">
+            <button 
+              className={styles.mobileMenuBtn}
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu width={24} height={24} />
+            </button>
+            <form ref={searchRef} onSubmit={handleSearch} className={styles.searchForm}>
             <Search className={styles.searchIcon} />
             <input
               type="text"
@@ -179,6 +195,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               </div>
             )}
           </form>
+          </div>
 
           <div className={styles.headerActions}>
             <div ref={notificationsRef} style={{ position: 'relative' }}>
@@ -192,8 +209,9 @@ export function AppLayout({ children }: AppLayoutProps) {
               {isNotificationsOpen && (
                 <div className={styles.dropdown} style={{ minWidth: '250px' }}>
                   <div className={styles.dropdownHeader}>Notifications</div>
-                  <div className={styles.dropdownItem} style={{ justifyContent: 'center', padding: '20px 16px', color: 'var(--text-muted)' }}>
-                    Belum ada notifikasi baru
+                  <div className={styles.dropdownItem} style={{ flexDirection: 'column', alignItems: 'flex-start', padding: '12px 16px', gap: '4px' }}>
+                    <span style={{ fontSize: '0.875rem', color: 'white' }}>Data pasar disinkronisasi</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sistem berhasil memperbarui data bursa hari ini.</span>
                   </div>
                 </div>
               )}
@@ -212,9 +230,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <Link href="/settings" className={styles.dropdownItem} onClick={() => setIsSettingsOpen(false)}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><UserIcon size={16} /> Profil</span>
                   </Link>
-                  <button className={styles.dropdownItem}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Moon size={16} /> Tema Gelap</span>
-                  </button>
                   <div style={{ height: '1px', background: 'var(--glass-border)', margin: '4px 0' }}></div>
                   <button onClick={logout} className={styles.dropdownItem} style={{ color: '#fb7185' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><LogOut size={16} /> Sign Out</span>

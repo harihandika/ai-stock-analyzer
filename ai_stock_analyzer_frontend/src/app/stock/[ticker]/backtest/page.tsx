@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import AppLayout from '@/components/layout/AppLayout';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { runBacktest } from '@/services/api';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Play, TrendingUp, TrendingDown, Target, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Play, TrendingUp, TrendingDown, Target, AlertTriangle, Settings } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
 

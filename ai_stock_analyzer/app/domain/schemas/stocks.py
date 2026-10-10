@@ -52,6 +52,17 @@ class DailyPriceResponse(BaseModel):
     low: Decimal
     close: Decimal
     volume: int
+    ema_20: Decimal | None = None
+    ema_50: Decimal | None = None
+    ema_200: Decimal | None = None
+    rsi_14: Decimal | None = None
+    macd: Decimal | None = None
+    macd_signal: Decimal | None = None
+    
+    stopping_volume: bool | None = False
+    no_demand: bool | None = False
+    is_spring: bool | None = False
+    climactic_volume: bool | None = False
 
     model_config = {"from_attributes": True}
 

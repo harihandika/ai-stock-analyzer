@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AppLayout from '@/components/layout/AppLayout';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { getUserQuota, logout } from '@/services/api';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
