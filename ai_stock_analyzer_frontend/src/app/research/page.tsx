@@ -10,6 +10,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { TradePlans } from "@/components/TradePlans";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { DataStatus } from "@/components/stock/DataStatus";
 import { apiClient, errorMessage } from "@/services/api";
@@ -18,7 +19,7 @@ import { MarketMetadata, formatPrice } from "@/services/market";
 
 const inputClass = "w-full rounded border border-slate-600 bg-slate-900 p-3";
 const actionClass =
-  "rounded border border-sky-500 px-4 py-2 disabled:opacity-50";
+  "inline-flex min-h-11 items-center justify-center rounded border border-sky-500 px-4 py-2 disabled:opacity-50";
 type Criteria = Record<string, string | number | boolean | null>;
 type Preset = {
   id: string;
@@ -602,7 +603,7 @@ function Monitoring({ initialTicker }: { initialTicker: string }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const load = useCallback(async (signal?: AbortSignal) => {
-    const options = signal ? {signal, skipAuthRefresh: true} : {};
+    const options = signal ? { signal, skipAuthRefresh: true } : {};
     const r = await Promise.all([
       apiClient.get("/alerts", options),
       apiClient.get("/notifications", options),
@@ -792,260 +793,6 @@ function Monitoring({ initialTicker }: { initialTicker: string }) {
   );
 }
 
-type Plan = {
-  id: string;
-  ticker: string;
-  version: number;
-  needs_review: boolean;
-  versions: unknown[];
-  details: {
-    input: Record<string, string | number>;
-    calculation: {
-      shares: number;
-      lots: number;
-      purchase_value: number;
-      estimated_risk: number;
-      remaining_capital: number;
-      reward_risk_before_fees: number;
-      limitations: string;
-    };
-  };
-};
-function Plans({ initialTicker }: { initialTicker: string }) {
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [editing, setEditing] = useState<Plan | null>(null);
-  const [calculation, setCalculation] = useState<
-    Plan["details"]["calculation"] | null
-  >(null);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const load = useCallback(
-    () => apiClient.get("/trade-plans").then((r) => setPlans(r.data.data)),
-    [],
-  );
-  useEffect(() => {
-    void load().catch((e) => setError(errorMessage(e)));
-  }, [load]);
-  const submit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const body: Record<string, string | number> = {};
-    const text = ["ticker", "currency", "horizon", "reason", "invalidation"];
-    f.forEach((v, k) => {
-      body[k] = text.includes(k) ? String(v) : Number(v);
-    });
-    setBusy(true);
-    setError("");
-    try {
-      const action = (e.nativeEvent as SubmitEvent).submitter?.getAttribute(
-        "value",
-      );
-      if (action === "calculate")
-        setCalculation(
-          (await apiClient.post("/trade-plans/calculate", body)).data,
-        );
-      else {
-        if (editing)
-          await apiClient.put("/trade-plans/" + editing.id, {
-            ...body,
-            expected_version: editing.version,
-          });
-        else await apiClient.post("/trade-plans", body);
-        setEditing(null);
-        await load();
-      }
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
-  };
-  const defaults: Record<string, string | number> = editing?.details.input || {
-    ticker: initialTicker,
-    currency: initialTicker.endsWith(".JK") ? "IDR" : "USD",
-    lot_size: initialTicker.endsWith(".JK") ? 100 : 1,
-    entry_low: "",
-    entry_high: "",
-    entry: "",
-    stop: "",
-    target: "",
-    capital: 10000000,
-    risk_pct: 1,
-    buy_fee_bps: 0,
-    sell_fee_bps: 0,
-    slippage_bps: 0,
-  };
-  const numericFields = [
-    ["entry_low", "Area entry bawah"],
-    ["entry_high", "Area entry atas"],
-    ["entry", "Harga entry perhitungan"],
-    ["stop", "Stop"],
-    ["target", "Target"],
-    ["capital", "Modal"],
-    ["risk_pct", "Batas risiko modal (%)"],
-    ["lot_size", "Lembar per lot"],
-    ["buy_fee_bps", "Fee beli (bps)"],
-    ["sell_fee_bps", "Fee jual (bps)"],
-    ["slippage_bps", "Slippage (bps)"],
-  ];
-  return (
-    <section className="space-y-4">
-      <h2 className="text-2xl font-semibold">Rencana transaksi</h2>
-      <p>
-        Semua angka pada formulir adalah input pengguna, bukan saran AI. Biaya
-        awal 0 perlu Anda sesuaikan; 10 bps = 0,1%. Hanya simulasi long, tanpa
-        pengiriman order broker.
-      </p>
-      <form
-        key={editing?.id || "new"}
-        onSubmit={submit}
-        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-      >
-        <Field
-          name="ticker"
-          label="Kode saham rencana"
-          defaultValue={defaults.ticker}
-          required
-        />
-        <Field name="currency" label="Mata uang modal">
-          <select
-            name="currency"
-            defaultValue={String(defaults.currency)}
-            className={inputClass}
-          >
-            <option>IDR</option>
-            <option>USD</option>
-          </select>
-        </Field>
-        {numericFields.map(([name, label]) => (
-          <Field
-            key={name}
-            name={name}
-            label={label}
-            type="number"
-            required
-            defaultValue={defaults[name]}
-          />
-        ))}
-        {[
-          ["horizon", "Horizon"],
-          ["reason", "Alasan berbasis data"],
-          ["invalidation", "Kondisi pembatalan"],
-        ].map(([name, label]) => (
-          <Field
-            key={name}
-            name={name}
-            label={label}
-            required
-            defaultValue={defaults[name]}
-          />
-        ))}
-        <button
-          name="action"
-          value="calculate"
-          disabled={busy}
-          className={actionClass}
-        >
-          Hitung risiko dan lot
-        </button>
-        <button
-          name="action"
-          value="save"
-          disabled={busy}
-          className={actionClass}
-        >
-          {editing ? "Simpan versi baru" : "Simpan rencana"}
-        </button>
-        {editing && (
-          <button
-            type="button"
-            className={actionClass}
-            onClick={() => setEditing(null)}
-          >
-            Batal edit
-          </button>
-        )}
-      </form>
-      <Status error={error} busy={busy} />
-      {calculation && (
-        <div role="status" className="border border-sky-700 rounded p-4">
-          <p>
-            {calculation.shares} lembar / {calculation.lots} lot · Reward/risk
-            sebelum biaya {calculation.reward_risk_before_fees.toFixed(2)}:1
-          </p>
-          <p>
-            Nilai beli termasuk estimasi biaya{" "}
-            {calculation.purchase_value.toLocaleString("id-ID")} · Risiko{" "}
-            {calculation.estimated_risk.toLocaleString("id-ID")} · Sisa modal{" "}
-            {calculation.remaining_capital.toLocaleString("id-ID")}
-          </p>
-          <p>{calculation.limitations}</p>
-        </div>
-      )}
-      {plans.map((p) => (
-        <article
-          key={p.id}
-          className="border border-slate-700 rounded p-4 space-y-2"
-        >
-          <h3>
-            {p.ticker} · Versi {p.version} · {p.versions.length} versi
-            sebelumnya
-          </h3>
-          <p>
-            {p.needs_review
-              ? "Data berubah; tinjau rencana ini."
-              : "Revisi data sesuai saat disimpan."}
-          </p>
-          <p>
-            {p.details.calculation.shares} lembar / {p.details.calculation.lots}{" "}
-            lot · Risiko{" "}
-            {formatPrice(
-              p.details.calculation.estimated_risk,
-              String(p.details.input.currency),
-            )}
-          </p>
-          <p>
-            Entry {p.details.input.entry} · Stop {p.details.input.stop} · Target{" "}
-            {p.details.input.target}
-          </p>
-          <p>
-            {p.details.input.reason} · Batal jika:{" "}
-            {p.details.input.invalidation}
-          </p>
-          <div className="flex gap-3">
-            <button
-              className={actionClass}
-              onClick={() => {
-                setEditing(p);
-                setCalculation(null);
-              }}
-            >
-              Edit rencana
-            </button>
-            <button
-              className={actionClass}
-              disabled={busy}
-              onClick={async () => {
-                setBusy(true);
-                try {
-                  await apiClient.delete("/trade-plans/" + p.id);
-                  await load();
-                } catch (e) {
-                  setError(errorMessage(e));
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            >
-              Hapus rencana
-            </button>
-          </div>
-        </article>
-      ))}
-    </section>
-  );
-}
-
 function Workbench() {
   const params = useSearchParams();
   const tab = params.get("tab") || "screener";
@@ -1079,7 +826,7 @@ function Workbench() {
           ) : tab === "monitoring" ? (
             <Monitoring initialTicker={ticker} />
           ) : tab === "plans" ? (
-            <Plans initialTicker={ticker} />
+            <TradePlans initialTicker={ticker} />
           ) : (
             <Screener />
           )}

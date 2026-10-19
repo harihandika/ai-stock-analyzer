@@ -9,7 +9,7 @@ import {
   HistogramSeries,
   LineSeries,
 } from "lightweight-charts";
-import clsx from "clsx";
+import { formatPrice } from "@/services/market";
 
 export interface ChartData {
   time: string; // 'YYYY-MM-DD'
@@ -34,9 +34,15 @@ interface StockChartProps {
   data: ChartData[];
   width?: number;
   height?: number;
+  currency?: string | null;
 }
 
-export function StockChart({ data, width = 0, height = 400 }: StockChartProps) {
+export function StockChart({
+  data,
+  width = 0,
+  height = 400,
+  currency,
+}: StockChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const rsiContainerRef = useRef<HTMLDivElement>(null);
   const macdContainerRef = useRef<HTMLDivElement>(null);
@@ -261,11 +267,12 @@ export function StockChart({ data, width = 0, height = 400 }: StockChartProps) {
     const charts = [chart, rsiChart, macdChart].filter(Boolean) as IChartApi[];
 
     charts.forEach((c) => {
+      c.subscribeClick((param) => {
+        const point = data.find((d) => d.time === param.time);
+        if (point) setHover({ source: data, point });
+      });
       c.subscribeCrosshairMove((param) => {
-        if (!param.point || !param.time) {
-          if (data.length > 0)
-            setHover({ source: data, point: data[data.length - 1] });
-        } else {
+        if (param.point && param.time) {
           const currentData = data.find((d) => d.time === param.time);
           if (currentData) setHover({ source: data, point: currentData });
         }
@@ -300,128 +307,102 @@ export function StockChart({ data, width = 0, height = 400 }: StockChartProps) {
     };
   }, [data, width, height, hasRsi, hasMacd]);
 
+  const selectedIndex = legendData ? data.indexOf(legendData) : 0;
+  const indicator = (value: number | null | undefined) =>
+    value == null
+      ? "Belum tersedia"
+      : value.toLocaleString("id-ID", { maximumFractionDigits: 4 });
   return (
-    <div className="w-full relative flex flex-col gap-1 group">
-      {/* Legend Overlay */}
-      {legendData && (
-        <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 pointer-events-none bg-slate-900/60 backdrop-blur-md p-3 rounded-lg border border-slate-700/50 shadow-lg text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="flex gap-3 text-slate-300 font-mono">
-            <span className="font-semibold text-slate-400">
-              {legendData.time}
-            </span>
-            <span>
-              O:{" "}
-              <span
-                className={clsx(
-                  legendData.open <= legendData.close
-                    ? "text-emerald-400"
-                    : "text-rose-400",
-                )}
-              >
-                {legendData.open.toLocaleString()}
-              </span>
-            </span>
-            <span>
-              H:{" "}
-              <span
-                className={clsx(
-                  legendData.open <= legendData.close
-                    ? "text-emerald-400"
-                    : "text-rose-400",
-                )}
-              >
-                {legendData.high.toLocaleString()}
-              </span>
-            </span>
-            <span>
-              L:{" "}
-              <span
-                className={clsx(
-                  legendData.open <= legendData.close
-                    ? "text-emerald-400"
-                    : "text-rose-400",
-                )}
-              >
-                {legendData.low.toLocaleString()}
-              </span>
-            </span>
-            <span>
-              C:{" "}
-              <span
-                className={clsx(
-                  legendData.open <= legendData.close
-                    ? "text-emerald-400"
-                    : "text-rose-400",
-                )}
-              >
-                {legendData.close.toLocaleString()}
-              </span>
-            </span>
-            {legendData.volume != null && (
-              <span>
-                V:{" "}
-                <span className="text-slate-300">
-                  {(legendData.volume / 1000).toFixed(1)}k
-                </span>
-              </span>
-            )}
-          </div>
-          <div className="flex gap-3 font-medium">
-            {legendData.ema20 != null && (
-              <span className="text-yellow-500">
-                EMA(20): {legendData.ema20.toFixed(2)}
-              </span>
-            )}
-            {legendData.ema50 != null && (
-              <span className="text-blue-500">
-                EMA(50): {legendData.ema50.toFixed(2)}
-              </span>
-            )}
-            {legendData.ema200 != null && (
-              <span className="text-red-500">
-                EMA(200): {legendData.ema200.toFixed(2)}
-              </span>
-            )}
-            {legendData.rsi != null && (
-              <span className="text-purple-400 ml-2">
-                RSI: {legendData.rsi.toFixed(2)}
-              </span>
-            )}
-            {legendData.macd != null && (
-              <span className="text-sky-400">
-                MACD: {legendData.macd.toFixed(2)}
-              </span>
-            )}
-          </div>
-          <div className="flex gap-2 font-medium mt-1">
-            {legendData.stoppingVolume && (
-              <span className="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded text-[10px] uppercase">
-                Stopping Vol
-              </span>
-            )}
-            {legendData.isSpring && (
-              <span className="bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded text-[10px] uppercase">
-                Spring
-              </span>
-            )}
-            {legendData.noDemand && (
-              <span className="bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded text-[10px] uppercase">
-                No Demand
-              </span>
-            )}
-            {legendData.climacticVolume && (
-              <span className="bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded text-[10px] uppercase">
-                Climax
-              </span>
-            )}
-          </div>
-        </div>
-      )}
+    <div className="w-full min-w-0 flex flex-col gap-4">
       <div
         ref={chartContainerRef}
-        className="w-full"
-        style={{ height: height }}
+        className="w-full min-w-0"
+        style={{ height }}
       />
+      {legendData && (
+        <section
+          aria-label="Nilai candle dan indikator"
+          className="rounded border border-slate-700 bg-slate-900/80 p-3 space-y-3"
+          data-testid="candle-values"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p>
+              Candle{" "}
+              <time dateTime={legendData.time} data-testid="candle-date">
+                {legendData.time}
+              </time>{" "}
+              · {currency || "Currency belum terverifikasi"}
+            </p>
+            <button
+              type="button"
+              className="rounded border border-slate-600 px-3 py-2"
+              onClick={() =>
+                setHover({ source: data, point: data[data.length - 1] })
+              }
+            >
+              Candle terbaru
+            </button>
+          </div>
+          <label className="block space-y-1">
+            <span>Pilih candle</span>
+            <input
+              aria-label="Pilih candle"
+              aria-valuetext={legendData.time}
+              type="range"
+              className="w-full min-h-11"
+              min={0}
+              max={data.length - 1}
+              value={selectedIndex}
+              onChange={(e) =>
+                setHover({ source: data, point: data[Number(e.target.value)] })
+              }
+            />
+          </label>
+          <dl className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-2 text-sm">
+            {[
+              ["Open", formatPrice(legendData.open, currency)],
+              ["High", formatPrice(legendData.high, currency)],
+              ["Low", formatPrice(legendData.low, currency)],
+              ["Close", formatPrice(legendData.close, currency)],
+              ["Volume (lembar)", indicator(legendData.volume)],
+              [
+                "EMA (20)",
+                legendData.ema20 == null
+                  ? "Belum tersedia"
+                  : formatPrice(legendData.ema20, currency),
+              ],
+              [
+                "EMA (50)",
+                legendData.ema50 == null
+                  ? "Belum tersedia"
+                  : formatPrice(legendData.ema50, currency),
+              ],
+              [
+                "EMA (200)",
+                legendData.ema200 == null
+                  ? "Belum tersedia"
+                  : formatPrice(legendData.ema200, currency),
+              ],
+              ["RSI (14)", indicator(legendData.rsi)],
+              ["MACD", indicator(legendData.macd)],
+              ["MACD signal", indicator(legendData.macdSignal)],
+            ].map(([label, value]) => (
+              <div key={label} className="min-w-0">
+                <dt className="text-slate-400">{label}</dt>
+                <dd className="break-words font-mono" data-value={label}>
+                  {value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <div className="flex flex-wrap gap-2 text-xs">
+            {legendData.stoppingVolume && <span>Stopping Volume</span>}
+            {legendData.isSpring && <span>Spring</span>}
+            {legendData.noDemand && <span>No Demand</span>}
+            {legendData.climacticVolume && <span>Climactic Volume</span>}
+          </div>
+        </section>
+      )}
       {hasRsi && <div ref={rsiContainerRef} className="w-full h-[120px]" />}
       {hasMacd && <div ref={macdContainerRef} className="w-full h-[120px]" />}
     </div>

@@ -120,6 +120,7 @@ def main():
         assert download.value.suggested_filename.endswith(".csv")
         print("PASS full-universe screener, saved filter, analysis history and CSV")
         page.goto(BASE + "/research?tab=plans&ticker=BBCA.JK", wait_until="domcontentloaded")
+        page.get_by_text("2. Lengkapi rencana untuk disimpan", exact=True).click()
         for name, value in [
             ("Area entry bawah", "990"),
             ("Area entry atas", "1010"),

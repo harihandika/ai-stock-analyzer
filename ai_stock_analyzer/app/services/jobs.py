@@ -41,6 +41,20 @@ async def submit(db, user, data):
         (ticker + ":".join(ai_identity()) + settings.MARKET_DATA_PROVIDER + PROMPT_VERSION).encode()
     ).hexdigest()
     key = hashlib.sha256(data.idempotency_key.encode()).hexdigest()
+    # Committed idempotent replays do not need a write lock or another commit.
+    # New acceptances still recheck after the per-user lock below.
+    existing = await db.scalar(
+        select(AnalysisJob).where(AnalysisJob.user_id == user.id, AnalysisJob.request_key == key)
+    )
+    if existing:
+        if existing.fingerprint != fingerprint:
+            raise api_error(
+                "IDEMPOTENCY_CONFLICT",
+                "Kunci job sudah dipakai untuk input lain.",
+                status=409,
+                stage="queued",
+            )
+        return existing
     # Serialize acceptance per account, including requests with different keys.
     # A read-then-insert check alone can admit duplicate jobs from two tabs.
     await db.execute(

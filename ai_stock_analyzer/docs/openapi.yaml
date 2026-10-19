@@ -1148,7 +1148,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PlanInput'
+              $ref: '#/components/schemas/PlanCalculationInput'
         required: true
       responses:
         '200':
@@ -2371,7 +2371,7 @@ components:
       - current_password
       - new_password
       title: PasswordChange
-    PlanInput:
+    PlanCalculationInput:
       properties:
         ticker:
           type: string
@@ -2384,14 +2384,6 @@ components:
           - IDR
           - USD
           title: Currency
-        entry_low:
-          type: number
-          exclusiveMinimum: 0.0
-          title: Entry Low
-        entry_high:
-          type: number
-          exclusiveMinimum: 0.0
-          title: Entry High
         entry:
           type: number
           exclusiveMinimum: 0.0
@@ -2437,6 +2429,117 @@ components:
           minimum: 0.0
           title: Slippage Bps
           default: 0
+        entry_low:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: 'null'
+          title: Entry Low
+        entry_high:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: 'null'
+          title: Entry High
+        horizon:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Horizon
+        reason:
+          anyOf:
+          - type: string
+            maxLength: 2000
+            minLength: 1
+          - type: 'null'
+          title: Reason
+        invalidation:
+          anyOf:
+          - type: string
+            maxLength: 2000
+            minLength: 1
+          - type: 'null'
+          title: Invalidation
+      additionalProperties: false
+      type: object
+      required:
+      - ticker
+      - currency
+      - entry
+      - stop
+      - target
+      - capital
+      - risk_pct
+      - lot_size
+      title: PlanCalculationInput
+    PlanInput:
+      properties:
+        ticker:
+          type: string
+          maxLength: 20
+          minLength: 1
+          title: Ticker
+        currency:
+          type: string
+          enum:
+          - IDR
+          - USD
+          title: Currency
+        entry:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Entry
+        stop:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Stop
+        target:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Target
+        capital:
+          type: number
+          maximum: 1000000000000000.0
+          exclusiveMinimum: 0.0
+          title: Capital
+        risk_pct:
+          type: number
+          maximum: 100.0
+          exclusiveMinimum: 0.0
+          title: Risk Pct
+        lot_size:
+          type: integer
+          maximum: 100000.0
+          minimum: 1.0
+          title: Lot Size
+        buy_fee_bps:
+          type: number
+          maximum: 1000.0
+          minimum: 0.0
+          title: Buy Fee Bps
+          default: 0
+        sell_fee_bps:
+          type: number
+          maximum: 1000.0
+          minimum: 0.0
+          title: Sell Fee Bps
+          default: 0
+        slippage_bps:
+          type: number
+          maximum: 1000.0
+          minimum: 0.0
+          title: Slippage Bps
+          default: 0
+        entry_low:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Entry Low
+        entry_high:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Entry High
         horizon:
           type: string
           maxLength: 200
@@ -2457,14 +2560,14 @@ components:
       required:
       - ticker
       - currency
-      - entry_low
-      - entry_high
       - entry
       - stop
       - target
       - capital
       - risk_pct
       - lot_size
+      - entry_low
+      - entry_high
       - horizon
       - reason
       - invalidation
@@ -2541,14 +2644,6 @@ components:
           - IDR
           - USD
           title: Currency
-        entry_low:
-          type: number
-          exclusiveMinimum: 0.0
-          title: Entry Low
-        entry_high:
-          type: number
-          exclusiveMinimum: 0.0
-          title: Entry High
         entry:
           type: number
           exclusiveMinimum: 0.0
@@ -2594,6 +2689,14 @@ components:
           minimum: 0.0
           title: Slippage Bps
           default: 0
+        entry_low:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Entry Low
+        entry_high:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Entry High
         horizon:
           type: string
           maxLength: 200
@@ -2618,14 +2721,14 @@ components:
       required:
       - ticker
       - currency
-      - entry_low
-      - entry_high
       - entry
       - stop
       - target
       - capital
       - risk_pct
       - lot_size
+      - entry_low
+      - entry_high
       - horizon
       - reason
       - invalidation

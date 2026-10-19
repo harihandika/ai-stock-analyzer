@@ -69,11 +69,9 @@ class PresetCreate(StrictInput):
     criteria: ScreenCriteria
 
 
-class PlanInput(StrictInput):
+class PlanCalculationInput(StrictInput):
     ticker: str = Field(min_length=1, max_length=20)
     currency: Literal["IDR", "USD"]
-    entry_low: float = Field(gt=0, allow_inf_nan=False)
-    entry_high: float = Field(gt=0, allow_inf_nan=False)
     entry: float = Field(gt=0, allow_inf_nan=False)
     stop: float = Field(gt=0, allow_inf_nan=False)
     target: float = Field(gt=0, allow_inf_nan=False)
@@ -83,16 +81,39 @@ class PlanInput(StrictInput):
     buy_fee_bps: float = Field(default=0, ge=0, le=1000, allow_inf_nan=False)
     sell_fee_bps: float = Field(default=0, ge=0, le=1000, allow_inf_nan=False)
     slippage_bps: float = Field(default=0, ge=0, le=1000, allow_inf_nan=False)
+    # Full legacy calculation payloads remain accepted explicitly. These fields
+    # are not required to try a calculation, and are never invented by the API.
+    entry_low: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    entry_high: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    horizon: str | None = Field(default=None, min_length=1, max_length=200)
+    reason: str | None = Field(default=None, min_length=1, max_length=2000)
+    invalidation: str | None = Field(default=None, min_length=1, max_length=2000)
+
+    @model_validator(mode="after")
+    def prices(self):
+        if not self.stop < self.entry < self.target:
+            raise ValueError("Gunakan stop < entry < target dan entry di dalam area entry.")
+        if (self.entry_low is not None and self.entry_low > self.entry) or (
+            self.entry_high is not None and self.entry_high < self.entry
+        ):
+            raise ValueError("Entry harus berada di dalam area entry.")
+        return self
+
+
+class PlanInput(PlanCalculationInput):
+    entry_low: float = Field(gt=0, allow_inf_nan=False)
+    entry_high: float = Field(gt=0, allow_inf_nan=False)
     horizon: str = Field(min_length=1, max_length=200)
     reason: str = Field(min_length=1, max_length=2000)
     invalidation: str = Field(min_length=1, max_length=2000)
 
     @model_validator(mode="after")
-    def prices(self):
-        if not (
-            self.entry_low <= self.entry <= self.entry_high and self.stop < self.entry < self.target
-        ):
-            raise ValueError("Gunakan stop < entry < target dan entry di dalam area entry.")
+    def complete(self):
+        for key in ("horizon", "reason", "invalidation"):
+            value = getattr(self, key).strip()
+            if not value:
+                raise ValueError("Horizon, alasan dan kondisi pembatalan wajib diisi.")
+            setattr(self, key, value)
         return self
 
 

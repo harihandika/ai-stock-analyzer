@@ -13,6 +13,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -105,6 +106,7 @@ class DailyPrice(Base):
     """
 
     __tablename__ = "daily_prices"
+    __table_args__ = (Index("ix_daily_prices_stock_date", "stock_ticker", "trading_date"),)
 
     id: Mapped[int] = mapped_column(
         BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True
@@ -134,6 +136,7 @@ class TechnicalIndicator(Base):
     """
 
     __tablename__ = "technical_indicators"
+    __table_args__ = (Index("ix_technical_indicators_stock_date", "stock_ticker", "trading_date"),)
 
     id: Mapped[int] = mapped_column(
         BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True

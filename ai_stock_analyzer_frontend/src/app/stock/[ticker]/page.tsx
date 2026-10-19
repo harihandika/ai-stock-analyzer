@@ -152,7 +152,8 @@ function StockDetail({ ticker }: { ticker: string }) {
     const timer = setInterval(async () => {
       try {
         const r = await apiClient.get("/analysis/jobs/" + jobId, {
-          signal: c.signal, skipAuthRefresh: true,
+          signal: c.signal,
+          skipAuthRefresh: true,
         });
         if (c.signal.aborted) return;
         if (r.data.status === "failed")
@@ -361,7 +362,10 @@ function StockDetail({ ticker }: { ticker: string }) {
                 {loading ? (
                   <p role="status">Memuat grafik…</p>
                 ) : visible.length ? (
-                  <StockChart data={visible} />
+                  <StockChart
+                    data={visible}
+                    currency={quote?.metadata.currency || metadata?.currency}
+                  />
                 ) : (
                   <p>
                     Data historis belum tersedia. Sinkronkan data untuk memulai.

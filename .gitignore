@@ -35,6 +35,9 @@ ENV/
 
 # ---- Database ----
 *.db
+*.db-journal
+*.db-wal
+*.db-shm
 *.sqlite3
 test.db
 

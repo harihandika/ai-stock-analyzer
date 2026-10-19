@@ -434,55 +434,58 @@ async def get_stock_chart(
 
     # Ambil data harga sesuai pagination, diurutkan desc lalu direverse
     offset = (page - 1) * per_page
-    prices_result = await db.execute(
-        select(DailyPrice, TechnicalIndicator)
-        .outerjoin(
-            TechnicalIndicator,
-            (DailyPrice.stock_ticker == TechnicalIndicator.stock_ticker)
-            & (DailyPrice.trading_date == TechnicalIndicator.trading_date),
+    price_columns = [
+        DailyPrice.trading_date,
+        DailyPrice.open,
+        DailyPrice.high,
+        DailyPrice.low,
+        DailyPrice.close,
+        DailyPrice.volume,
+    ]
+    indicator_names = ["ema_20", "ema_50", "ema_200", "rsi_14", "macd", "macd_signal"]
+    signal_names = ["stopping_volume", "no_demand", "is_spring", "climactic_volume"]
+    rows = (
+        (
+            await db.execute(
+                select(
+                    *price_columns,
+                    *(getattr(TechnicalIndicator, key) for key in indicator_names),
+                    *(
+                        func.coalesce(getattr(TechnicalIndicator, key), False).label(key)
+                        for key in signal_names
+                    ),
+                )
+                .outerjoin(
+                    TechnicalIndicator,
+                    (DailyPrice.stock_ticker == TechnicalIndicator.stock_ticker)
+                    & (DailyPrice.trading_date == TechnicalIndicator.trading_date),
+                )
+                .where(DailyPrice.stock_ticker == ticker.upper())
+                .order_by(desc(DailyPrice.trading_date))
+                .offset(offset)
+                .limit(per_page)
+            )
         )
-        .where(DailyPrice.stock_ticker == ticker.upper())
-        .order_by(desc(DailyPrice.trading_date))
-        .offset(offset)
-        .limit(per_page)
+        .mappings()
+        .all()
     )
-    rows = prices_result.all()
-
-    response.headers["X-Total-Count"] = str(total)
-
-    data = []
-    for price, ind in reversed(rows):
-        p_dict = {
-            "trading_date": price.trading_date,
-            "open": price.open,
-            "high": price.high,
-            "low": price.low,
-            "close": price.close,
-            "volume": price.volume,
-        }
-        if ind:
-            p_dict["ema_20"] = ind.ema_20
-            p_dict["ema_50"] = ind.ema_50
-            p_dict["ema_200"] = ind.ema_200
-            p_dict["rsi_14"] = ind.rsi_14
-            p_dict["macd"] = ind.macd
-            p_dict["macd_signal"] = ind.macd_signal
-            p_dict["stopping_volume"] = ind.stopping_volume
-            p_dict["no_demand"] = ind.no_demand
-            p_dict["is_spring"] = ind.is_spring
-            p_dict["climactic_volume"] = ind.climactic_volume
-        data.append(DailyPriceResponse(**p_dict))
-
-    # Kembalikan dalam urutan kronologis (ascending) untuk chart
-    return PaginatedResponse(
-        data=data,
-        metadata=metadata(stock, rows[0][0].trading_date if rows else None),
+    # Validate once and serialize through Pydantic's JSON serializer. Returning
+    # an already validated response avoids rebuilding thousands of ORM objects
+    # and a second FastAPI validation pass for concurrent five-year charts.
+    result = PaginatedResponse[DailyPriceResponse](
+        data=[DailyPriceResponse(**row) for row in reversed(rows)],
+        metadata=metadata(stock, rows[0]["trading_date"] if rows else None),
         pagination=PaginationMeta(
             page=page,
             per_page=per_page,
             total=total,
             total_pages=math.ceil(total / per_page) if total > 0 else 1,
         ),
+    )
+    return Response(
+        content=result.model_dump_json(),
+        media_type="application/json",
+        headers={"X-Total-Count": str(total)},
     )
 
 

@@ -45,7 +45,7 @@ def test_schema_upgrade_preserves_user_and_watchlist(tmp_path, monkeypatch, lega
     assert "analysis_quota_reserved" in {c["name"] for c in inspector.get_columns("users")}
     assert "provenance" in {c["name"] for c in inspector.get_columns("ai_analyses")}
     with engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "r2_product"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "r3_read_paths"
         if legacy:
             assert connection.scalar(text("SELECT analysis_quota_used FROM users")) == 2
             assert connection.scalar(text("SELECT notes FROM watchlists")) == "Keep this note"

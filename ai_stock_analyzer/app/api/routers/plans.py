@@ -6,7 +6,13 @@ from sqlalchemy import select, update
 from app.api.dependencies import get_current_active_user, get_db
 from app.api.routers.monitoring import owned
 from app.domain.models.models import Stock, TradePlan
-from app.domain.schemas.product import PlanInput, PlanList, PlanResponse, PlanUpdate
+from app.domain.schemas.product import (
+    PlanCalculationInput,
+    PlanInput,
+    PlanList,
+    PlanResponse,
+    PlanUpdate,
+)
 from app.services.market_metadata import as_utc, utcnow
 from app.services.trade_plans import calculate_plan
 
@@ -67,7 +73,9 @@ async def list_plans(db=Depends(get_db), user=Depends(get_current_active_user)):
 
 
 @router.post("/calculate")
-async def calculate(data: PlanInput, db=Depends(get_db), user=Depends(get_current_active_user)):
+async def calculate(
+    data: PlanCalculationInput, db=Depends(get_db), user=Depends(get_current_active_user)
+):
     await validate_instrument(db, data)
     return calculate_plan(data)
 

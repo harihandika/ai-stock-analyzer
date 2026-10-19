@@ -47,7 +47,10 @@ export function AppLayout({ children }: AppLayoutProps) {
     const controller = new AbortController();
     const refresh = () =>
       apiClient
-        .get("/notifications", { signal: controller.signal, skipAuthRefresh: true })
+        .get("/notifications", {
+          signal: controller.signal,
+          skipAuthRefresh: true,
+        })
         .then((r) => {
           if (active) setUnread(r.data.unread);
         })
@@ -93,8 +96,22 @@ export function AppLayout({ children }: AppLayoutProps) {
         setIsNotificationsOpen(false);
       }
     }
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      for (const ref of [settingsRef, notificationsRef]) {
+        if (ref.current?.contains(document.activeElement))
+          ref.current.querySelector("button")?.focus();
+      }
+      setIsSearchOpen(false);
+      setIsSettingsOpen(false);
+      setIsNotificationsOpen(false);
+    }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, []);
 
   useEffect(() => {
@@ -241,7 +258,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <main className={styles.mainContent}>
         {/* Top Header */}
         <header className={styles.topHeader}>
-          <div className="flex items-center">
+          <div className={styles.headerSearch}>
             <button
               className={styles.mobileMenuBtn}
               aria-label="Buka navigasi"
@@ -371,6 +388,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <button
                 className={styles.actionBtn}
                 aria-label="Notifikasi"
+                aria-expanded={isNotificationsOpen}
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
               >
                 <Bell width={20} height={20} />
@@ -416,6 +434,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <button
                 className={styles.actionBtn}
                 aria-label="Menu akun"
+                aria-expanded={isSettingsOpen}
                 onClick={() => setIsSettingsOpen(!isSettingsOpen)}
               >
                 <Settings width={20} height={20} />

@@ -9,25 +9,27 @@ from app.services.market_metadata import metadata
 
 
 async def screen(db, criteria, page=1, per_page=20):
-    latest = (
-        select(
-            DailyPrice.stock_ticker.label("ticker"), func.max(DailyPrice.trading_date).label("day")
-        )
-        .group_by(DailyPrice.stock_ticker)
-        .subquery()
+    # Probe each stock's ordered composite index instead of aggregating the
+    # entire multi-year price table for every filter/count/page request.
+    latest_day = (
+        select(DailyPrice.trading_date)
+        .where(DailyPrice.stock_ticker == Stock.ticker)
+        .order_by(DailyPrice.trading_date.desc())
+        .limit(1)
+        .correlate(Stock)
+        .scalar_subquery()
     )
     query = (
         select(Stock, DailyPrice, TechnicalIndicator)
-        .outerjoin(latest, latest.c.ticker == Stock.ticker)
         .outerjoin(
             DailyPrice,
-            and_(DailyPrice.stock_ticker == Stock.ticker, DailyPrice.trading_date == latest.c.day),
+            and_(DailyPrice.stock_ticker == Stock.ticker, DailyPrice.trading_date == latest_day),
         )
         .outerjoin(
             TechnicalIndicator,
             and_(
                 TechnicalIndicator.stock_ticker == Stock.ticker,
-                TechnicalIndicator.trading_date == latest.c.day,
+                TechnicalIndicator.trading_date == DailyPrice.trading_date,
             ),
         )
         .where(Stock.is_active.is_(True))

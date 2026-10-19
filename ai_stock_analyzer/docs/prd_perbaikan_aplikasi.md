@@ -1,5 +1,7 @@
 # PRD dan Rencana Perbaikan AI Stock Analyzer
 
+Tindak lanjut aktif setelah merge `d17f260` ke `main`: [PRD 1.2 pasca-audit](prd_perbaikan_pasca_audit_d17f260.md), berdasarkan [audit terbaru sesi Edit ai-stock-analyzer](review_audit_d17f260_2026-10-19.md). Gunakan dokumen tersebut untuk empat bug baru dan penerimaan operasional. PRD 1.1 di bawah tetap menjadi acuan kontrak dan jejak perencanaan sebelumnya.
+
 Versi: 1.1 — tindak lanjut feedback sesi “Edit ai-stock-analyzer”
 
 Tanggal revisi: 19 Oktober 2026, Asia/Jakarta (WIB). Versi awal: 18 Oktober 2026.

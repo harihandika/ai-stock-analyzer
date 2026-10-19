@@ -12,6 +12,7 @@ from app.domain.models.models import (
     DailyPrice,
     PasswordReset,
     Stock,
+    TechnicalIndicator,
 )
 from app.services.alerts import evaluate_alerts
 from app.services.jobs import process_one
@@ -34,6 +35,66 @@ PLAN = {
     "reason": "Pantau volume",
     "invalidation": "Harga di bawah support",
 }
+
+
+@pytest.mark.asyncio
+async def test_chart_preserves_precision_and_missing_indicator_contract(client, db_session):
+    from decimal import Decimal
+
+    from sqlalchemy import delete
+
+    await seed_market(db_session)
+    last = await db_session.scalar(select(func.max(DailyPrice.trading_date)))
+    await db_session.execute(
+        delete(TechnicalIndicator).where(TechnicalIndicator.trading_date == last)
+    )
+    await db_session.execute(
+        update(DailyPrice).where(DailyPrice.trading_date == last).values(close=Decimal("105.1234"))
+    )
+    await db_session.commit()
+    response = await client.get("/api/v1/stocks/BBCA.JK/chart?per_page=1")
+    assert response.status_code == 200
+    body = response.json()
+    assert response.headers["X-Total-Count"] == "60"
+    assert body["data"][0]["close"] == "105.1234"
+    assert body["data"][0]["rsi_14"] is None
+    assert body["data"][0]["stopping_volume"] is False
+    assert body["metadata"]["market_as_of"] == last.isoformat()
+    older = (await client.get("/api/v1/stocks/BBCA.JK/chart?per_page=1&page=2")).json()
+    assert float(older["data"][0]["rsi_14"]) == 55
+
+
+@pytest.mark.asyncio
+async def test_calculator_accepts_minimal_input_but_save_requires_complete_plan(client, db_session):
+    await seed_market(db_session)
+    headers = await login(client)
+    minimal = {
+        k: v
+        for k, v in PLAN.items()
+        if k not in {"entry_low", "entry_high", "horizon", "reason", "invalidation"}
+    }
+    result = await client.post("/api/v1/trade-plans/calculate", headers=headers, json=minimal)
+    assert result.status_code == 200, result.text
+    assert result.json()["lots"] == 20
+    smaller = await client.post(
+        "/api/v1/trade-plans/calculate", headers=headers, json={**minimal, "capital": 1000000}
+    )
+    assert smaller.json()["lots"] == 2
+    assert smaller.json()["estimated_risk"] == 10000
+    assert smaller.json()["remaining_capital"] == 800000
+    assert (
+        await client.post("/api/v1/trade-plans", headers=headers, json=minimal)
+    ).status_code == 422
+    assert (
+        await client.post("/api/v1/trade-plans", headers=headers, json={**PLAN, "reason": "   "})
+    ).status_code == 422
+    for invalid in [{"surprise": 1}, {"stop": 1100}, {"risk_pct": 0}, {"entry_low": 1100}]:
+        assert (
+            await client.post(
+                "/api/v1/trade-plans/calculate", headers=headers, json={**minimal, **invalid}
+            )
+        ).status_code == 422
+    assert (await client.get("/api/v1/trade-plans", headers=headers)).json()["data"] == []
 
 
 @pytest.mark.asyncio

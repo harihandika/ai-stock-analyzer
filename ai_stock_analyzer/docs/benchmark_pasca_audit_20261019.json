@@ -1,0 +1,114 @@
+{
+  "date_wib": "2026-10-19",
+  "baseline": "d17f260",
+  "scope": "Local disposable PostgreSQL, synthetic OHLCV, no upstream providers; not staging acceptance.",
+  "comparison_limits": "Query/serialization/index improvements AND worker count changed together. Shared cloud resources, 60 warm samples per endpoint; first round is not a guaranteed cold cache. Rate limits disabled only on this separate TESTING server; queued admission is not analysis completion.",
+  "before": {
+    "environment": "local_disposable_postgresql",
+    "provider": "synthetic_fixture_no_external_requests",
+    "users": 20,
+    "tickers": 100,
+    "bars_per_ticker": 1305,
+    "data_start": "2021-10-18",
+    "data_end": "2026-10-16",
+    "rate_limits": "disabled_only_in_separate_TESTING_server",
+    "worker": "not_started_admission_only",
+    "results": {
+      "list": {
+        "first_round_max_seconds": 0.2397,
+        "warm_p50_seconds": 0.1659,
+        "warm_p95_seconds": 0.9431,
+        "samples": 60,
+        "errors": 0,
+        "target_p95_seconds": 1
+      },
+      "price": {
+        "first_round_max_seconds": 0.1978,
+        "warm_p50_seconds": 0.0836,
+        "warm_p95_seconds": 0.1011,
+        "samples": 60,
+        "errors": 0,
+        "target_p95_seconds": 1
+      },
+      "chart_5y": {
+        "first_round_max_seconds": 3.1883,
+        "warm_p50_seconds": 2.0183,
+        "warm_p95_seconds": 3.1558,
+        "samples": 60,
+        "errors": 0,
+        "target_p95_seconds": 1
+      },
+      "screener": {
+        "first_round_max_seconds": 2.1653,
+        "warm_p50_seconds": 1.9722,
+        "warm_p95_seconds": 6.2256,
+        "samples": 60,
+        "errors": 0,
+        "target_p95_seconds": 1
+      },
+      "job_admission": {
+        "first_round_max_seconds": 10.0534,
+        "warm_p50_seconds": 1.0686,
+        "warm_p95_seconds": 3.392,
+        "samples": 60,
+        "errors": 0,
+        "target_p95_seconds": 1
+      }
+    },
+    "server_workers_configured_by_operator": 1
+  },
+  "after": {
+    "server_workers_configured_by_operator": 4,
+    "environment": "local_disposable_postgresql",
+    "provider": "synthetic_fixture_no_external_requests",
+    "users": 20,
+    "tickers": 100,
+    "bars_per_ticker": 1305,
+    "data_start": "2021-10-18",
+    "data_end": "2026-10-16",
+    "rate_limits": "disabled_only_in_separate_TESTING_server",
+    "worker": "not_started_admission_only",
+    "results": {
+      "list": {
+        "first_round_max_seconds": 0.5104,
+        "warm_p50_seconds": 0.0898,
+        "warm_p95_seconds": 0.1845,
+        "samples": 60,
+        "errors": 0,
+        "target_p95_seconds": 1
+      },
+      "price": {
+        "first_round_max_seconds": 0.188,
+        "warm_p50_seconds": 0.1257,
+        "warm_p95_seconds": 0.2385,
+        "samples": 60,
+        "errors": 0,
+        "target_p95_seconds": 1
+      },
+      "chart_5y": {
+        "first_round_max_seconds": 0.9985,
+        "warm_p50_seconds": 0.5575,
+        "warm_p95_seconds": 0.6927,
+        "samples": 60,
+        "errors": 0,
+        "target_p95_seconds": 1
+      },
+      "screener": {
+        "first_round_max_seconds": 0.6428,
+        "warm_p50_seconds": 0.3324,
+        "warm_p95_seconds": 0.4534,
+        "samples": 60,
+        "errors": 0,
+        "target_p95_seconds": 1
+      },
+      "job_admission": {
+        "first_round_max_seconds": 0.489,
+        "warm_p50_seconds": 0.192,
+        "warm_p95_seconds": 0.2922,
+        "samples": 60,
+        "errors": 0,
+        "target_p95_seconds": 1
+      }
+    }
+  }
+}

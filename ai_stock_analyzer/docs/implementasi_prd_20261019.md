@@ -2,7 +2,7 @@
 
 Tanggal: 19 Oktober 2026, WIB. Acuan: [PRD 1.1](prd_perbaikan_aplikasi.md), [review baseline 42d887a](review_pengguna_2026-10-19.md), dan implementasi R1 pada `541c281`.
 
-Perubahan berikut tersedia pada branch `work`. Ini laporan implementasi dan validasi lokal; gerbang rilis publik di bagian akhir masih terbuka.
+Perubahan berikut sudah digabungkan dari `work` ke `main` pada commit `d17f260`. Ini laporan implementasi dan validasi lokal; gerbang rilis publik di bagian akhir masih terbuka. Audit terpisah sesudah implementasi menemukan empat bug yang direncanakan dalam [PRD 1.2 pasca-audit](prd_perbaikan_pasca_audit_d17f260.md); laporan ini tidak menyatakan bug tersebut sudah diperbaiki.
 
 ## Perilaku yang tersedia
 

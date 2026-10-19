@@ -53,6 +53,8 @@ class Settings(BaseSettings):
     EODHD_API_KEY: str = ""
     EOD_PUBLICATION_DELAY_MINUTES: int | None = Field(default=None, ge=0, le=1440)
     MARKET_CALENDAR_VERIFIED: bool = False
+    EOD_INGESTION_ENABLED: bool = False
+    EOD_INGESTION_TICKERS: str = ""
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
     SMTP_HOST: str = ""

@@ -185,25 +185,30 @@
 
   .mobileMenuBtn {
     display: flex !important;
-    margin-right: 12px;
-  }
-
-  .searchForm {
-    max-width: 150px !important;
   }
 }
 
 .topHeader {
-  height: 80px;
+  min-height: 80px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
+  gap: 16px;
   background-color: rgba(18, 20, 29, 0.4);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--glass-border);
   z-index: 10;
+}
+
+.headerSearch {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
 }
 
 .mobileMenuBtn {
@@ -214,15 +219,21 @@
   cursor: pointer;
   padding: 8px;
   border-radius: 8px;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
 }
 .mobileMenuBtn:hover {
-  background-color: rgba(255,255,255,0.05);
+  background-color: rgba(255, 255, 255, 0.05);
   color: white;
 }
 
 .searchForm {
   position: relative;
   width: 384px;
+  max-width: 384px;
+  min-width: 0;
+  flex: 1;
 }
 
 .searchIcon {
@@ -260,11 +271,12 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-shrink: 0;
 }
 
 .actionBtn {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -316,7 +328,7 @@
 .searchDropdown {
   left: 0;
   right: auto;
-  width: 100%;
+  width: max(100%, min(320px, calc(100vw - 88px)));
   max-height: 300px;
   overflow-y: auto;
 }
@@ -334,6 +346,21 @@
   font-size: 0.875rem;
   cursor: pointer;
   transition: background-color 0.2s;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 768px) {
+  .topHeader {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .headerActions {
+    gap: 8px;
+  }
+  .pageContent {
+    padding: 16px;
+  }
 }
 
 .dropdownItem:hover {

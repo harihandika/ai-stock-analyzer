@@ -93,7 +93,7 @@ Buka aplikasi di browser: **http://localhost:3000**
 
 ```bash
 cd ai_stock_analyzer
-pytest tests/ --ignore=tests/worker -v
+.venv/bin/python -m pytest tests/ -q
 ```
 
 ---
@@ -101,8 +101,10 @@ pytest tests/ --ignore=tests/worker -v
 ## 📖 Dokumentasi Lengkap & Changelog
 
 - **[CHANGELOG.md](CHANGELOG.md)**: Catatan rilis lengkap dari Sprint 1 hingga Sprint 10.
-- **[OpenAPI Spec](docs/openapi.yaml)**: Dokumentasi API lengkap 15 endpoint.
-# Implementasi tindak lanjut PRD
+- **[OpenAPI Spec](docs/openapi.yaml)**: Kontrak API yang diekspor dari runtime.
+## Implementasi tindak lanjut PRD
+
+Rencana setelah audit commit `d17f260`: [PRD 1.2 pasca-audit](docs/prd_perbaikan_pasca_audit_d17f260.md). Perbaikan kalkulator/header/CSS/chart, formulir bertahap, informasi data serta alat operasional dicatat dalam [laporan implementasi pasca-audit](docs/implementasi_pasca_audit_20261019.md), termasuk gerbang provider/email/pilot yang belum selesai.
 
 Riset/pemantauan, job persisten, pilihan Gemini/EODHD, rencana transaksi, akun dan backtest berbiaya dijelaskan pada [laporan implementasi PRD](docs/implementasi_prd_20261019.md). Selain API dan frontend, jalankan worker produk terpisah dengan environment/database yang sama:
 
