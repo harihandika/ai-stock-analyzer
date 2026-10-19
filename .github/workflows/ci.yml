@@ -1,0 +1,114 @@
+name: Application checks
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: analyzer_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: ai_stock_analyzer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v6
+      - run: uv venv --python 3.12 .venv
+      - run: uv pip install --python .venv/bin/python -r requirements.txt
+      - name: Ephemeral test settings
+        run: |
+          .venv/bin/python - <<'PY'
+          from pathlib import Path
+          import secrets
+          Path(".env").write_text(
+              "DATABASE_URL=sqlite+aiosqlite:///./ci.db\n"
+              "SYNC_DATABASE_URL=sqlite:///./ci.db\n"
+              "ANTHROPIC_API_KEY=\nSECRET_KEY=" + secrets.token_hex(32) + "\n"
+          )
+          PY
+      - run: .venv/bin/python -m pytest tests/ -q
+      - name: PostgreSQL regression
+        env:
+          TEST_DATABASE_URL: postgresql+asyncpg://postgres@127.0.0.1:5432/analyzer_ci
+        run: .venv/bin/python -m pytest tests/ -q
+      - name: Published schema matches runtime
+        run: |
+          .venv/bin/python -m scripts.export_openapi
+          git diff --exit-code -- docs/openapi.yaml
+
+  browser:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: ai_stock_analyzer_frontend/package-lock.json
+      - name: Backend and browser dependencies
+        working-directory: ai_stock_analyzer
+        run: |
+          uv venv --python 3.12 .venv
+          uv pip install --python .venv/bin/python -r requirements.txt -r requirements-browser.txt
+          .venv/bin/python -m playwright install --with-deps chromium
+          .venv/bin/python - <<'PY'
+          from pathlib import Path
+          import secrets
+          Path(".env").write_text(
+              "DATABASE_URL=sqlite+aiosqlite:///./browser-r1.db\n"
+              "SYNC_DATABASE_URL=sqlite:///./browser-r1.db\n"
+              "ANTHROPIC_API_KEY=\nSECRET_KEY=" + secrets.token_hex(32) + "\n"
+          )
+          PY
+          .venv/bin/alembic upgrade head
+      - name: Frontend checks
+        working-directory: ai_stock_analyzer_frontend
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+      - name: Browser smoke with isolated provider fixtures
+        shell: bash
+        env:
+          BROWSER_SMOKE: '1'
+          TESTING: '1'
+        run: |
+          set -euo pipefail
+          cd ai_stock_analyzer
+          .venv/bin/python -m uvicorn tests.browser_app:app --host 127.0.0.1 --port 8000 > "$RUNNER_TEMP/backend.log" 2>&1 &
+          backend_pid=$!
+          cd ../ai_stock_analyzer_frontend
+          npm run start -- --hostname 127.0.0.1 --port 3001 > "$RUNNER_TEMP/frontend.log" 2>&1 &
+          frontend_pid=$!
+          trap 'kill "$backend_pid" "$frontend_pid" 2>/dev/null || true' EXIT
+          cd ../ai_stock_analyzer
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8000/health > /dev/null && curl --fail --silent http://127.0.0.1:3001/login > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          export BROWSER_EXECUTABLE="$(.venv/bin/python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
+          .venv/bin/python tests/browser_smoke.py

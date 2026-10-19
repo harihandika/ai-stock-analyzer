@@ -1,267 +1,1570 @@
-openapi: 3.0.3
+# Generated from app.main:app; regenerate with python -m scripts.export_openapi.
+openapi: 3.1.0
 info:
-  title: AI Stock Analyzer API
-  description: API untuk mengambil data harga saham historis, indikator teknikal (VPA/Wyckoff), dan analisis/rekomendasi harian berbasis AI.
+  title: AI Stock Analyzer
+  description: Platform analisis saham berbasis AI yang menggunakan Volume Price Analysis
+    (VPA), Wyckoff Theory, dan Smart Money Concepts (SMC) untuk mengidentifikasi peluang
+    investasi dengan probabilitas tinggi.
   version: 1.0.0
-servers:
-  - url: http://localhost:8000/api/v1
-    description: Local development server
-tags:
-  - name: Authentication
-    description: Endpoint otentikasi pengguna
-  - name: Stocks
-    description: Operasi terkait data emiten saham
-  - name: Analysis
-    description: Endpoint untuk mendapatkan hasil analisis teknikal dan AI
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-security:
-  - bearerAuth: []
 paths:
-  /auth/register:
+  /api/v1/auth/register:
     post:
       tags:
-        - Authentication
-      summary: Register akun pengguna baru
-      security: []
+      - Authentication
+      summary: Registrasi pengguna baru
+      description: Mendaftarkan akun pengguna baru. Email harus unik.
+      operationId: register_api_v1_auth_register_post
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                password:
-                  type: string
-                full_name:
-                  type: string
+              $ref: '#/components/schemas/UserRegisterRequest'
+        required: true
       responses:
         '201':
-          description: Created
-        '400':
-          description: Bad Request
-  /auth/token:
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/token:
     post:
       tags:
-        - Authentication
-      summary: Login pengguna untuk mendapatkan JWT Token
-      security: []
+      - Authentication
+      summary: Login dan dapatkan JWT Access Token
+      description: Autentikasi pengguna dengan email dan password. Mengembalikan JWT
+        token.
+      operationId: login_for_access_token_api_v1_auth_token_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/refresh:
+    post:
+      tags:
+      - Authentication
+      summary: Dapatkan Access Token baru menggunakan Refresh Token
+      description: Menghasilkan JWT access token baru menggunakan refresh token yang
+        valid.
+      operationId: refresh_token_api_v1_auth_refresh_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/logout:
+    post:
+      tags:
+      - Authentication
+      summary: Logout pengguna
+      description: Me-revoke refresh token sehingga tidak bisa digunakan lagi.
+      operationId: logout_api_v1_auth_logout_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/me:
+    get:
+      tags:
+      - Authentication
+      summary: Dapatkan data pengguna yang sedang login
+      description: Mengembalikan profil pengguna yang terautentikasi berdasarkan JWT
+        token.
+      operationId: get_current_user_profile_api_v1_auth_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+      security:
+      - OAuth2PasswordBearer: []
+  /api/v1/stocks:
+    get:
+      tags:
+      - Stocks
+      summary: Dapatkan daftar saham yang didukung
+      description: Mengembalikan semua emiten saham yang aktif di database.
+      operationId: list_stocks_api_v1_stocks_get
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          description: Nomor halaman
+          default: 1
+          title: Page
+        description: Nomor halaman
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Jumlah item per halaman
+          default: 20
+          title: Per Page
+        description: Jumlah item per halaman
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Pencarian ticker atau nama perusahaan
+          title: Q
+        description: Pencarian ticker atau nama perusahaan
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse_StockResponse_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stocks/recommendations:
+    get:
+      tags:
+      - Stocks
+      summary: Rekomendasi BUY dari seluruh saham aktif
+      operationId: recommendations_api_v1_stocks_recommendations_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - OAuth2PasswordBearer: []
+  /api/v1/stocks/{ticker}/price:
+    get:
+      tags:
+      - Stocks
+      summary: Harga penutupan harian terakhir yang tersimpan
+      operationId: get_realtime_price_api_v1_stocks__ticker__price_get
+      parameters:
+      - name: ticker
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ticker
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockQuoteResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stocks/{ticker}/sync:
+    post:
+      tags:
+      - Stocks
+      summary: Sinkronisasi data historis dan indikator (Manual/Admin)
+      description: Mengambil data dari yfinance, menghitung VPA & indikator teknikal,
+        lalu menyimpannya ke database.
+      operationId: sync_stock_data_api_v1_stocks__ticker__sync_post
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: ticker
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ticker
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stocks/{ticker}/chart:
+    get:
+      tags:
+      - Stocks
+      summary: Dapatkan data harga historis OHLCV
+      description: Mengembalikan data time-series harga untuk charting, dilengkapi
+        pagination.
+      operationId: get_stock_chart_api_v1_stocks__ticker__chart_get
+      parameters:
+      - name: ticker
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ticker
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          description: Nomor halaman
+          default: 1
+          title: Page
+        description: Nomor halaman
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 1825
+          minimum: 1
+          description: Jumlah data per halaman
+          default: 100
+          title: Per Page
+        description: Jumlah data per halaman
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse_DailyPriceResponse_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stocks/{ticker}/analysis/latest:
+    get:
+      tags:
+      - Stocks
+      summary: Dapatkan hasil analisis AI terbaru
+      description: Mengembalikan analisis VPA/Wyckoff dan rekomendasi AI terkini untuk
+        sebuah saham.
+      operationId: get_latest_analysis_api_v1_stocks__ticker__analysis_latest_get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: ticker
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ticker
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockAnalysisLatestResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stocks/watchlist:
+    get:
+      tags:
+      - Stocks
+      summary: Dapatkan daftar watchlist pengguna
+      description: Mengembalikan semua saham yang dipantau oleh pengguna yang sedang
+        login.
+      operationId: get_watchlist_api_v1_stocks_watchlist_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/WatchlistResponse'
+                type: array
+                title: Response Get Watchlist Api V1 Stocks Watchlist Get
+      security:
+      - OAuth2PasswordBearer: []
+    post:
+      tags:
+      - Stocks
+      summary: Tambah saham ke watchlist
+      description: Menambahkan emiten saham ke daftar pantau pengguna yang sedang
+        login.
+      operationId: add_to_watchlist_api_v1_stocks_watchlist_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WatchlistAddRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WatchlistResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - OAuth2PasswordBearer: []
+  /api/v1/stocks/watchlist/{ticker}:
+    delete:
+      tags:
+      - Stocks
+      summary: Hapus saham dari watchlist
+      description: Menghapus emiten saham dari daftar pantau pengguna yang sedang
+        login.
+      operationId: remove_from_watchlist_api_v1_stocks_watchlist__ticker__delete
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: ticker
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ticker
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - Stocks
+      summary: Update Watchlist Notes
+      operationId: update_watchlist_notes_api_v1_stocks_watchlist__ticker__patch
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: ticker
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ticker
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
+              $ref: '#/components/schemas/WatchlistUpdateRequest'
       responses:
         '200':
-          description: Login berhasil
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WatchlistResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/analysis/health:
+    get:
+      tags:
+      - Analysis
+      summary: Health check untuk Analysis engine
+      description: Memverifikasi bahwa modul analisis siap digunakan.
+      operationId: analysis_health_check_api_v1_analysis_health_get
+      responses:
+        '200':
+          description: Successful Response
           content:
             application/json:
               schema:
                 type: object
-                properties:
-                  access_token:
-                    type: string
-                  refresh_token:
-                    type: string
-                  token_type:
-                    type: string
-        '401':
-          description: Email atau password salah
-  /auth/refresh:
+                title: Response Analysis Health Check Api V1 Analysis Health Get
+      security:
+      - OAuth2PasswordBearer: []
+  /api/v1/analysis/{ticker}:
     post:
       tags:
-        - Authentication
-      summary: Refresh Access Token
-      security: []
+      - Analysis
+      summary: Jalankan analisis AI dari data tersinkronisasi
+      operationId: trigger_ai_analysis_api_v1_analysis__ticker__post
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: ticker
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ticker
+      - name: idempotency-key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Idempotency-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisExecutionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/analysis/{ticker}/backtest:
+    post:
+      tags:
+      - Analysis
+      summary: Backtest strategi teknikal harian
+      operationId: run_backtest_api_v1_analysis__ticker__backtest_post
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: ticker
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ticker
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                refresh_token:
-                  type: string
+              $ref: '#/components/schemas/BacktestRequest'
       responses:
         '200':
-          description: Token refreshed
-        '401':
-          description: Token invalid
-  /auth/logout:
-    post:
-      tags:
-        - Authentication
-      summary: Logout dan revoke token
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                refresh_token:
-                  type: string
-      responses:
-        '200':
-          description: Success
-  /auth/me:
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BacktestResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /health:
     get:
       tags:
-        - Authentication
-      summary: Dapatkan profil pengguna saat ini
+      - System
+      summary: Health Check
+      description: 'Health check endpoint.
+
+        Digunakan oleh UptimeRobot untuk memastikan server tetap aktif.'
+      operationId: health_check_health_get
       responses:
         '200':
-          description: Success
-  /stocks:
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Response Health Check Health Get
+  /:
     get:
       tags:
-        - Stocks
-      summary: Dapatkan daftar saham yang didukung
+      - System
+      summary: Root
+      description: Root endpoint with API information.
+      operationId: root__get
       responses:
         '200':
-          description: Success
-  /stocks/{ticker}/chart:
-    get:
-      tags:
-        - Stocks
-      summary: Dapatkan data harga riwayat (OHLCV) untuk chart
-      parameters:
-        - in: path
-          name: ticker
-          required: true
-          schema:
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                title: Response Root  Get
+components:
+  schemas:
+    AnalysisExecutionResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+        result:
+          $ref: '#/components/schemas/AnalysisResult'
+      type: object
+      required:
+      - message
+      - result
+      title: AnalysisExecutionResponse
+    AnalysisResult:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        ticker:
+          type: string
+          title: Ticker
+        recommendation:
+          type: string
+          enum:
+          - BUY
+          - HOLD
+          - WAIT
+          title: Recommendation
+        confidence_score:
+          type: integer
+          maximum: 100.0
+          minimum: 0.0
+          title: Confidence Score
+        ai_summary:
+          type: string
+          title: Ai Summary
+        vpa_insight:
+          type: string
+          title: Vpa Insight
+        analysis_date:
+          type: string
+          format: date
+          title: Analysis Date
+        generated_at:
+          type: string
+          format: date-time
+          title: Generated At
+        data_revision:
+          type: string
+          title: Data Revision
+        model_name:
+          type: string
+          title: Model Name
+        prompt_version:
+          type: string
+          title: Prompt Version
+        provenance:
+          type: string
+          enum:
+          - real
+          const: real
+          title: Provenance
+        cached:
+          type: boolean
+          title: Cached
+        supporting_factors:
+          items:
             type: string
-      responses:
-        '200':
-          description: Success
-  /stocks/{ticker}/sync:
-    post:
-      tags:
-        - Stocks
-      summary: Sinkronisasi data saham dari yfinance
-      parameters:
-        - in: path
-          name: ticker
-          required: true
-          schema:
+          type: array
+          title: Supporting Factors
+        opposing_factors:
+          items:
             type: string
-      responses:
-        '200':
-          description: Success
-  /stocks/{ticker}/analysis/latest:
-    get:
-      tags:
-        - Analysis
-      summary: Dapatkan hasil analisis AI dan teknikal terbaru untuk sebuah saham
-      parameters:
-        - in: path
-          name: ticker
-          required: true
-          schema:
+          type: array
+          title: Opposing Factors
+        limitations:
+          type: string
+          title: Limitations
+        horizon:
+          type: string
+          title: Horizon
+        tokens_used:
+          type: integer
+          minimum: 0.0
+          title: Tokens Used
+      type: object
+      required:
+      - id
+      - ticker
+      - recommendation
+      - confidence_score
+      - ai_summary
+      - vpa_insight
+      - analysis_date
+      - generated_at
+      - data_revision
+      - model_name
+      - prompt_version
+      - provenance
+      - cached
+      - limitations
+      - horizon
+      - tokens_used
+      title: AnalysisResult
+    BacktestRequest:
+      properties:
+        years:
+          type: integer
+          maximum: 5.0
+          minimum: 1.0
+          title: Years
+          default: 3
+        target_profit_pct:
+          type: number
+          maximum: 20.0
+          exclusiveMinimum: 0.0
+          title: Target Profit Pct
+          default: 5
+        stop_loss_pct:
+          type: number
+          maximum: 10.0
+          exclusiveMinimum: 0.0
+          title: Stop Loss Pct
+          default: 3
+      additionalProperties: false
+      type: object
+      title: BacktestRequest
+    BacktestResult:
+      properties:
+        ticker:
+          type: string
+          title: Ticker
+        period_years:
+          type: integer
+          title: Period Years
+        requested_parameters:
+          $ref: '#/components/schemas/BacktestRequest'
+        effective_parameters:
+          $ref: '#/components/schemas/BacktestRequest'
+        data_start:
+          type: string
+          format: date
+          title: Data Start
+        data_end:
+          type: string
+          format: date
+          title: Data End
+        source:
+          type: string
+          title: Source
+        interval:
+          type: string
+          enum:
+          - 1d
+          const: 1d
+          title: Interval
+        strategy:
+          type: string
+          title: Strategy
+        total_trades:
+          type: integer
+          minimum: 0.0
+          title: Total Trades
+        win_rate_pct:
+          type: number
+          maximum: 100.0
+          minimum: 0.0
+          title: Win Rate Pct
+        avg_profit_pct:
+          type: number
+          title: Avg Profit Pct
+        max_drawdown_pct:
+          type: number
+          maximum: 100.0
+          minimum: 0.0
+          title: Max Drawdown Pct
+        trades:
+          items:
+            $ref: '#/components/schemas/BacktestTrade'
+          type: array
+          title: Trades
+        equity_curve:
+          items:
+            $ref: '#/components/schemas/EquityPoint'
+          type: array
+          title: Equity Curve
+        assumptions:
+          type: object
+          title: Assumptions
+      type: object
+      required:
+      - ticker
+      - period_years
+      - requested_parameters
+      - effective_parameters
+      - data_start
+      - data_end
+      - source
+      - interval
+      - strategy
+      - total_trades
+      - win_rate_pct
+      - avg_profit_pct
+      - max_drawdown_pct
+      - trades
+      - equity_curve
+      - assumptions
+      title: BacktestResult
+    BacktestTrade:
+      properties:
+        buy_date:
+          type: string
+          format: date
+          title: Buy Date
+        sell_date:
+          type: string
+          format: date
+          title: Sell Date
+        buy_price:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Buy Price
+        sell_price:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Sell Price
+        profit_pct:
+          type: number
+          title: Profit Pct
+        status:
+          type: string
+          enum:
+          - WIN
+          - LOSS
+          - BREAKEVEN
+          title: Status
+        exit_reason:
+          type: string
+          enum:
+          - TAKE_PROFIT
+          - STOP_LOSS
+          - TIMEOUT
+          - END_OF_PERIOD
+          title: Exit Reason
+        reason:
+          type: string
+          title: Reason
+        days_held:
+          type: integer
+          minimum: 1.0
+          title: Days Held
+      type: object
+      required:
+      - buy_date
+      - sell_date
+      - buy_price
+      - sell_price
+      - profit_pct
+      - status
+      - exit_reason
+      - reason
+      - days_held
+      title: BacktestTrade
+    DailyPriceResponse:
+      properties:
+        trading_date:
+          type: string
+          format: date
+          title: Trading Date
+        open:
+          type: string
+          title: Open
+        high:
+          type: string
+          title: High
+        low:
+          type: string
+          title: Low
+        close:
+          type: string
+          title: Close
+        volume:
+          type: integer
+          title: Volume
+        ema_20:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ema 20
+        ema_50:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ema 50
+        ema_200:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ema 200
+        rsi_14:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Rsi 14
+        macd:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macd
+        macd_signal:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macd Signal
+        stopping_volume:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Stopping Volume
+          default: false
+        no_demand:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: No Demand
+          default: false
+        is_spring:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Spring
+          default: false
+        climactic_volume:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Climactic Volume
+          default: false
+      type: object
+      required:
+      - trading_date
+      - open
+      - high
+      - low
+      - close
+      - volume
+      title: DailyPriceResponse
+      description: Response data harga OHLCV harian.
+    EquityPoint:
+      properties:
+        date:
+          type: string
+          format: date
+          title: Date
+        equity:
+          type: number
+          minimum: 0.0
+          title: Equity
+      type: object
+      required:
+      - date
+      - equity
+      title: EquityPoint
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    LogoutResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: LogoutResponse
+    MarketDataMetadata:
+      properties:
+        source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source
+        currency:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Currency
+        exchange:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Exchange
+        market_as_of:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Market As Of
+        fetched_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Fetched At
+        interval:
+          type: string
+          enum:
+          - 1d
+          const: 1d
+          title: Interval
+        data_revision:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Data Revision
+        data_state:
+          type: string
+          enum:
+          - fresh
+          - stale
+          - unavailable
+          - demo
+          - unknown
+          title: Data State
+        price_adjustment:
+          type: string
+          title: Price Adjustment
+      type: object
+      required:
+      - source
+      - currency
+      - exchange
+      - market_as_of
+      - fetched_at
+      - interval
+      - data_revision
+      - data_state
+      - price_adjustment
+      title: MarketDataMetadata
+    PaginatedResponse_DailyPriceResponse_:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/DailyPriceResponse'
+          type: array
+          title: Data
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+        metadata:
+          anyOf:
+          - $ref: '#/components/schemas/MarketDataMetadata'
+          - type: 'null'
+      type: object
+      required:
+      - data
+      - pagination
+      title: PaginatedResponse[DailyPriceResponse]
+    PaginatedResponse_StockResponse_:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/StockResponse'
+          type: array
+          title: Data
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+        metadata:
+          anyOf:
+          - $ref: '#/components/schemas/MarketDataMetadata'
+          - type: 'null'
+      type: object
+      required:
+      - data
+      - pagination
+      title: PaginatedResponse[StockResponse]
+    PaginationMeta:
+      properties:
+        page:
+          type: integer
+          title: Page
+        per_page:
+          type: integer
+          title: Per Page
+        total:
+          type: integer
+          title: Total
+        total_pages:
+          type: integer
+          title: Total Pages
+      type: object
+      required:
+      - page
+      - per_page
+      - total
+      - total_pages
+      title: PaginationMeta
+      description: Metadata untuk pagination.
+    RefreshRequest:
+      properties:
+        refresh_token:
+          type: string
+          title: Refresh Token
+      type: object
+      required:
+      - refresh_token
+      title: RefreshRequest
+    RegisterResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+          default: Registrasi berhasil. Silakan login.
+        user:
+          $ref: '#/components/schemas/UserResponse'
+      type: object
+      required:
+      - user
+      title: RegisterResponse
+      description: Response setelah registrasi berhasil.
+    StockAnalysisLatestResponse:
+      properties:
+        ticker:
+          type: string
+          title: Ticker
+        company_name:
+          type: string
+          title: Company Name
+        analysis_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Analysis Id
+        current_price:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Current Price
+        metadata:
+          anyOf:
+          - $ref: '#/components/schemas/MarketDataMetadata'
+          - type: 'null'
+        generated_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Generated At
+        model_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model Name
+        prompt_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Prompt Version
+        provenance:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provenance
+        analysis_matches_data:
+          type: boolean
+          title: Analysis Matches Data
+          default: false
+        supporting_factors:
+          items:
             type: string
-      responses:
-        '200':
-          description: Success
-  /stocks/watchlist:
-    get:
-      tags:
-        - Stocks
-      summary: Dapatkan daftar watchlist pengguna
-      responses:
-        '200':
-          description: Success
-    post:
-      tags:
-        - Stocks
-      summary: Tambahkan saham ke watchlist
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                ticker:
-                  type: string
-                notes:
-                  type: string
-      responses:
-        '201':
-          description: Created
-  /stocks/watchlist/{ticker}:
-    delete:
-      tags:
-        - Stocks
-      summary: Hapus saham dari watchlist
-      parameters:
-        - in: path
-          name: ticker
-          required: true
-          schema:
+          type: array
+          title: Supporting Factors
+          default: []
+        opposing_factors:
+          items:
             type: string
-      responses:
-        '204':
-          description: Deleted
-  /analysis/{ticker}:
-    post:
-      tags:
-        - Analysis
-      summary: Jalankan AI Analysis untuk saham
-      parameters:
-        - in: path
-          name: ticker
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-  /analysis/{ticker}/backtest:
-    post:
-      tags:
-        - Analysis
-      summary: Jalankan Backtest Strategi
-      parameters:
-        - in: path
-          name: ticker
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                years:
-                  type: integer
-                target_profit_pct:
-                  type: number
-                stop_loss_pct:
-                  type: number
-      responses:
-        '200':
-          description: Success
-  /analysis/health:
-    get:
-      tags:
-        - Analysis
-      summary: Cek status API eksternal (Claude/Redis)
-      responses:
-        '200':
-          description: Success
+          type: array
+          title: Opposing Factors
+          default: []
+        limitations:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Limitations
+        horizon:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Horizon
+        analysis_date:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Analysis Date
+        wyckoff_phase:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Wyckoff Phase
+        ai_recommendation:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ai Recommendation
+        confidence_score:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Confidence Score
+        ai_summary:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ai Summary
+        vpa_insight:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Vpa Insight
+        technical_indicators:
+          anyOf:
+          - $ref: '#/components/schemas/TechnicalIndicatorResponse'
+          - type: 'null'
+      type: object
+      required:
+      - ticker
+      - company_name
+      title: StockAnalysisLatestResponse
+    StockQuoteResponse:
+      properties:
+        ticker:
+          type: string
+          title: Ticker
+        company_name:
+          type: string
+          title: Company Name
+        current_price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Current Price
+        previous_close:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Previous Close
+        change:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Change
+        change_percent:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Change Percent
+        metadata:
+          $ref: '#/components/schemas/MarketDataMetadata'
+      type: object
+      required:
+      - ticker
+      - company_name
+      - current_price
+      - previous_close
+      - change
+      - change_percent
+      - metadata
+      title: StockQuoteResponse
+    StockResponse:
+      properties:
+        ticker:
+          type: string
+          maxLength: 20
+          title: Ticker
+          description: Kode saham, e.g., BBCA, TLKM
+        company_name:
+          type: string
+          maxLength: 255
+          title: Company Name
+          description: Nama perusahaan
+        sector:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sector
+          description: Sektor industri
+        exchange:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Exchange
+          description: Bursa efek, e.g., IDX, NYSE
+        currency:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Currency
+        is_active:
+          type: boolean
+          title: Is Active
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - ticker
+      - company_name
+      - is_active
+      - created_at
+      title: StockResponse
+      description: Response data emiten saham.
+    TechnicalIndicatorResponse:
+      properties:
+        trading_date:
+          type: string
+          format: date
+          title: Trading Date
+        rsi_14:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Rsi 14
+        ema_20:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ema 20
+        ema_50:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ema 50
+        ema_200:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ema 200
+        macd:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macd
+        macd_signal:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Macd Signal
+        vwap:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Vwap
+        atr_14:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atr 14
+        stopping_volume:
+          type: boolean
+          title: Stopping Volume
+          default: false
+        no_demand:
+          type: boolean
+          title: No Demand
+          default: false
+        is_spring:
+          type: boolean
+          title: Is Spring
+          default: false
+        climactic_volume:
+          type: boolean
+          title: Climactic Volume
+          default: false
+        wyckoff_phase:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Wyckoff Phase
+        smc_patterns:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Smc Patterns
+      type: object
+      required:
+      - trading_date
+      title: TechnicalIndicatorResponse
+      description: Response data indikator teknikal harian.
+    TokenResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+          description: JWT access token
+        refresh_token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Refresh Token
+          description: JWT refresh token
+        token_type:
+          type: string
+          title: Token Type
+          description: Tipe token
+          default: bearer
+      type: object
+      required:
+      - access_token
+      title: TokenResponse
+      description: Response token setelah login berhasil.
+    UserLoginRequest:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+          description: Alamat email terdaftar
+        password:
+          type: string
+          title: Password
+          description: Password pengguna
+      type: object
+      required:
+      - email
+      - password
+      title: UserLoginRequest
+      description: Schema untuk login pengguna (OAuth2 password flow).
+    UserRegisterRequest:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+          description: Alamat email pengguna (unik)
+        password:
+          type: string
+          minLength: 8
+          title: Password
+          description: Password minimal 8 karakter
+        full_name:
+          type: string
+          maxLength: 255
+          minLength: 2
+          title: Full Name
+          description: Nama lengkap pengguna
+      type: object
+      required:
+      - email
+      - password
+      - full_name
+      title: UserRegisterRequest
+      description: Schema untuk registrasi pengguna baru.
+    UserResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        email:
+          type: string
+          title: Email
+        full_name:
+          type: string
+          title: Full Name
+        subscription_tier:
+          type: string
+          title: Subscription Tier
+        is_active:
+          type: boolean
+          title: Is Active
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        analysis_quota_used:
+          type: integer
+          title: Analysis Quota Used
+          default: 0
+        quota_used:
+          type: integer
+          title: Quota Used
+          default: 0
+        quota_reserved:
+          type: integer
+          title: Quota Reserved
+          default: 0
+        quota_limit:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Quota Limit
+          default: 3
+        quota_remaining:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Quota Remaining
+          default: 3
+        quota_reset_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Quota Reset At
+      type: object
+      required:
+      - id
+      - email
+      - full_name
+      - subscription_tier
+      - is_active
+      - created_at
+      title: UserResponse
+      description: Response data pengguna (tidak termasuk password).
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    WatchlistAddRequest:
+      properties:
+        ticker:
+          type: string
+          maxLength: 20
+          title: Ticker
+          description: Kode saham yang ingin dipantau
+        notes:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Notes
+          description: Catatan personal
+      type: object
+      required:
+      - ticker
+      title: WatchlistAddRequest
+      description: Request untuk menambahkan saham ke watchlist.
+    WatchlistResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        stock_ticker:
+          type: string
+          title: Stock Ticker
+        company_name:
+          type: string
+          title: Company Name
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+        added_at:
+          type: string
+          format: date-time
+          title: Added At
+      type: object
+      required:
+      - id
+      - stock_ticker
+      - company_name
+      - added_at
+      title: WatchlistResponse
+      description: Response data watchlist pengguna.
+    WatchlistUpdateRequest:
+      properties:
+        notes:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Notes
+      additionalProperties: false
+      type: object
+      title: WatchlistUpdateRequest
+  securitySchemes:
+    OAuth2PasswordBearer:
+      type: oauth2
+      flows:
+        password:
+          scopes: {}
+          tokenUrl: /api/v1/auth/token

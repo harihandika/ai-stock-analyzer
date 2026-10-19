@@ -5,6 +5,7 @@ AI Stock Analyzer - Auth Logout and Refresh Token Tests
 import pytest
 from httpx import AsyncClient
 
+
 @pytest.mark.asyncio
 async def test_refresh_token_rotation(client: AsyncClient):
     """Test: Refresh token rotasi dan database validation."""
@@ -30,13 +31,11 @@ async def test_refresh_token_rotation(client: AsyncClient):
     login_data = login_response.json()
     refresh_token = login_data["refresh_token"]
 
-    import asyncio
-    await asyncio.sleep(1)
+    # Rotation must be unique even within the same second.
 
     # 3. Use refresh token
     refresh_response = await client.post(
-        "/api/v1/auth/refresh",
-        json={"refresh_token": refresh_token}
+        "/api/v1/auth/refresh", json={"refresh_token": refresh_token}
     )
     assert refresh_response.status_code == 200
     refresh_data = refresh_response.json()
@@ -45,8 +44,7 @@ async def test_refresh_token_rotation(client: AsyncClient):
 
     # 4. Try to use the old refresh token again (should fail)
     old_refresh_response = await client.post(
-        "/api/v1/auth/refresh",
-        json={"refresh_token": refresh_token}
+        "/api/v1/auth/refresh", json={"refresh_token": refresh_token}
     )
     assert old_refresh_response.status_code == 401
 
@@ -73,28 +71,30 @@ async def test_logout(client: AsyncClient):
         },
     )
     refresh_token = login_response.json()["refresh_token"]
+    access_token = login_response.json()["access_token"]
 
     # 3. Logout
     logout_response = await client.post(
-        "/api/v1/auth/logout",
-        json={"refresh_token": refresh_token}
+        "/api/v1/auth/logout", json={"refresh_token": refresh_token}
     )
     assert logout_response.status_code == 200
     assert "berhasil" in logout_response.json()["message"]
 
     # 4. Try to refresh with revoked token
     refresh_response = await client.post(
-        "/api/v1/auth/refresh",
-        json={"refresh_token": refresh_token}
+        "/api/v1/auth/refresh", json={"refresh_token": refresh_token}
     )
     assert refresh_response.status_code == 401
+    assert (
+        await client.get("/api/v1/auth/me", headers={"Authorization": "Bearer " + access_token})
+    ).status_code == 401
+
 
 @pytest.mark.asyncio
 async def test_logout_invalid_token(client: AsyncClient):
     """Test: Logout dengan token invalid tetap return 200."""
     logout_response = await client.post(
-        "/api/v1/auth/logout",
-        json={"refresh_token": "some-invalid-token"}
+        "/api/v1/auth/logout", json={"refresh_token": "some-invalid-token"}
     )
     # We should not leak information if token is not found
     assert logout_response.status_code == 200

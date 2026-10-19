@@ -6,15 +6,16 @@ Menyediakan dependency injections untuk:
 """
 
 import uuid
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
+from datetime import UTC, datetime
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import decode_access_token
-from app.domain.models.models import User
+from app.domain.models.models import RefreshToken, User
 from app.infrastructure.database import AsyncSessionLocal
 
 # OAuth2 scheme: membaca token dari header Authorization: Bearer <token>
@@ -36,6 +37,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_current_user(
+    request: Request,
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User:
@@ -79,6 +81,19 @@ async def get_current_user(
             detail="Akun pengguna tidak aktif.",
         )
 
+    try:
+        session_id = uuid.UUID(payload.get("sid", ""))
+    except (ValueError, TypeError):
+        raise credentials_exception
+    session = await db.get(RefreshToken, session_id)
+    if not session or session.user_id != user.id or session.is_revoked:
+        raise credentials_exception
+    expiry = session.expires_at
+    if expiry.tzinfo is None:
+        expiry = expiry.replace(tzinfo=UTC)
+    if expiry <= datetime.now(UTC):
+        raise credentials_exception
+    request.state.user = user
     return user
 
 

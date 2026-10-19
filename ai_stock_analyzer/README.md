@@ -1,5 +1,7 @@
 # AI Stock Analyzer
 
+Perbaikan R1 tersedia pada checkout: [laporan implementasi dan cara menjalankan](docs/implementasi_r1.md), [PRD perbaikan](docs/prd_perbaikan_aplikasi.md). Gunakan Alembic untuk schema baru/upgrade; jangan mengandalkan create_tables.py untuk memigrasikan database lama.
+
 Platform analisis saham berbasis AI yang menggunakan **Volume Price Analysis (VPA)**, **Wyckoff Theory**, dan **Smart Money Concepts (SMC)** untuk mengidentifikasi peluang investasi dengan probabilitas tinggi.
 
 ---

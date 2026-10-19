@@ -6,28 +6,58 @@ Mendefinisikan skema validasi input/output untuk data saham dan analisis.
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Generic, TypeVar, List
+from typing import Generic, Literal, TypeVar
+
 from pydantic import BaseModel, Field
 
 T = TypeVar("T")
 
+
+class MarketDataMetadata(BaseModel):
+    source: str | None
+    currency: str | None
+    exchange: str | None
+    market_as_of: date | None
+    fetched_at: datetime | None
+    interval: Literal["1d"]
+    data_revision: str | None
+    data_state: Literal["fresh", "stale", "unavailable", "demo", "unknown"]
+    price_adjustment: str
+
+
+class StockQuoteResponse(BaseModel):
+    ticker: str
+    company_name: str
+    current_price: float | None
+    previous_close: float | None
+    change: float | None
+    change_percent: float | None
+    metadata: MarketDataMetadata
+
+
 class PaginationMeta(BaseModel):
     """Metadata untuk pagination."""
+
     page: int
     per_page: int
     total: int
     total_pages: int
 
+
 class PaginatedResponse(BaseModel, Generic[T]):
     """Response generik untuk data berhalaman."""
-    data: List[T]
+
+    data: list[T]
     pagination: PaginationMeta
+    metadata: MarketDataMetadata | None = None
 
 
 # ---- Stock Schemas ----
 
+
 class StockBase(BaseModel):
     """Schema dasar untuk data emiten saham."""
+
     ticker: str = Field(..., max_length=20, description="Kode saham, e.g., BBCA, TLKM")
     company_name: str = Field(..., max_length=255, description="Nama perusahaan")
     sector: str | None = Field(default=None, description="Sektor industri")
@@ -36,6 +66,8 @@ class StockBase(BaseModel):
 
 class StockResponse(StockBase):
     """Response data emiten saham."""
+
+    currency: str | None = None
     is_active: bool
     created_at: datetime
 
@@ -44,8 +76,10 @@ class StockResponse(StockBase):
 
 # ---- Daily Price Schemas ----
 
+
 class DailyPriceResponse(BaseModel):
     """Response data harga OHLCV harian."""
+
     trading_date: date
     open: Decimal
     high: Decimal
@@ -58,7 +92,7 @@ class DailyPriceResponse(BaseModel):
     rsi_14: Decimal | None = None
     macd: Decimal | None = None
     macd_signal: Decimal | None = None
-    
+
     stopping_volume: bool | None = False
     no_demand: bool | None = False
     is_spring: bool | None = False
@@ -69,8 +103,10 @@ class DailyPriceResponse(BaseModel):
 
 # ---- Technical Indicator Schemas ----
 
+
 class SMCPatterns(BaseModel):
     """Pola Smart Money Concept yang terdeteksi."""
+
     bullish_fvg: bool = False
     bearish_fvg: bool = False
     fvg_level: Decimal | None = None
@@ -81,6 +117,7 @@ class SMCPatterns(BaseModel):
 
 class TechnicalIndicatorResponse(BaseModel):
     """Response data indikator teknikal harian."""
+
     trading_date: date
     rsi_14: Decimal | None = None
     ema_20: Decimal | None = None
@@ -108,8 +145,10 @@ class TechnicalIndicatorResponse(BaseModel):
 
 # ---- AI Analysis Schemas ----
 
+
 class AIAnalysisResponse(BaseModel):
     """Response hasil analisis AI untuk sebuah saham."""
+
     id: uuid.UUID
     ticker: str
     analysis_date: date
@@ -125,14 +164,27 @@ class AIAnalysisResponse(BaseModel):
 
 # ---- Combined Analysis Response ----
 
+
 class StockAnalysisLatestResponse(BaseModel):
+    model_config = {"protected_namespaces": ()}
     """
     Response gabungan untuk endpoint /stocks/{ticker}/analysis/latest.
     Menggabungkan harga terkini, indikator teknikal, dan analisis AI.
     """
     ticker: str
     company_name: str
+    analysis_id: uuid.UUID | None = None
     current_price: Decimal | None = None
+    metadata: MarketDataMetadata | None = None
+    generated_at: datetime | None = None
+    model_name: str | None = None
+    prompt_version: str | None = None
+    provenance: str | None = None
+    analysis_matches_data: bool = False
+    supporting_factors: list[str] = []
+    opposing_factors: list[str] = []
+    limitations: str | None = None
+    horizon: str | None = None
     analysis_date: date | None = None
     wyckoff_phase: str | None = None
     ai_recommendation: str | None = None
@@ -144,14 +196,17 @@ class StockAnalysisLatestResponse(BaseModel):
 
 # ---- Watchlist Schemas ----
 
+
 class WatchlistAddRequest(BaseModel):
     """Request untuk menambahkan saham ke watchlist."""
+
     ticker: str = Field(..., max_length=20, description="Kode saham yang ingin dipantau")
     notes: str | None = Field(default=None, max_length=500, description="Catatan personal")
 
 
 class WatchlistResponse(BaseModel):
     """Response data watchlist pengguna."""
+
     id: uuid.UUID
     stock_ticker: str
     company_name: str
@@ -159,3 +214,8 @@ class WatchlistResponse(BaseModel):
     added_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class WatchlistUpdateRequest(BaseModel):
+    notes: str | None = Field(default=None, max_length=500)
+    model_config = {"extra": "forbid"}

@@ -1,123 +1,110 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import Cookies from 'js-cookie';
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import Cookies from "js-cookie";
+import { clearSession, storeSession } from "./session";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  timeout: 120000,
+  headers: { "Content-Type": "application/json" },
 });
-
-// Request Interceptor: Attach token if available
-apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = Cookies.get('access_token');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response Interceptor: Handle 401 & Auto Refresh
-let isRefreshing = false;
-let failedQueue: Array<{ resolve: (value?: unknown) => void; reject: (reason?: any) => void }> = [];
-
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  failedQueue = [];
-};
-
+const refreshClient = axios.create({ baseURL: API_BASE_URL, timeout: 15000 });
+let refreshing: Promise<string> | null = null;
+apiClient.interceptors.request.use((config) => {
+  const token = Cookies.get("access_token");
+  if (token) config.headers.Authorization = "Bearer " + token;
+  else delete config.headers.Authorization;
+  return config;
+});
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-
-    // If 401 Unauthorized and not already retrying
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // Wait for the refresh to complete
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then((token) => {
-          originalRequest.headers.Authorization = 'Bearer ' + token;
-          return apiClient(originalRequest);
-        }).catch((err) => {
-          return Promise.reject(err);
-        });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      const refreshToken = Cookies.get('refresh_token');
-      if (!refreshToken) {
-        // Force logout if no refresh token
-        Cookies.remove('access_token');
-        Cookies.remove('refresh_token');
-        if (typeof window !== 'undefined' && !['/login', '/register'].includes(window.location.pathname)) {
-          window.location.href = '/login';
-        }
-        return Promise.reject(error);
-      }
-
-      try {
-        const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          refresh_token: refreshToken,
-        });
-
-        const newAccessToken = data.access_token;
-        Cookies.set('access_token', newAccessToken, { secure: true, sameSite: 'strict' });
-        
-        // Also update refresh token if a new one is sent
-        if (data.refresh_token) {
-          Cookies.set('refresh_token', data.refresh_token, { expires: 7, secure: true, sameSite: 'strict' });
-        }
-
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-        processQueue(null, newAccessToken);
-        return apiClient(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        Cookies.remove('access_token');
-        Cookies.remove('refresh_token');
-        if (typeof window !== 'undefined' && !['/login', '/register'].includes(window.location.pathname)) {
-          window.location.href = '/login';
-        }
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+    const config = error.config as
+      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | undefined;
+    const authRequest = /\/auth\/(token|register|refresh|logout)$/.test(
+      config?.url || "",
+    );
+    if (
+      !config ||
+      error.response?.status !== 401 ||
+      config._retry ||
+      authRequest
+    )
+      throw error;
+    config._retry = true;
+    const currentAccess = Cookies.get("access_token");
+    if (
+      currentAccess &&
+      config.headers.Authorization !== "Bearer " + currentAccess
+    ) {
+      config.headers.Authorization = "Bearer " + currentAccess;
+      return apiClient(config);
     }
-
-    return Promise.reject(error);
-  }
+    const initialRefresh = Cookies.get("refresh_token");
+    let refreshedAccess: string | undefined;
+    if (!refreshing) {
+      refreshing = (async () => {
+        const token = Cookies.get("refresh_token");
+        if (!token) throw new Error("Sesi berakhir. Silakan masuk kembali.");
+        const { data } = await refreshClient.post("/auth/refresh", {
+          refresh_token: token,
+        });
+        if (Cookies.get("refresh_token") !== token)
+          throw new Error("Sesi telah berubah.");
+        storeSession(data.access_token, data.refresh_token);
+        return data.access_token as string;
+      })().finally(() => {
+        refreshing = null;
+      });
+    }
+    try {
+      refreshedAccess = await refreshing;
+      config.headers.Authorization = "Bearer " + refreshedAccess;
+      return await apiClient(config);
+    } catch (refreshError) {
+      const stillOwnsSession = refreshedAccess
+        ? Cookies.get("access_token") === refreshedAccess
+        : Cookies.get("refresh_token") === initialRefresh;
+      if (!stillOwnsSession) throw refreshError;
+      clearSession();
+      if (
+        typeof window !== "undefined" &&
+        !["/login", "/register"].includes(window.location.pathname)
+      ) {
+        window.location.assign("/login");
+      }
+      throw refreshError;
+    }
+  },
 );
-
-// Sprint 10 API Functions
-export const logout = async (refreshToken: string) => {
-  return apiClient.post('/auth/logout', { refresh_token: refreshToken });
-};
-
-export const updatePassword = async (currentPw: string, newPw: string) => {
-  return apiClient.post('/auth/password', { current_password: currentPw, new_password: newPw });
-};
-
-export const getUserQuota = async () => {
-  return apiClient.get('/auth/me');
-};
-
-export const runBacktest = async (ticker: string, params: { years: number; target_profit_pct: number; stop_loss_pct: number }) => {
-  return apiClient.post(`/analysis/${ticker}/backtest`, params);
-};
+export function errorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const detail = error.response?.data?.detail;
+    if (typeof detail === "string") return detail;
+    if (detail?.message) return detail.message;
+    if (Array.isArray(detail)) return detail.map((item) => item.msg).join("; ");
+    return error.code === "ECONNABORTED"
+      ? "Permintaan melewati batas waktu."
+      : "Layanan tidak dapat dihubungi. Silakan coba lagi.";
+  }
+  return error instanceof Error
+    ? error.message
+    : "Terjadi kesalahan. Silakan coba lagi.";
+}
+export const logout = (refreshToken: string) =>
+  apiClient.post("/auth/logout", { refresh_token: refreshToken });
+export const updatePassword = (currentPw: string, newPw: string) =>
+  apiClient.post("/auth/password", {
+    current_password: currentPw,
+    new_password: newPw,
+  });
+export const getUserQuota = () => apiClient.get("/auth/me");
+export const runBacktest = (
+  ticker: string,
+  params: { years: number; target_profit_pct: number; stop_loss_pct: number },
+) =>
+  apiClient.post(
+    "/analysis/" + encodeURIComponent(ticker) + "/backtest",
+    params,
+  );

@@ -4,25 +4,24 @@ Menyediakan fixtures yang dapat digunakan oleh semua test.
 """
 
 import os
-os.environ["TESTING"] = "1"  # Harus di-set sebelum import app agar rate limiter disabled
 
-import asyncio
-import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
-from app.main import app
-from app.infrastructure.database import Base
 from app.api.dependencies import get_db
+from app.infrastructure.database import Base
+from app.main import app
 
 # Gunakan SQLite in-memory untuk testing (tidak butuh PostgreSQL)
-TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite+aiosqlite:///./test.db")
 
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
     echo=False,
-    connect_args={"check_same_thread": False},
+    connect_args={"check_same_thread": False} if "sqlite" in TEST_DATABASE_URL else {},
+    poolclass=NullPool,
 )
 
 TestSessionLocal = async_sessionmaker(
@@ -55,13 +54,22 @@ async def client(db_session: AsyncSession):
     Fixture: HTTP client AsyncClient untuk testing API endpoints.
     Override dependency get_db agar menggunakan test database.
     """
+
     async def override_get_db():
-        yield db_session
+        # Each HTTP request owns its transaction; concurrency tests must not share a session.
+        async with TestSessionLocal() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
 
     app.dependency_overrides[get_db] = override_get_db
 
     from fastapi_cache import FastAPICache
     from fastapi_cache.backends.inmemory import InMemoryBackend
+
     FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
 
     async with AsyncClient(

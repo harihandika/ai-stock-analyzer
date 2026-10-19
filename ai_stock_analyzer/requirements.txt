@@ -15,6 +15,7 @@ python-dotenv==1.0.1
 # --- Database (SQLAlchemy + PostgreSQL) ---
 sqlalchemy==2.0.30
 alembic==1.13.1
+aiosqlite==0.22.1        # SQLite development and tests
 asyncpg==0.29.0          # Async PostgreSQL driver
 psycopg2-binary==2.9.9   # Sync PostgreSQL driver (for Alembic)
 

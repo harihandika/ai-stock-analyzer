@@ -3,7 +3,8 @@ AI Stock Analyzer - Security Utilities
 Menangani enkripsi password (bcrypt) dan JWT token (pembuatan & verifikasi).
 """
 
-from datetime import datetime, timedelta, timezone
+import uuid
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from jose import JWTError, jwt
@@ -25,14 +26,20 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifikasi password plaintext terhadap hash yang tersimpan di database."""
     return pwd_context.verify(plain_password, hashed_password)
 
+
 def hash_token(token: str) -> str:
     """Hash token menggunakan SHA-256 untuk penyimpanan di DB."""
     import hashlib
+
     return hashlib.sha256(token.encode()).hexdigest()
+
 
 # ---- JWT Token ----
 
-def create_access_token(subject: str | Any, expires_delta: timedelta | None = None) -> str:
+
+def create_access_token(
+    subject: str | Any, expires_delta: timedelta | None = None, *, session_id: str | None = None
+) -> str:
     """
     Membuat JWT access token.
 
@@ -44,24 +51,21 @@ def create_access_token(subject: str | Any, expires_delta: timedelta | None = No
         JWT token string yang ditandatangani (signed).
     """
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
+        expire = datetime.now(UTC) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode = {"exp": expire, "sub": str(subject), "type": "access"}
-    encoded_jwt = jwt.encode(
-        to_encode,
-        settings.SECRET_KEY,
-        algorithm=settings.ALGORITHM
-    )
+    if session_id:
+        to_encode["sid"] = str(session_id)
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
+
 
 def create_refresh_token(subject: str | Any) -> str:
     """Membuat JWT refresh token."""
-    expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode = {"exp": expire, "sub": str(subject), "type": "refresh"}
+    expire = datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode = {"exp": expire, "sub": str(subject), "type": "refresh", "jti": str(uuid.uuid4())}
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
@@ -76,25 +80,18 @@ def decode_access_token(token: str) -> dict | None:
         Dictionary payload jika token valid, None jika tidak valid/kedaluwarsa.
     """
     try:
-        payload = jwt.decode(
-            token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         if payload.get("type") != "access" and "type" in payload:
             return None
         return payload
     except JWTError:
         return None
 
+
 def decode_refresh_token(token: str) -> dict | None:
     """Mendekode dan memverifikasi JWT refresh token."""
     try:
-        payload = jwt.decode(
-            token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         if payload.get("type") != "refresh":
             return None
         return payload

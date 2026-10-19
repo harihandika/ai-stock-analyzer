@@ -1,13 +1,15 @@
 import pytest
 from httpx import AsyncClient
 
+
 @pytest.mark.asyncio
 async def test_integration_health(client: AsyncClient):
     """Test endpoint health dan root"""
     response = await client.get("/")
     assert response.status_code == 200
     assert "AI Stock Analyzer API" in response.json().get("message", "")
-    
+
+
 @pytest.mark.asyncio
 async def test_integration_auth(client: AsyncClient):
     """Test registrasi dan login flow"""
@@ -15,63 +17,64 @@ async def test_integration_auth(client: AsyncClient):
     reg_payload = {
         "email": "test_integration@example.com",
         "password": "StrongPassword123!",
-        "full_name": "Integration Tester"
+        "full_name": "Integration Tester",
     }
     res_reg = await client.post("/api/v1/auth/register", json=reg_payload)
     # 201 Created atau 400 Bad Request jika user sudah ada (test idempotency)
     assert res_reg.status_code in [201, 400]
-    
+
     # 2. Login User
-    login_payload = {
-        "email": "test_integration@example.com",
-        "password": "StrongPassword123!"
-    }
-    res_login = await client.post(
-        "/api/v1/auth/token", 
-        json=login_payload
-    )
+    login_payload = {"email": "test_integration@example.com", "password": "StrongPassword123!"}
+    res_login = await client.post("/api/v1/auth/token", json=login_payload)
     assert res_login.status_code == 200
     token = res_login.json().get("access_token")
     assert token is not None
-    
+
     # 3. Test Protected Endpoint
-    res_me = await client.get(
-        "/api/v1/auth/me",
-        headers={"Authorization": f"Bearer {token}"}
-    )
+    res_me = await client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert res_me.status_code == 200
     assert res_me.json()["email"] == "test_integration@example.com"
 
 
 @pytest.mark.asyncio
-async def test_integration_sync_pipeline(client: AsyncClient):
-    """Test full pipeline dari Sync sampai AI Prompting"""
-    # 1. Sync stock data (assuming we have a mocked yfinance response or test ticker)
-    # Using 'BBCA.JK' as it's standard in Indonesia, but for unit test, 
-    # we might mock it or let it run against real if it's an integration test.
-    # Note: For reliability in CI, we'd mock `fetch_stock_history_async`.
-    # But since this is a local integration test, we'll try to hit it or just check endpoint response.
-    
-    # We will test the structure of response from the Sync endpoint.
-    res_sync = await client.post("/api/v1/stocks/BBCA.JK/sync")
-    # if it succeeds, it should return 200 OK
-    if res_sync.status_code == 200:
-        data = res_sync.json()
-        assert "Sinkronisasi berhasil" in data["message"]
-        assert "patterns_detected" in data
-        
-        # 2. Get latest analysis (to see if prompt/AI response works or is queued)
-        # Note: If no token, it might return 401. So let's login first.
-        login_payload = {
-            "email": "test_integration@example.com",
-            "password": "StrongPassword123!"
+async def test_integration_sync_pipeline(client: AsyncClient, monkeypatch):
+    """Real API/database pipeline with controlled external providers."""
+    from unittest.mock import AsyncMock
+
+    import numpy as np
+    import pandas as pd
+
+    from tests.support import MODEL_RESPONSE, login
+
+    frame = pd.DataFrame(
+        {
+            "trading_date": pd.bdate_range("2025-01-01", periods=80).date,
+            "open": np.linspace(100, 120, 80),
+            "close": np.linspace(101, 121, 80),
+            "high": np.linspace(105, 125, 80),
+            "low": np.linspace(95, 115, 80),
+            "volume": np.arange(80) + 1000,
         }
-        res_login = await client.post("/api/v1/auth/token", json=login_payload)
-        token = res_login.json().get("access_token")
-        
-        # Now get latest analysis
-        res_analysis = await client.get(
-            "/api/v1/stocks/BBCA.JK/analysis/latest",
-            headers={"Authorization": f"Bearer {token}"}
-        )
-        assert res_analysis.status_code in [200, 404] # 404 if AI hasn't run yet
+    )
+    monkeypatch.setattr(
+        "app.api.routers.stocks.fetch_stock_history_async", AsyncMock(return_value=frame)
+    )
+    monkeypatch.setattr(
+        "app.api.routers.stocks.fetch_stock_info_async",
+        AsyncMock(return_value={"currency": "IDR", "exchange": "IDX", "longName": "Bank Test"}),
+    )
+    monkeypatch.setattr(
+        "app.services.ai_service.call_claude_sonnet", AsyncMock(return_value=MODEL_RESPONSE)
+    )
+    headers = await login(client)
+    response = await client.post("/api/v1/stocks/BBCA.JK/sync", headers=headers)
+    assert response.status_code == 200, response.text
+    assert response.json()["total_days_synced"] == 80
+    result = await client.post("/api/v1/analysis/BBCA.JK", headers=headers)
+    assert result.status_code == 200, result.text
+    latest = (await client.get("/api/v1/stocks/BBCA.JK/analysis/latest", headers=headers)).json()
+    assert latest["analysis_id"] == result.json()["result"]["id"]
+    assert latest["ai_recommendation"] == "BUY"
+    assert latest["confidence_score"] == 88
+    assert latest["metadata"]["currency"] == "IDR"
+    assert latest["analysis_matches_data"]

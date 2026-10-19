@@ -1,143 +1,172 @@
-"""
-AI Stock Analyzer - AI Service
-Orkestrasi pemanggilan AI: ambil data, buat prompt, panggil Claude, dan simpan hasilnya.
-"""
+"""Validated, revisioned analysis results. Database results are the shared cache."""
 
-import logging
-from datetime import date
+from decimal import Decimal
+
 import pandas as pd
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import ValidationError
+from sqlalchemy import select
 
-from app.domain.models.models import DailyPrice, TechnicalIndicator, AIAnalysis
-from app.services.prompt_builder import build_analysis_prompt
+from app.core.config import settings
+from app.core.errors import AnalysisError
+from app.domain.models.models import AIAnalysis, DailyPrice, Stock, TechnicalIndicator
+from app.domain.schemas.analysis import ModelAnalysis
 from app.infrastructure.ai_client import call_claude_sonnet
-from app.core.cache import get_cache, set_cache
+from app.services.market_metadata import as_utc, utcnow
+from app.services.prompt_builder import build_analysis_prompt
 
-logger = logging.getLogger(__name__)
+PROMPT_VERSION = "technical-r1-v1"
 
-async def run_ai_analysis(ticker: str, db: AsyncSession, analyzed_by=None) -> dict:
-    """
-    Menjalankan end-to-end proses AI untuk satu saham.
-    1. Ambil 10 data daily price terakhir dari DB
-    2. Ambil technical indicator terakhir dari DB
-    3. Generate prompt dan panggil Claude
-    4. Simpan ke database (tabel ai_analyses)
-    """
-    logger.info(f"Memulai AI Analysis untuk saham {ticker}")
-    
-    # 1. Ambil 10 harga terakhir
-    stmt_price = (
-        select(DailyPrice)
-        .where(DailyPrice.stock_ticker == ticker)
-        .order_by(DailyPrice.trading_date.desc())
-        .limit(10)
-    )
-    result_price = await db.execute(stmt_price)
-    prices = result_price.scalars().all()
-    
-    if not prices:
-        raise ValueError(f"Tidak ada data harga untuk {ticker}")
-    
-    # Urutkan dari terlama ke terbaru (untuk dataframe)
-    prices = list(reversed(prices))
-    df = pd.DataFrame([{
-        "trading_date": p.trading_date,
-        "open": float(p.open),
-        "high": float(p.high),
-        "low": float(p.low),
-        "close": float(p.close),
-        "volume": p.volume,
-    } for p in prices])
-    
-    # 2. Ambil technical indicator 5 hari terakhir
-    stmt_tech = (
-        select(TechnicalIndicator)
-        .where(TechnicalIndicator.stock_ticker == ticker)
-        .order_by(TechnicalIndicator.trading_date.desc())
-        .limit(5)
-    )
-    result_tech = await db.execute(stmt_tech)
-    techs = list(reversed(result_tech.scalars().all()))
-    
-    if not techs:
-        raise ValueError(f"Tidak ada data indikator teknikal untuk {ticker}")
-        
-    latest_tech = techs[-1]
-    
-    # Gabungkan data technical indicator ke dataframe
-    tech_map = {t.trading_date: t for t in techs}
-    for col in ['rsi_14', 'ema_50', 'ema_200', 'stopping_volume', 'no_demand', 'climactic_volume']:
-        df[col] = df['trading_date'].apply(lambda d: getattr(tech_map.get(d), col, None) if d in tech_map else None)
 
-    latest_indicators_dict = {
-        "smc_patterns": latest_tech.smc_patterns,
-        "is_spring": latest_tech.is_spring,
-        "wyckoff_phase": latest_tech.wyckoff_phase
+def result_payload(record, *, cached=False):
+    return {
+        **(record.details or {}),
+        "id": str(record.id),
+        "ticker": record.stock_ticker,
+        "recommendation": record.recommendation,
+        "confidence_score": record.confidence_score,
+        "ai_summary": record.ai_summary,
+        "vpa_insight": record.vpa_insight,
+        "analysis_date": record.analysis_date.isoformat(),
+        "generated_at": as_utc(record.generated_at).isoformat(),
+        "data_revision": record.data_revision,
+        "model_name": record.model_name,
+        "prompt_version": record.prompt_version,
+        "provenance": record.provenance,
+        "cached": cached,
     }
-    
-    # 2.5 Cek Cache
-    cache_key = f"analysis:{ticker}:{latest_tech.trading_date}"
-    cached_response = await get_cache(cache_key)
-    if cached_response:
-        logger.info(f"Cache HIT untuk {cache_key}")
-        # Karena kita mengambil dari cache, jangan update record DB lagi agar menghindari overhead.
-        # Kecuali kalau memang harus, tapi response AI yang identik tidak perlu di update ke DB.
-        return cached_response
-    
-    # 3. Build Prompt
-    system_prompt, user_prompt = build_analysis_prompt(ticker, df, latest_indicators_dict)
-    
-    # 4. Call Claude
-    ai_response = await call_claude_sonnet(system_prompt, user_prompt)
-    
-    # Simpan ke Cache
-    await set_cache(cache_key, ai_response, ttl=86400)
-    
-    # 5. Parse and Save to Database
-    recommendation = ai_response.get("recommendation", "HOLD").upper()
-    if recommendation not in ["BUY", "HOLD", "WAIT"]:
-        recommendation = "HOLD"
-        
-    conf_score_raw = ai_response.get("confidence_score", 0.0)
-    try:
-        conf_score = int(float(conf_score_raw) * 100)
-    except (ValueError, TypeError):
-        conf_score = 0
-        
-    analysis_date = latest_tech.trading_date
-    
-    # Cek apakah sudah ada analisis hari ini
-    stmt_check = select(AIAnalysis).where(
-        AIAnalysis.stock_ticker == ticker,
-        AIAnalysis.analysis_date == analysis_date
-    )
-    result_check = await db.execute(stmt_check)
-    existing = result_check.scalars().first()
-    
-    if existing:
-        existing.wyckoff_phase_ai = ai_response.get("wyckoff_phase", "")
-        existing.vpa_insight = ai_response.get("vpa_insight", "")
-        existing.recommendation = recommendation
-        existing.confidence_score = conf_score
-        existing.ai_summary = "Generated by Claude Sonnet"
-        existing.tokens_used = ai_response.get("tokens_used", 0)
-        existing.analyzed_by = analyzed_by
-    else:
-        new_analysis = AIAnalysis(
-            stock_ticker=ticker,
-            analysis_date=analysis_date,
-            wyckoff_phase_ai=ai_response.get("wyckoff_phase", ""),
-            vpa_insight=ai_response.get("vpa_insight", ""),
-            recommendation=recommendation,
-            confidence_score=conf_score,
-            ai_summary="Generated by Claude Sonnet",
-            tokens_used=ai_response.get("tokens_used", 0),
-            analyzed_by=analyzed_by
+
+
+async def cached_analysis(db, ticker, revision):
+    if not revision:
+        return None
+    return (
+        await db.execute(
+            select(AIAnalysis)
+            .where(
+                AIAnalysis.stock_ticker == ticker,
+                AIAnalysis.data_revision == revision,
+                AIAnalysis.model_name == settings.AI_MODEL_OPERATIONAL,
+                AIAnalysis.prompt_version == PROMPT_VERSION,
+                AIAnalysis.provenance == "real",
+            )
+            .order_by(AIAnalysis.generated_at.desc())
+            .limit(1)
         )
-        db.add(new_analysis)
-        
-    await db.commit()
-    logger.info(f"AI Analysis untuk {ticker} sukses disimpan.")
-    
-    return ai_response
+    ).scalar_one_or_none()
+
+
+async def run_ai_analysis(ticker, db, analyzed_by=None, *, commit=True):
+    stock = await db.get(Stock, ticker)
+    if not stock or not stock.data_revision or not stock.market_source:
+        raise AnalysisError(
+            "DATA_UNVERIFIED",
+            "Sinkronkan data pasar sebelum menjalankan AI.",
+            status=409,
+            stage="data",
+        )
+    cached = await cached_analysis(db, ticker, stock.data_revision)
+    if cached:
+        return result_payload(cached, cached=True)
+    prices = list(
+        reversed(
+            (
+                await db.execute(
+                    select(DailyPrice)
+                    .where(DailyPrice.stock_ticker == ticker)
+                    .order_by(DailyPrice.trading_date.desc())
+                    .limit(10)
+                )
+            )
+            .scalars()
+            .all()
+        )
+    )
+    techs = list(
+        reversed(
+            (
+                await db.execute(
+                    select(TechnicalIndicator)
+                    .where(TechnicalIndicator.stock_ticker == ticker)
+                    .order_by(TechnicalIndicator.trading_date.desc())
+                    .limit(5)
+                )
+            )
+            .scalars()
+            .all()
+        )
+    )
+    if (
+        len(prices) < 5
+        or not techs
+        or techs[-1].trading_date != prices[-1].trading_date
+        or techs[-1].rsi_14 is None
+        or techs[-1].ema_50 is None
+    ):
+        raise AnalysisError(
+            "DATA_INSUFFICIENT",
+            "Data harga/indikator belum cukup atau tidak selaras.",
+            status=409,
+            stage="data",
+        )
+    revision = stock.data_revision
+    tech_map = {t.trading_date: t for t in techs}
+    data = []
+    for p in prices:
+        row = {"trading_date": p.trading_date, "volume": p.volume}
+        row.update({k: float(getattr(p, k)) for k in ["open", "high", "low", "close"]})
+        for k in [
+            "rsi_14",
+            "ema_50",
+            "ema_200",
+            "stopping_volume",
+            "no_demand",
+            "climactic_volume",
+        ]:
+            value = getattr(tech_map.get(p.trading_date), k, None)
+            row[k] = float(value) if isinstance(value, Decimal) else value
+        data.append(row)
+    latest = techs[-1]
+    system, prompt = build_analysis_prompt(
+        ticker,
+        pd.DataFrame(data),
+        {
+            "smc_patterns": latest.smc_patterns,
+            "is_spring": latest.is_spring,
+            "wyckoff_phase": latest.wyckoff_phase,
+        },
+    )
+    raw = await call_claude_sonnet(system, prompt)
+    try:
+        validated = ModelAnalysis.model_validate(raw)
+    except ValidationError as exc:
+        raise AnalysisError(
+            "AI_INVALID_RESPONSE", "Respons AI tidak memenuhi kontrak analisis."
+        ) from exc
+    # Do not label a result against a newer data revision if sync happened during the call.
+    await db.refresh(stock)
+    if stock.data_revision != revision:
+        raise AnalysisError(
+            "DATA_CHANGED", "Data berubah selama analisis. Silakan jalankan ulang.", status=409
+        )
+    record = AIAnalysis(
+        stock_ticker=ticker,
+        analysis_date=latest.trading_date,
+        ai_summary=validated.summary or validated.vpa_insight,
+        vpa_insight=validated.vpa_insight,
+        recommendation=validated.recommendation,
+        confidence_score=round(validated.confidence_score * 100),
+        wyckoff_phase_ai=validated.wyckoff_phase,
+        tokens_used=validated.tokens_used,
+        analyzed_by=analyzed_by,
+        generated_at=utcnow(),
+        provenance="real",
+        data_revision=revision,
+        model_name=settings.AI_MODEL_OPERATIONAL,
+        prompt_version=PROMPT_VERSION,
+        details=validated.model_dump(exclude={"confidence_score", "recommendation"}),
+    )
+    db.add(record)
+    await db.flush()
+    if commit:
+        await db.commit()
+    return result_payload(record)

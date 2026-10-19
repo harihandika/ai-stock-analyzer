@@ -1,84 +1,44 @@
-"""
-AI Stock Analyzer - Anthropic SDK Wrapper
-Mengatur koneksi ke Claude Sonnet.
-"""
+"""Anthropic failures are failures, never synthetic investment recommendations."""
+
 import json
-import logging
-from anthropic import AsyncAnthropic, APITimeoutError, APIStatusError
+
+from anthropic import APIError, APITimeoutError, AsyncAnthropic
 
 from app.core.config import settings
+from app.core.errors import AnalysisError
 
-logger = logging.getLogger(__name__)
 
 async def call_claude_sonnet(system_prompt: str, user_prompt: str) -> dict:
-    """
-    Memanggil Claude Sonnet via Anthropic SDK.
-    Mengembalikan dict hasil parsing JSON dari balasan AI.
-    """
     if not settings.ANTHROPIC_API_KEY or settings.ANTHROPIC_API_KEY == "mock-key-for-testing":
-        logger.warning("Mock Anthropic API Key terdeteksi. Menggunakan mock response.")
-        return {
-            "wyckoff_phase": "Tidak diketahui (Mock)",
-            "vpa_insight": "Mock VPA insight - Harap masukkan API key asli.",
-            "recommendation": "HOLD",
-            "confidence_score": 0.0,
-            "summary_id": "mock-summary"
-        }
-
-    client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
-
+        raise AnalysisError("AI_NOT_CONFIGURED", "Layanan AI belum dikonfigurasi.", status=503)
     try:
-        model_name = getattr(settings, "AI_MODEL_OPERATIONAL", "claude-sonnet-4-20250514")
-        response = await client.messages.create(
-            model=model_name,
-            max_tokens=1024,
-            system=system_prompt,
-            messages=[
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.1 # Suhu rendah untuk konsistensi analisis JSON
-        )
-        
-        # Ekstrak teks dari balasan pertama (asumsi balasan adalah text block JSON)
-        raw_text = response.content[0].text
-        
-        try:
-            # Cari substring JSON di dalam balasan (jaga-jaga Claude menambahkan narasi)
-            start_idx = raw_text.find('{')
-            end_idx = raw_text.rfind('}') + 1
-            if start_idx != -1 and end_idx != 0:
-                json_str = raw_text[start_idx:end_idx]
-                result = json.loads(json_str)
-                
-                # Ekstrak token usage
-                tokens_used = getattr(response.usage, "input_tokens", 0) + getattr(response.usage, "output_tokens", 0)
-                result["tokens_used"] = tokens_used
-                logger.info(f"Token usage: {tokens_used}")
-                
-                return result
-            else:
-                raise ValueError("JSON object tidak ditemukan pada response Claude")
-                
-        except json.JSONDecodeError as je:
-            logger.error(f"Gagal memparsing JSON dari balasan Claude: {je}\nRaw Text: {raw_text}")
-            return __get_fallback_response()
-            
-    except APITimeoutError:
-        logger.error("Timeout memanggil Anthropic API")
-        return __get_fallback_response("API Timeout")
-    except APIStatusError as status_err:
-        logger.error(f"Anthropic API Error: {status_err.status_code} - {status_err.message}")
-        return __get_fallback_response(f"API Error {status_err.status_code}")
-    except Exception as e:
-        logger.error(f"Unexpected error memanggil Claude: {e}")
-        return __get_fallback_response(str(e))
-
-def __get_fallback_response(reason: str = "Format Invalid") -> dict:
-    """Mengembalikan format gagal/fallback jika terjadi error"""
-    return {
-        "wyckoff_phase": "Unknown",
-        "vpa_insight": f"Gagal menganalisis karena: {reason}",
-        "recommendation": "HOLD",
-        "confidence_score": 0.0,
-        "summary_id": "error-summary"
-    }
+        async with AsyncAnthropic(
+            api_key=settings.ANTHROPIC_API_KEY, timeout=60, max_retries=0
+        ) as client:
+            response = await client.messages.create(
+                model=settings.AI_MODEL_OPERATIONAL,
+                max_tokens=2048,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}],
+                temperature=0.1,
+            )
+        raw = "".join(block.text for block in response.content if block.type == "text").strip()
+        if raw.startswith("\u0060\u0060\u0060"):
+            raw = raw.split("\n", 1)[1].rsplit("\u0060\u0060\u0060", 1)[0].strip()
+        result = json.loads(raw)
+        if not isinstance(result, dict):
+            raise ValueError("Expected object")
+        result["tokens_used"] = response.usage.input_tokens + response.usage.output_tokens
+        return result
+    except APITimeoutError as exc:
+        raise AnalysisError(
+            "AI_TIMEOUT", "Layanan AI melewati batas waktu. Silakan coba lagi.", status=504
+        ) from exc
+    except APIError as exc:
+        raise AnalysisError(
+            "AI_PROVIDER_ERROR", "Layanan AI tidak dapat dihubungi. Silakan coba lagi."
+        ) from exc
+    except (ValueError, TypeError, IndexError) as exc:
+        raise AnalysisError(
+            "AI_INVALID_RESPONSE", "Respons AI tidak valid; hasil terakhir dipertahankan."
+        ) from exc

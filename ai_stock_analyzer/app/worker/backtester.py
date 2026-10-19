@@ -1,212 +1,212 @@
-"""
-AI Stock Analyzer - Backtesting Engine
-CLI script untuk menguji efektivitas algoritma VPA + SMC pada data historis.
-"""
+"""Causal daily technical strategy. Decisions at close, executions at next open."""
 
 import argparse
 import asyncio
+
+import numpy as np
 import pandas as pd
-from rich.console import Console
-from rich.table import Table
-from typing import List, Dict
 
 from app.infrastructure.market_data import fetch_stock_history_async
 from app.services.indicator_engine import calculate_indicators, detect_vpa_signals
-from app.services.pattern_engine import detect_swing_points, detect_double_bottom
-from app.services.wyckoff_engine import detect_wyckoff_accumulation
+from app.services.pattern_engine import detect_confirmed_swings
 from app.services.smc_engine import detect_fvg, detect_structure_breaks
+from app.services.wyckoff_engine import detect_wyckoff_accumulation
 
-console = Console()
+
+def prepare_signals(frame):
+    frame = frame.sort_values("trading_date").reset_index(drop=True).copy()
+    frame = calculate_indicators(frame)
+    frame = detect_vpa_signals(frame)
+    frame = detect_confirmed_swings(frame)
+    frame = detect_wyckoff_accumulation(frame)
+    frame = detect_fvg(frame)
+    return detect_structure_breaks(frame)
+
 
 class Backtester:
-    def __init__(self, ticker: str, years: int, target_profit: float = 0.05, stop_loss: float = 0.03):
+    def __init__(
+        self, ticker: str, years: int, target_profit: float = 0.05, stop_loss: float = 0.03
+    ):
+        if not 1 <= years <= 5 or not 0 < target_profit <= 0.20 or not 0 < stop_loss <= 0.10:
+            raise ValueError("Parameter backtest di luar batas.")
         self.ticker = ticker.upper()
-        self.period = f"{years}y"
+        self.years = years
+        self.period = str(years) + "y"
         self.target_profit = target_profit
         self.stop_loss = stop_loss
-        
-        self.trades: List[Dict] = []
+        self.trades = []
+        self.equity_curve = []
         self.df = pd.DataFrame()
 
     async def _fetch_and_prepare_data(self):
-        console.print(f"[cyan]Mengambil data {self.ticker} selama {self.period} terakhir...[/cyan]")
-        df = await fetch_stock_history_async(self.ticker, period=self.period)
-        
-        if df.empty:
-            console.print(f"[red]Error: Data untuk {self.ticker} tidak ditemukan.[/red]")
+        frame = await fetch_stock_history_async(self.ticker, period=self.period)
+        required = ["open", "high", "low", "close", "volume"]
+        if frame.empty or len(frame) < 60 or not set(required + ["trading_date"]).issubset(frame):
             return False
-            
-        console.print(f"[cyan]Menghitung indikator teknikal untuk {len(df)} baris data...[/cyan]")
-        df = calculate_indicators(df)
-        df = detect_vpa_signals(df)
-        df = detect_swing_points(df, window=5)
-        df = detect_wyckoff_accumulation(df)
-        df = detect_fvg(df)
-        df = detect_structure_breaks(df)
-        
-        self.df = df
+        values = frame[required].to_numpy(dtype=float)
+        if (
+            not np.isfinite(values).all()
+            or (frame[required[:4]] <= 0).any().any()
+            or frame["trading_date"].duplicated().any()
+            or (frame["low"] > frame[["open", "close"]].min(axis=1)).any()
+            or (frame["high"] < frame[["open", "close"]].max(axis=1)).any()
+            or (frame["volume"] < 0).any()
+        ):
+            raise ValueError("Data OHLCV tidak valid.")
+        self.df = prepare_signals(frame)
         return True
 
+    @staticmethod
+    def entry_signal(row):
+        if bool(row.get("is_spring", False)) and bool(row.get("stopping_volume", False)):
+            return "Wyckoff Spring + Stopping Volume"
+        if bool(row.get("bullish_fvg", False)) and bool(row.get("choch", False)):
+            return "SMC Bullish FVG + confirmed CHoCH"
+        return None
+
     def run_simulation(self):
-        console.print("[cyan]Memulai simulasi time-stepping (berjalan dari masa lalu ke masa kini)...[/cyan]")
-        
-        in_position = False
-        buy_price = 0
-        buy_date = None
-        buy_reason = ""
-        days_held = 0
-        MAX_HOLD_DAYS = 30
-        
-        # Simulasi berjalan dari hari pertama yang punya indikator komplit
-        for idx in range(50, len(self.df)):
-            row = self.df.iloc[idx]
-            current_date = row['trading_date']
-            current_close = row['close']
-            
-            # Cek Exit (Jika sedang punya posisi)
-            if in_position:
-                days_held += 1
-                profit_pct = (current_close - buy_price) / buy_price
-                
-                # Exit condition: Take profit, Stop Loss, atau Timeout
-                if profit_pct >= self.target_profit:
-                    self._record_trade(buy_date, current_date, buy_price, current_close, "WIN (Take Profit)", profit_pct, days_held, buy_reason)
-                    in_position = False
-                elif profit_pct <= -self.stop_loss:
-                    self._record_trade(buy_date, current_date, buy_price, current_close, "LOSS (Stop Loss)", profit_pct, days_held, buy_reason)
-                    in_position = False
-                elif days_held >= MAX_HOLD_DAYS:
-                    status = "WIN (Timeout)" if profit_pct > 0 else "LOSS (Timeout)"
-                    self._record_trade(buy_date, current_date, buy_price, current_close, status, profit_pct, days_held, buy_reason)
-                    in_position = False
+        self.trades, self.equity_curve = [], []
+        cash, units = 100.0, 0.0
+        entry = None
+        pending_entry, pending_exit = None, None
+        for i, row in self.df.iterrows():
+            exited_today = False
+            if pending_exit and entry:
+                sell = float(row["open"])
+                cash = units * sell
+                self._record_trade(
+                    entry["date"],
+                    row["trading_date"],
+                    entry["price"],
+                    sell,
+                    pending_exit,
+                    sell / entry["price"] - 1,
+                    i - entry["index"] + 1,
+                    entry["reason"],
+                )
+                units, entry, pending_exit = 0.0, None, None
+                exited_today = True
+            if pending_entry and not entry and not exited_today:
+                buy = float(row["open"])
+                units, cash = cash / buy, 0.0
+                entry = {
+                    "date": row["trading_date"],
+                    "price": buy,
+                    "reason": pending_entry,
+                    "index": i,
+                }
+            pending_entry = None
+            final_day = i == len(self.df) - 1
+            if final_day and entry:
+                sell = float(row["close"])
+                cash = units * sell
+                self._record_trade(
+                    entry["date"],
+                    row["trading_date"],
+                    entry["price"],
+                    sell,
+                    "END_OF_PERIOD",
+                    sell / entry["price"] - 1,
+                    i - entry["index"] + 1,
+                    entry["reason"],
+                )
+                units, entry = 0.0, None
+            equity = cash + units * float(row["close"])
+            self.equity_curve.append({"date": str(row["trading_date"]), "equity": round(equity, 8)})
+            if final_day:
                 continue
-            
-            # Cek Entry (Jika tidak punya posisi)
-            # Syarat Entry: 
-            # 1. Wyckoff Spring + VPA Stopping Volume ATAU
-            # 2. Bullish FVG + CHoCH (Pembalikan arah tren)
-            
-            is_spring = row.get('is_spring', False)
-            stopping_vol = row.get('stopping_volume', False)
-            bullish_fvg = row.get('bullish_fvg', False)
-            choch = row.get('choch', False)
-            
-            if is_spring and stopping_vol:
-                in_position = True
-                buy_price = current_close
-                buy_date = current_date
-                buy_reason = "Wyckoff Spring + Stopping Vol"
-                days_held = 0
-            elif bullish_fvg and choch:
-                in_position = True
-                buy_price = current_close
-                buy_date = current_date
-                buy_reason = "SMC Bullish FVG + CHoCH"
-                days_held = 0
-                
-    def _record_trade(self, buy_date, sell_date, buy_price, sell_price, status, profit_pct, days_held, reason):
-        self.trades.append({
-            "buy_date": buy_date,
-            "sell_date": sell_date,
-            "buy_price": buy_price,
-            "sell_price": sell_price,
-            "status": status,
-            "profit_pct": profit_pct * 100,
-            "days_held": days_held,
-            "reason": reason
-        })
-        
-    def get_results_dict(self) -> dict:
-        total_trades = len(self.trades)
-        if total_trades == 0:
-            return {
-                "ticker": self.ticker,
-                "period": self.period,
-                "total_trades": 0,
-                "win_rate": 0.0,
-                "avg_profit_pct": 0.0,
-                "max_drawdown_pct": 0.0,
-                "recent_trades": []
+            if entry:
+                profit = float(row["close"]) / entry["price"] - 1
+                if profit >= self.target_profit:
+                    pending_exit = "TAKE_PROFIT"
+                elif profit <= -self.stop_loss:
+                    pending_exit = "STOP_LOSS"
+                elif i - entry["index"] + 1 >= 30:
+                    pending_exit = "TIMEOUT"
+            elif not exited_today and i >= 50:
+                pending_entry = self.entry_signal(row)
+
+    def _record_trade(
+        self, buy_date, sell_date, buy_price, sell_price, exit_reason, profit, days_held, reason
+    ):
+        self.trades.append(
+            {
+                "buy_date": str(buy_date),
+                "sell_date": str(sell_date),
+                "buy_price": buy_price,
+                "sell_price": sell_price,
+                "profit_pct": round(profit * 100, 6),
+                "status": "WIN" if profit > 0 else "LOSS" if profit < 0 else "BREAKEVEN",
+                "exit_reason": exit_reason,
+                "reason": reason,
+                "days_held": days_held,
             }
-            
-        wins = [t for t in self.trades if "WIN" in t["status"]]
-        losses = [t for t in self.trades if "LOSS" in t["status"]]
-        
-        win_rate = (len(wins) / total_trades) * 100
-        avg_profit = sum([t["profit_pct"] for t in self.trades]) / total_trades
-        max_drawdown = min([t["profit_pct"] for t in self.trades]) if losses else 0
-        
+        )
+
+    def get_results_dict(self):
+        total = len(self.trades)
+        wins = sum(t["status"] == "WIN" for t in self.trades)
+        peak, drawdown = 100.0, 0.0
+        for point in self.equity_curve:
+            peak = max(peak, point["equity"])
+            drawdown = max(drawdown, (peak - point["equity"]) / peak * 100)
+        params = {
+            "years": self.years,
+            "target_profit_pct": self.target_profit * 100,
+            "stop_loss_pct": self.stop_loss * 100,
+        }
         return {
             "ticker": self.ticker,
-            "period": self.period,
-            "total_trades": total_trades,
-            "wins": len(wins),
-            "losses": len(losses),
-            "win_rate": round(win_rate, 2),
-            "avg_profit_pct": round(avg_profit, 2),
-            "max_drawdown_pct": round(max_drawdown, 2),
-            "recent_trades": self.trades[-10:]
+            "period_years": self.years,
+            "requested_parameters": params,
+            "effective_parameters": params,
+            "data_start": str(self.df.iloc[0]["trading_date"]) if not self.df.empty else None,
+            "data_end": str(self.df.iloc[-1]["trading_date"]) if not self.df.empty else None,
+            "source": "Yahoo Finance",
+            "interval": "1d",
+            "strategy": "technical_daily_v1",
+            "total_trades": total,
+            "win_rate_pct": round(wins / total * 100, 6) if total else 0,
+            "avg_profit_pct": round(sum(t["profit_pct"] for t in self.trades) / total, 6)
+            if total
+            else 0,
+            "max_drawdown_pct": round(drawdown, 6),
+            "trades": self.trades,
+            "equity_curve": self.equity_curve,
+            "assumptions": {
+                "initial_equity": 100,
+                "allocation_pct": 100,
+                "compounding": True,
+                "entry": "Keputusan close; entry open sesi berikutnya",
+                "exit": "Evaluasi TP/SL pada close; exit open berikutnya termasuk gap",
+                "max_holding_sessions": 30,
+                "final_position": "Tutup pada close akhir periode",
+                "price_adjustment": "split_and_dividend_adjusted",
+                "fee_bps": 0,
+                "slippage_bps": 0,
+                "limitations": "Simulasi strategi teknikal, bukan rekam jejak AI. Ukuran lot dan likuiditas belum dimodelkan; biaya/slippage diasumsikan nol. TP/SL bukan jaminan harga eksekusi intraday.",
+            },
         }
-        
+
     def print_results(self):
-        total_trades = len(self.trades)
-        if total_trades == 0:
-            console.print("[yellow]Tidak ada sinyal entry yang terdeteksi selama periode ini.[/yellow]")
-            return
-            
-        wins = [t for t in self.trades if "WIN" in t["status"]]
-        losses = [t for t in self.trades if "LOSS" in t["status"]]
-        
-        win_rate = (len(wins) / total_trades) * 100
-        avg_profit = sum([t["profit_pct"] for t in self.trades]) / total_trades
-        max_drawdown = min([t["profit_pct"] for t in self.trades]) if losses else 0
-        
-        console.print("\n[bold green]=== HASIL BACKTESTING ===[/bold green]")
-        console.print(f"Ticker: {self.ticker}")
-        console.print(f"Periode: {self.period}")
-        console.print(f"Total Trade: {total_trades}")
-        console.print(f"Win Rate: {win_rate:.2f}% ({len(wins)} Win / {len(losses)} Loss)")
-        console.print(f"Avg Profit/Trade: {avg_profit:.2f}%")
-        console.print(f"Max Drawdown: {max_drawdown:.2f}%")
-        
-        # Print Table
-        table = Table(title="Daftar Transaksi (Sampel max 10 terakhir)")
-        table.add_column("Buy Date", style="cyan")
-        table.add_column("Sell Date", style="cyan")
-        table.add_column("Reason", style="magenta")
-        table.add_column("Hold", justify="right")
-        table.add_column("Status", justify="center")
-        table.add_column("Profit %", justify="right")
-        
-        for t in self.trades[-10:]:
-            color = "green" if "WIN" in t["status"] else "red"
-            table.add_row(
-                str(t["buy_date"])[:10],
-                str(t["sell_date"])[:10],
-                t["reason"],
-                f"{t['days_held']} hari",
-                f"[{color}]{t['status']}[/{color}]",
-                f"[{color}]{t['profit_pct']:.2f}%[/{color}]"
-            )
-            
-        console.print(table)
+        import json
+
+        print(json.dumps(self.get_results_dict(), indent=2))
 
 
 async def main():
-    parser = argparse.ArgumentParser(description="AI Stock Analyzer - Backtesting Engine")
-    parser.add_argument("--ticker", type=str, required=True, help="Simbol saham (contoh: BBCA.JK)")
-    parser.add_argument("--years", type=int, default=3, help="Periode backtest dalam tahun (default: 3)")
-    parser.add_argument("--tp", type=float, default=0.05, help="Target profit dalam desimal (default: 0.05 = 5%)")
-    parser.add_argument("--sl", type=float, default=0.03, help="Stop loss dalam desimal (default: 0.03 = 3%)")
-    
+    parser = argparse.ArgumentParser(description="Backtest strategi teknikal harian")
+    parser.add_argument("--ticker", required=True)
+    parser.add_argument("--years", type=int, default=3)
+    parser.add_argument("--tp", type=float, default=0.05, help="Target sebagai desimal")
+    parser.add_argument("--sl", type=float, default=0.03, help="Stop sebagai desimal")
     args = parser.parse_args()
-    
-    backtester = Backtester(args.ticker, args.years, args.tp, args.sl)
-    success = await backtester._fetch_and_prepare_data()
-    
-    if success:
-        backtester.run_simulation()
-        backtester.print_results()
+    engine = Backtester(args.ticker, args.years, args.tp, args.sl)
+    if not await engine._fetch_and_prepare_data():
+        raise SystemExit("Data historis belum cukup atau tidak tersedia.")
+    engine.run_simulation()
+    engine.print_results()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

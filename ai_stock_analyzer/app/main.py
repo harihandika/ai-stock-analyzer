@@ -3,21 +3,24 @@ AI Stock Analyzer - FastAPI Application Entrypoint
 Mendaftarkan semua router, middleware, dan event handler.
 """
 
+import logging
+import uuid as _uuid
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.core.config import settings
-from app.api.routers import auth, stocks, analysis
-from app.core.rate_limiter import limiter, rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.base import BaseHTTPMiddleware
 
-
+from app.api.routers import analysis, auth, stocks
 from app.core.cache import setup_redis_cache
+from app.core.config import settings
 from app.core.logging import setup_logging
-import logging
+from app.core.rate_limiter import limiter, rate_limit_exceeded_handler
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -68,9 +71,7 @@ app.add_middleware(
 )
 
 # ---- Correlation ID Middleware ----
-import uuid as _uuid
-from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi import Request, Response
+
 
 class CorrelationIdMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
@@ -79,6 +80,7 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         response.headers["X-Correlation-ID"] = correlation_id
         return response
+
 
 app.add_middleware(CorrelationIdMiddleware)
 
@@ -114,3 +116,13 @@ async def root() -> dict:
         "health": "/health",
         "api_prefix": API_PREFIX,
     }
+
+
+# Preserve legacy string errors, add correlation to structured operational errors.
+
+
+@app.exception_handler(StarletteHTTPException)
+async def operational_error_handler(request: Request, exc: StarletteHTTPException):
+    if isinstance(exc.detail, dict):
+        exc.detail = {**exc.detail, "request_id": getattr(request.state, "correlation_id", None)}
+    return await http_exception_handler(request, exc)

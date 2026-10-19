@@ -1,0 +1,2 @@
+# Optional browser smoke tests; requires a Chromium executable.
+playwright==1.62.0

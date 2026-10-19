@@ -1,35 +1,22 @@
-import { apiClient } from './api';
-
+import Cookies from "js-cookie";
+import { apiClient, logout } from "./api";
+import { clearSession } from "./session";
 export const authService = {
-  async login(username: string, password: string) {
-    const params = new URLSearchParams();
-    params.append('username', username);
-    params.append('password', password);
-    
-    const response = await apiClient.post('/auth/token', params, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
-    return response.data; // { access_token, refresh_token, token_type }
+  async login(email: string, password: string) {
+    return (await apiClient.post("/auth/token", { email, password })).data;
   },
-
-  async register(data: any) {
-    const response = await apiClient.post('/auth/register', data);
-    return response.data;
+  async register(data: { full_name: string; email: string; password: string }) {
+    return (await apiClient.post("/auth/register", data)).data;
   },
-
   async getMe() {
-    const response = await apiClient.get('/auth/me');
-    return response.data; // User profile
+    return (await apiClient.get("/auth/me")).data;
   },
-
   async logout() {
-    // Attempt to hit logout endpoint to revoke refresh token
     try {
-      await apiClient.post('/auth/logout');
-    } catch (e) {
-      console.error('Logout API failed', e);
+      const token = Cookies.get("refresh_token");
+      if (token) await logout(token);
+    } finally {
+      clearSession();
     }
-  }
+  },
 };
