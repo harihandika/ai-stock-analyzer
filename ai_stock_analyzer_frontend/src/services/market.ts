@@ -8,6 +8,11 @@ export interface MarketMetadata {
   price_adjustment?: string;
   data_state: "fresh" | "stale" | "unavailable" | "demo" | "unknown";
   data_revision: string | null;
+  volume_adjustment?: string;
+  session_timezone?: string | null;
+  market_status?: "open" | "closed" | "unknown";
+  expected_market_date?: string | null;
+  publication_delay_minutes?: number | null;
 }
 export interface Quote {
   ticker: string;

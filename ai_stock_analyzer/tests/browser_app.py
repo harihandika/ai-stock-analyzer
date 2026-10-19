@@ -1,5 +1,6 @@
 """Isolated browser-test backend. Never use with a development/production database."""
 
+import asyncio
 import os
 from contextlib import asynccontextmanager
 
@@ -24,7 +25,9 @@ if os.getenv("BROWSER_SMOKE") != "1" or "browser-r1" not in settings.DATABASE_UR
 
 
 async def history(ticker, period="1y"):
-    if ticker == "MISSING.JK":
+    if ticker == "RELOAD.JK":
+        await asyncio.sleep(5)
+    if ticker in ("MISSING.JK", "INVALIDXYZ"):
         return pd.DataFrame()
     close = 100 + np.sin(np.arange(130) / 3) * 5 + np.arange(130) * 0.03
     return pd.DataFrame(
@@ -67,12 +70,24 @@ original_lifespan = app.router.lifespan_context
 async def test_lifespan(application):
     async with original_lifespan(application):
         async with AsyncSessionLocal() as db:
-            for ticker in ["BBCA.JK", "AAPL", "FAILAI.JK"]:
+            for ticker in [
+                "BBCA.JK",
+                "AAPL",
+                "FAILAI.JK",
+                "RELOAD.JK",
+                *[f"BROWSE{i:02}.JK" for i in range(1, 9)],
+            ]:
                 if not await db.get(Stock, ticker):
                     db.add(
                         Stock(
                             ticker=ticker,
-                            company_name="Bank Fixture" if ticker.endswith(".JK") else "US Fixture",
+                            company_name=(
+                                "Saham Pengujian " + ticker
+                                if ticker.startswith("BROWSE")
+                                else "Bank Fixture"
+                                if ticker.endswith(".JK")
+                                else "US Fixture"
+                            ),
                             currency="IDR" if ticker.endswith(".JK") else "USD",
                             exchange="IDX" if ticker.endswith(".JK") else "NASDAQ",
                         )

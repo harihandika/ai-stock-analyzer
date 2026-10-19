@@ -6,11 +6,11 @@ import pandas as pd
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from app.core.config import settings
 from app.core.errors import AnalysisError
 from app.domain.models.models import AIAnalysis, DailyPrice, Stock, TechnicalIndicator
 from app.domain.schemas.analysis import ModelAnalysis
-from app.infrastructure.ai_client import call_claude_sonnet
+from app.infrastructure.ai_client import ai_identity
+from app.infrastructure.ai_client import call_analysis_model as call_claude_sonnet
 from app.services.market_metadata import as_utc, utcnow
 from app.services.prompt_builder import build_analysis_prompt
 
@@ -30,6 +30,8 @@ def result_payload(record, *, cached=False):
         "generated_at": as_utc(record.generated_at).isoformat(),
         "data_revision": record.data_revision,
         "model_name": record.model_name,
+        "provider_name": record.provider_name,
+        "actual_model_name": record.actual_model_name,
         "prompt_version": record.prompt_version,
         "provenance": record.provenance,
         "cached": cached,
@@ -45,7 +47,8 @@ async def cached_analysis(db, ticker, revision):
             .where(
                 AIAnalysis.stock_ticker == ticker,
                 AIAnalysis.data_revision == revision,
-                AIAnalysis.model_name == settings.AI_MODEL_OPERATIONAL,
+                AIAnalysis.model_name == ai_identity()[1],
+                AIAnalysis.provider_name == ai_identity()[0],
                 AIAnalysis.prompt_version == PROMPT_VERSION,
                 AIAnalysis.provenance == "real",
             )
@@ -109,6 +112,13 @@ async def run_ai_analysis(ticker, db, analyzed_by=None, *, commit=True):
             stage="data",
         )
     revision = stock.data_revision
+    input_metadata = {
+        "source": stock.market_source,
+        "currency": stock.currency,
+        "exchange": stock.exchange,
+        "price_adjustment": stock.price_adjustment,
+        "volume_adjustment": stock.volume_adjustment,
+    }
     tech_map = {t.trading_date: t for t in techs}
     data = []
     for p in prices:
@@ -161,9 +171,14 @@ async def run_ai_analysis(ticker, db, analyzed_by=None, *, commit=True):
         generated_at=utcnow(),
         provenance="real",
         data_revision=revision,
-        model_name=settings.AI_MODEL_OPERATIONAL,
+        model_name=ai_identity()[1],
+        provider_name=ai_identity()[0],
+        actual_model_name=raw.get("_model_name", ai_identity()[1]),
         prompt_version=PROMPT_VERSION,
-        details=validated.model_dump(exclude={"confidence_score", "recommendation"}),
+        details={
+            **validated.model_dump(exclude={"confidence_score", "recommendation"}),
+            "input_metadata": input_metadata,
+        },
     )
     db.add(record)
     await db.flush()

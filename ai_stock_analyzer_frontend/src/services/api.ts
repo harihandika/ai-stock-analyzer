@@ -2,6 +2,12 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
 import { clearSession, storeSession } from "./session";
 
+declare module "axios" {
+  interface AxiosRequestConfig {
+    skipAuthRefresh?: boolean;
+  }
+}
+
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -20,13 +26,14 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const config = error.config as
-      | (InternalAxiosRequestConfig & { _retry?: boolean })
-      | undefined;
+      (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
     const authRequest = /\/auth\/(token|register|refresh|logout)$/.test(
       config?.url || "",
     );
     if (
       !config ||
+      config.skipAuthRefresh ||
+      config.signal?.aborted ||
       error.response?.status !== 401 ||
       config._retry ||
       authRequest
@@ -68,12 +75,8 @@ apiClient.interceptors.response.use(
         : Cookies.get("refresh_token") === initialRefresh;
       if (!stillOwnsSession) throw refreshError;
       clearSession();
-      if (
-        typeof window !== "undefined" &&
-        !["/login", "/register"].includes(window.location.pathname)
-      ) {
-        window.location.assign("/login");
-      }
+      // AuthProvider receives auth-expired and the protected layout owns navigation.
+      // Multiple concurrent 401s must not launch competing full-page redirects.
       throw refreshError;
     }
   },
@@ -95,14 +98,23 @@ export function errorMessage(error: unknown): string {
 export const logout = (refreshToken: string) =>
   apiClient.post("/auth/logout", { refresh_token: refreshToken });
 export const updatePassword = (currentPw: string, newPw: string) =>
-  apiClient.post("/auth/password", {
+  apiClient.post("/auth/change-password", {
     current_password: currentPw,
     new_password: newPw,
   });
 export const getUserQuota = () => apiClient.get("/auth/me");
 export const runBacktest = (
   ticker: string,
-  params: { years: number; target_profit_pct: number; stop_loss_pct: number },
+  params: {
+    years: number;
+    target_profit_pct: number;
+    stop_loss_pct: number;
+    initial_capital?: number;
+    lot_size?: number;
+    buy_fee_bps?: number;
+    sell_fee_bps?: number;
+    slippage_bps?: number;
+  },
 ) =>
   apiClient.post(
     "/analysis/" + encodeURIComponent(ticker) + "/backtest",

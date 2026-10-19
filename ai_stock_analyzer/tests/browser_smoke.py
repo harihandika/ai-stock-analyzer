@@ -21,7 +21,7 @@ def main():
         )
         context = browser.new_context(viewport={"width": 1440, "height": 1000})
         page = context.new_page()
-        page.set_default_timeout(15000)
+        page.set_default_timeout(30000)
         errors, refreshes = [], []
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.on(
@@ -38,10 +38,25 @@ def main():
         page.wait_for_url(re.compile(r".*/login$"))
         page.get_by_label("Email Address").fill(email)
         page.get_by_label("Password", exact=True).fill(password)
+        page.get_by_label("Email Address").focus()
+        page.keyboard.press("Tab")
+        expect(page.get_by_label("Password", exact=True)).to_be_focused()
+        page.keyboard.press("Tab")
+        expect(page.get_by_role("button", name="Tampilkan password", exact=True)).to_be_focused()
+        page.keyboard.press("Space")
+        expect(page.get_by_label("Password", exact=True)).to_have_attribute("type", "text")
+        page.keyboard.press("Space")
+        expect(page.get_by_label("Password", exact=True)).to_have_attribute("type", "password")
+        print("PASS keyboard labels, password toggle and tab order")
         page.get_by_role("button", name="Sign In", exact=True).click()
         page.wait_for_url(re.compile(r".*/dashboard$"))
         expect(page.get_by_role("heading", name="Selamat Datang, Browser")).to_be_visible()
         print("PASS register/login JSON and same-origin API")
+        page.get_by_role("button", name="Saham berikutnya", exact=True).click()
+        expect(page.get_by_text("Halaman 2 / 2", exact=True)).to_be_visible()
+        page.get_by_role("button", name="Saham sebelumnya", exact=True).click()
+        expect(page.get_by_text("Halaman 1 / 2", exact=True)).to_be_visible()
+        print("PASS dashboard pagination reaches the complete registered universe")
         page.get_by_role("combobox", name="Cari saham").fill("Bank Fixture")
         expect(page.get_by_role("option").first).to_be_visible()
         page.get_by_role("combobox", name="Cari saham").press("Enter")
@@ -49,12 +64,25 @@ def main():
         print("PASS search company name + Enter resolves ticker")
         page.get_by_role("button", name="Analisis Ulang AI", exact=True).click()
         expect(page.get_by_text("Skor model: 88%", exact=True)).to_be_visible()
-        expect(page.get_by_role("button", name="Analisis Ulang AI", exact=True)).to_be_enabled()
+        expect(page.get_by_role("button", name="Analisis Ulang AI", exact=True)).to_be_enabled(
+            timeout=30000
+        )
         expect(page.locator("canvas").first).to_be_visible()
         chart_box = page.locator("canvas").first.bounding_box()
         page.mouse.move(chart_box["x"] + chart_box["width"] / 2, chart_box["y"] + 50)
         page.screenshot(path=str(OUTPUT / "stock-desktop.png"), full_page=True)
         print("PASS sync -> AI -> persisted result, chart and score")
+        page.goto(BASE + "/stock/RELOAD.JK", wait_until="domcontentloaded")
+        page.get_by_role("button", name="Analisis Ulang AI", exact=True).click()
+        expect(page.get_by_text("Job analisis:", exact=False)).to_be_visible()
+        page.reload(wait_until="domcontentloaded")
+        expect(page.get_by_role("button", name="Analisis Ulang AI", exact=True)).to_be_disabled()
+        expect(page.get_by_role("button", name="Analisis Ulang AI", exact=True)).to_be_enabled(
+            timeout=30000
+        )
+        expect(page.get_by_text("Skor model: 88%", exact=True)).to_be_visible()
+        page.goto(BASE + "/stock/BBCA.JK", wait_until="domcontentloaded")
+        print("PASS job status and completion survive a full page reload")
         page.get_by_role("button", name="Tambah Watchlist", exact=True).click()
         expect(page.get_by_text("Saham ditambahkan ke watchlist.", exact=True)).to_be_visible()
         page.get_by_role("link", name="Backtest teknikal", exact=True).click()
@@ -75,6 +103,62 @@ def main():
         page.reload()
         expect(page.get_by_label("Catatan pribadi")).to_have_value("Pantau volume pada penutupan.")
         print("PASS watchlist notes persist")
+        page.goto(BASE + "/research?tab=screener", wait_until="domcontentloaded")
+        expect(page.get_by_role("heading", name="Screener saham", exact=True)).to_be_visible()
+        page.get_by_role("textbox", name="Bursa", exact=True).fill("IDX")
+        page.get_by_role("button", name="Terapkan filter", exact=True).click()
+        expect(page.get_by_text("BBCA.JK · Bank Fixture", exact=True)).to_be_visible()
+        page.get_by_label("Nama filter tersimpan").fill("Pantauan IDX")
+        page.get_by_role("button", name="Simpan filter aktif", exact=True).click()
+        expect(page.get_by_role("button", name="Pantauan IDX", exact=True)).to_be_visible()
+        page.goto(BASE + "/research?tab=history&ticker=BBCA.JK", wait_until="domcontentloaded")
+        expect(
+            page.get_by_text("Ringkasan aktual berdasarkan indikator.", exact=True)
+        ).to_be_visible()
+        with page.expect_download() as download:
+            page.get_by_role("button", name="Ekspor CSV", exact=True).click()
+        assert download.value.suggested_filename.endswith(".csv")
+        print("PASS full-universe screener, saved filter, analysis history and CSV")
+        page.goto(BASE + "/research?tab=plans&ticker=BBCA.JK", wait_until="domcontentloaded")
+        for name, value in [
+            ("Area entry bawah", "990"),
+            ("Area entry atas", "1010"),
+            ("Harga entry perhitungan", "1000"),
+            ("Stop", "950"),
+            ("Target", "1100"),
+            ("Horizon", "10 sesi"),
+            ("Alasan berbasis data", "Pantau volume"),
+            ("Kondisi pembatalan", "Close di bawah support"),
+        ]:
+            page.get_by_label(name, exact=True).fill(value)
+        page.get_by_role("button", name="Hitung risiko dan lot", exact=True).click()
+        expect(page.get_by_text("2000 lembar / 20 lot", exact=False)).to_be_visible()
+        page.get_by_role("button", name="Simpan rencana", exact=True).click()
+        expect(page.get_by_role("button", name="Edit rencana", exact=True)).to_be_visible()
+        page.reload()
+        expect(page.get_by_role("button", name="Edit rencana", exact=True)).to_be_visible()
+        print("PASS risk/lot calculation and private persisted trade plan")
+        page.goto(BASE + "/research?tab=monitoring&ticker=BBCA.JK", wait_until="domcontentloaded")
+        page.get_by_label("Ambang harga (currency instrumen)", exact=True).fill("110")
+        page.get_by_role("button", name="Simpan alert", exact=True).click()
+        expect(page.get_by_role("button", name="Jeda", exact=True)).to_be_visible()
+        expect(
+            page.get_by_text("Menunggu data lengkap dan kalender terverifikasi", exact=True)
+        ).to_be_visible()
+        page.get_by_role("button", name="Jeda", exact=True).click()
+        expect(page.get_by_role("button", name="Aktifkan", exact=True)).to_be_visible()
+        print("PASS EOD alert creation, pause and honest unknown freshness")
+        page.goto(BASE + "/settings", wait_until="domcontentloaded")
+        expect(page.get_by_role("heading", name="Pengaturan akun", exact=True)).to_be_visible()
+        page.get_by_label("Nama lengkap", exact=True).fill("Browser Updated")
+        page.get_by_role("button", name="Simpan profil", exact=True).click()
+        expect(page.get_by_text("Profil dan preferensi disimpan.", exact=True)).to_be_visible()
+        page.goto(BASE + "/guide", wait_until="domcontentloaded")
+        expect(page.get_by_role("heading", name="Free dan Premium", exact=True)).to_be_visible()
+        page.goto(BASE + "/watchlist", wait_until="domcontentloaded")
+        print("PASS profile editing, quota explanation and onboarding glossary")
+        expect(page.get_by_role("heading", name="Watchlist Saham", exact=True)).to_be_visible()
+        page.wait_for_load_state("networkidle")
         before = len(refreshes)
         context.add_cookies(
             [{"name": "access_token", "value": "expired", "url": BASE, "sameSite": "Strict"}]
@@ -118,8 +202,12 @@ def main():
         page.unroute("**/stocks/BBCA.JK/analysis/latest")
         page.goto(BASE + "/stock/FAILAI.JK", wait_until="domcontentloaded")
         page.get_by_role("button", name="Analisis Ulang AI", exact=True).click()
-        expect(page.get_by_role("alert").first).to_contain_text("Provider AI melewati batas waktu.")
-        expect(page.get_by_role("button", name="Analisis Ulang AI", exact=True)).to_be_enabled()
+        expect(
+            page.get_by_role("alert").filter(has_text="Provider AI melewati batas waktu.").first
+        ).to_be_visible(timeout=30000)
+        expect(page.get_by_role("button", name="Analisis Ulang AI", exact=True)).to_be_enabled(
+            timeout=30000
+        )
         print("PASS partial API/provider failures keep genuine chart and expose error")
         page.goto(BASE + "/stock/MISSING.JK", wait_until="domcontentloaded")
         expect(
@@ -145,6 +233,25 @@ def main():
         ), "Mobile watchlist overflows"
         page.screenshot(path=str(OUTPUT / "watchlist-mobile.png"), full_page=True)
         print("PASS mobile 360px navigation and no horizontal page overflow")
+        page.set_viewport_size({"width": 390, "height": 844})
+        page.goto(BASE + "/stock/BBCA.JK", wait_until="domcontentloaded")
+        expect(page.get_by_role("button", name="1Y", exact=True)).to_be_visible()
+        for label in ("1M", "3M", "6M", "1Y"):
+            box = page.get_by_role("button", name=label, exact=True).bounding_box()
+            assert box["width"] >= 44 and box["height"] >= 44
+        assert not page.evaluate(
+            "document.documentElement.scrollWidth > innerWidth"
+        ), "390px detail overflows"
+        page.screenshot(path=str(OUTPUT / "stock-390x844.png"), full_page=True)
+        page.goto(BASE + "/stock/INVALIDXYZ", wait_until="domcontentloaded")
+        expect(
+            page.get_by_text(
+                "Data historis belum tersedia. Sinkronkan data untuk memulai.", exact=True
+            )
+        ).to_be_visible()
+        assert page.locator("canvas").count() == 0
+        assert "88%" not in page.locator("body").inner_text()
+        print("PASS exact INVALIDXYZ review case, mobile 390x844 and touch targets")
         assert not errors, errors
         context.close()
         missing = browser.new_context()

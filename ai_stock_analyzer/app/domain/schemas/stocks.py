@@ -23,6 +23,12 @@ class MarketDataMetadata(BaseModel):
     data_revision: str | None
     data_state: Literal["fresh", "stale", "unavailable", "demo", "unknown"]
     price_adjustment: str
+    volume_adjustment: str = "unknown"
+    market_status: str = "unknown"
+    session_timezone: str | None = None
+    expected_market_date: date | None = None
+    publication_delay_minutes: int | None = None
+    calendar_verified: bool = False
 
 
 class StockQuoteResponse(BaseModel):
@@ -177,6 +183,8 @@ class StockAnalysisLatestResponse(BaseModel):
     current_price: Decimal | None = None
     metadata: MarketDataMetadata | None = None
     generated_at: datetime | None = None
+    provider_name: str | None = None
+    actual_model_name: str | None = None
     model_name: str | None = None
     prompt_version: str | None = None
     provenance: str | None = None
@@ -205,6 +213,8 @@ class WatchlistAddRequest(BaseModel):
 
 
 class WatchlistResponse(BaseModel):
+    currency: str | None = None
+    exchange: str | None = None
     """Response data watchlist pengguna."""
 
     id: uuid.UUID

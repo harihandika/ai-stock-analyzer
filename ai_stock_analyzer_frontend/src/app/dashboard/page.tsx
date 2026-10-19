@@ -16,6 +16,7 @@ interface Pick {
 }
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [page, setPage] = useState(1);
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [quotes, setQuotes] = useState<Record<string, Quote>>({});
   const [total, setTotal] = useState<number | null>(null);
@@ -26,7 +27,7 @@ export default function DashboardPage() {
   const load = useCallback((signal?: AbortSignal) => {
     return Promise.allSettled([
       apiClient.get("/stocks/watchlist", { signal }),
-      apiClient.get("/stocks?per_page=6", { signal }),
+      apiClient.get("/stocks?per_page=6&page=" + page, { signal }),
       apiClient.get("/stocks/recommendations", { signal }),
     ]).then(async (results) => {
       if (signal?.aborted) return;
@@ -69,7 +70,7 @@ export default function DashboardPage() {
       setErrors(issues);
       setLoading(false);
     });
-  }, []);
+  }, [page]);
   useEffect(() => {
     const c = new AbortController();
     void load(c.signal);
@@ -189,6 +190,7 @@ export default function DashboardPage() {
               </Link>
             ))}
           </div>
+          <nav aria-label="Halaman daftar saham" className="flex flex-wrap gap-3 items-center"><button className="border rounded p-2" disabled={loading || page === 1} onClick={() => {setLoading(true); setPage(v => v - 1);}}>Saham sebelumnya</button><span>Halaman {page} / {Math.max(1, Math.ceil((total || 0) / 6))}</span><button className="border rounded p-2" disabled={loading || page * 6 >= (total || 0)} onClick={() => {setLoading(true); setPage(v => v + 1);}}>Saham berikutnya</button><Link className="underline p-2" href="/research">Buka screener</Link></nav>
           {!loading && total === 0 && (
             <p>
               Belum ada saham tersimpan. Cari ticker lalu sinkronkan data pada

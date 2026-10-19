@@ -90,6 +90,11 @@ export default function LoginPage() {
         </form>
 
         <div className={styles.footer}>
+          <p>
+            <Link className="inline-block p-2 underline" href="/reset-password">
+              Lupa password?
+            </Link>
+          </p>
           Don&apos;t have an account?{" "}
           <Link href="/register" className={styles.link}>
             Create one now

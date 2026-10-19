@@ -40,6 +40,26 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let active = true;
+    const controller = new AbortController();
+    const refresh = () =>
+      apiClient
+        .get("/notifications", { signal: controller.signal, skipAuthRefresh: true })
+        .then((r) => {
+          if (active) setUnread(r.data.unread);
+        })
+        .catch(() => undefined);
+    void refresh();
+    const timer = setInterval(refresh, 30000);
+    return () => {
+      active = false;
+      controller.abort();
+      clearInterval(timer);
+    };
+  }, [isAuthenticated]);
 
   const searchRef = useRef<HTMLFormElement>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -47,7 +67,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [isLoading, isAuthenticated, router]);
 
@@ -161,6 +181,27 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
 
         <nav className={styles.nav}>
+          <Link href="/research">
+            <span
+              className={clsx(
+                styles.navItem,
+                pathname.startsWith("/research") && styles.navItemActive,
+              )}
+            >
+              <LineChart className={styles.navIcon} />
+              Riset dan pemantauan
+            </span>
+          </Link>
+          <Link href="/guide">
+            <span
+              className={clsx(
+                styles.navItem,
+                pathname.startsWith("/guide") && styles.navItemActive,
+              )}
+            >
+              Panduan dan glosarium
+            </span>
+          </Link>
           {navItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
@@ -333,6 +374,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
               >
                 <Bell width={20} height={20} />
+                {unread > 0 && (
+                  <span aria-label={unread + " notifikasi belum dibaca"}>
+                    {unread}
+                  </span>
+                )}
               </button>
               {isNotificationsOpen && (
                 <div className={styles.dropdown} style={{ minWidth: "250px" }}>
@@ -347,7 +393,9 @@ export function AppLayout({ children }: AppLayoutProps) {
                     }}
                   >
                     <span style={{ fontSize: "0.875rem", color: "white" }}>
-                      Belum ada notifikasi
+                      {unread > 0
+                        ? unread + " notifikasi belum dibaca"
+                        : "Tidak ada notifikasi belum dibaca"}
                     </span>
                     <span
                       style={{
@@ -355,8 +403,9 @@ export function AppLayout({ children }: AppLayoutProps) {
                         color: "var(--text-muted)",
                       }}
                     >
-                      Riwayat notifikasi belum tersedia. Status pembaruan
-                      ditampilkan pada halaman saham.
+                      <Link href="/research?tab=monitoring">
+                        Buka alert, riwayat notifikasi, dan status job.
+                      </Link>
                     </span>
                   </div>
                 </div>

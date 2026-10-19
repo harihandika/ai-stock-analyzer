@@ -23,8 +23,34 @@ export function DataStatus({ metadata }: { metadata?: MarketMetadata | null }) {
         <p>Harga historis disesuaikan untuk split dan dividen.</p>
       )}
       {metadata.fetched_at && (
-        <p>Diambil: {new Date(metadata.fetched_at).toLocaleString("id-ID")}</p>
+        <p>
+          Diambil:{" "}
+          {new Date(metadata.fetched_at).toLocaleString("id-ID", {
+            timeZone: "Asia/Jakarta",
+          })}{" "}
+          WIB
+        </p>
       )}
+      <p>
+        Zona sesi: {metadata.session_timezone || "Belum diketahui"} · Status
+        pasar:{" "}
+        {metadata.market_status === "open"
+          ? "Buka"
+          : metadata.market_status === "closed"
+            ? "Tutup"
+            : "Belum terverifikasi"}
+        .
+      </p>
+      {metadata.volume_adjustment &&
+        metadata.volume_adjustment !== "unknown" && (
+          <p>
+            Volume:{" "}
+            {metadata.volume_adjustment === "split_adjusted"
+              ? "disesuaikan split oleh provider"
+              : "sesuai laporan provider"}
+            .
+          </p>
+        )}
     </div>
   );
 }

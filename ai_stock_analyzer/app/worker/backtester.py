@@ -6,8 +6,9 @@ import asyncio
 import numpy as np
 import pandas as pd
 
-from app.infrastructure.market_data import fetch_stock_history_async
+from app.infrastructure.market_data import fetch_stock_history_async, market_identity
 from app.services.indicator_engine import calculate_indicators, detect_vpa_signals
+from app.services.market_metadata import history_revision
 from app.services.pattern_engine import detect_confirmed_swings
 from app.services.smc_engine import detect_fvg, detect_structure_breaks
 from app.services.wyckoff_engine import detect_wyckoff_accumulation
@@ -25,10 +26,32 @@ def prepare_signals(frame):
 
 class Backtester:
     def __init__(
-        self, ticker: str, years: int, target_profit: float = 0.05, stop_loss: float = 0.03
+        self,
+        ticker: str,
+        years: int,
+        target_profit: float = 0.05,
+        stop_loss: float = 0.03,
+        *,
+        initial_capital=100,
+        lot_size=None,
+        buy_fee_bps=0,
+        sell_fee_bps=0,
+        slippage_bps=0,
     ):
         if not 1 <= years <= 5 or not 0 < target_profit <= 0.20 or not 0 < stop_loss <= 0.10:
             raise ValueError("Parameter backtest di luar batas.")
+        if not 0 < initial_capital <= 1e15 or any(
+            not np.isfinite(v) or not 0 <= v <= 1000
+            for v in (buy_fee_bps, sell_fee_bps, slippage_bps)
+        ):
+            raise ValueError("Modal/biaya tidak valid.")
+        self.initial_capital, self.lot_size = initial_capital, lot_size
+        self.buy_fee, self.sell_fee, self.slip = (
+            buy_fee_bps / 10000,
+            sell_fee_bps / 10000,
+            slippage_bps / 10000,
+        )
+        self.source, self.price_adjustment, self.data_revision = market_identity(), "unknown", None
         self.ticker = ticker.upper()
         self.years = years
         self.period = str(years) + "y"
@@ -39,7 +62,7 @@ class Backtester:
         self.df = pd.DataFrame()
 
     async def _fetch_and_prepare_data(self):
-        frame = await fetch_stock_history_async(self.ticker, period=self.period)
+        frame = await fetch_stock_history_async(self.ticker, period=str(self.years + 1) + "y")
         required = ["open", "high", "low", "close", "volume"]
         if frame.empty or len(frame) < 60 or not set(required + ["trading_date"]).issubset(frame):
             return False
@@ -53,8 +76,17 @@ class Backtester:
             or (frame["volume"] < 0).any()
         ):
             raise ValueError("Data OHLCV tidak valid.")
-        self.df = prepare_signals(frame)
-        return True
+        self.source = frame.attrs.get("source", market_identity())
+        self.price_adjustment = frame.attrs.get("price_adjustment", "unknown")
+        prepared = prepare_signals(frame)
+        cutoff = pd.Timestamp(prepared.iloc[-1]["trading_date"]) - pd.DateOffset(years=self.years)
+        self.df = prepared[pd.to_datetime(prepared["trading_date"]) >= cutoff].reset_index(
+            drop=True
+        )
+        self.data_revision = history_revision(
+            self.df, {"source": self.source, "price_adjustment": self.price_adjustment}
+        )
+        return len(self.df) >= 60
 
     @staticmethod
     def entry_signal(row):
@@ -64,53 +96,64 @@ class Backtester:
             return "SMC Bullish FVG + confirmed CHoCH"
         return None
 
+    def quantity(self, cash, price):
+        units = cash / (price * (1 + self.buy_fee))
+        return np.floor(units / self.lot_size) * self.lot_size if self.lot_size else units
+
     def run_simulation(self):
         self.trades, self.equity_curve = [], []
-        cash, units = 100.0, 0.0
+        cash, units = float(self.initial_capital), 0.0
         entry = None
         pending_entry, pending_exit = None, None
+
+        def close_position(row, raw_price, reason, index):
+            nonlocal cash, units, entry
+            sell = raw_price * (1 - self.slip)
+            fee = units * sell * self.sell_fee
+            proceeds = units * sell - fee
+            cash += proceeds
+            self._record_trade(
+                entry["date"],
+                row["trading_date"],
+                entry["price"],
+                sell,
+                reason,
+                proceeds / entry["cost"] - 1,
+                index - entry["index"] + 1,
+                entry["reason"],
+                quantity=float(units),
+                fees=entry["fee"] + fee,
+                gross_profit_pct=(raw_price / entry["raw_price"] - 1) * 100,
+            )
+            units, entry = 0.0, None
+
         for i, row in self.df.iterrows():
             exited_today = False
             if pending_exit and entry:
-                sell = float(row["open"])
-                cash = units * sell
-                self._record_trade(
-                    entry["date"],
-                    row["trading_date"],
-                    entry["price"],
-                    sell,
-                    pending_exit,
-                    sell / entry["price"] - 1,
-                    i - entry["index"] + 1,
-                    entry["reason"],
-                )
-                units, entry, pending_exit = 0.0, None, None
+                close_position(row, float(row["open"]), pending_exit, i)
+                pending_exit = None
                 exited_today = True
             if pending_entry and not entry and not exited_today:
-                buy = float(row["open"])
-                units, cash = cash / buy, 0.0
-                entry = {
-                    "date": row["trading_date"],
-                    "price": buy,
-                    "reason": pending_entry,
-                    "index": i,
-                }
+                raw_price = float(row["open"])
+                buy = raw_price * (1 + self.slip)
+                units = float(self.quantity(cash, buy))
+                if units > 0:
+                    fee = units * buy * self.buy_fee
+                    cost = units * buy + fee
+                    cash -= cost
+                    entry = {
+                        "date": row["trading_date"],
+                        "price": buy,
+                        "raw_price": raw_price,
+                        "reason": pending_entry,
+                        "index": i,
+                        "fee": fee,
+                        "cost": cost,
+                    }
             pending_entry = None
             final_day = i == len(self.df) - 1
             if final_day and entry:
-                sell = float(row["close"])
-                cash = units * sell
-                self._record_trade(
-                    entry["date"],
-                    row["trading_date"],
-                    entry["price"],
-                    sell,
-                    "END_OF_PERIOD",
-                    sell / entry["price"] - 1,
-                    i - entry["index"] + 1,
-                    entry["reason"],
-                )
-                units, entry = 0.0, None
+                close_position(row, float(row["close"]), "END_OF_PERIOD", i)
             equity = cash + units * float(row["close"])
             self.equity_curve.append({"date": str(row["trading_date"]), "equity": round(equity, 8)})
             if final_day:
@@ -123,11 +166,41 @@ class Backtester:
                     pending_exit = "STOP_LOSS"
                 elif i - entry["index"] + 1 >= 30:
                     pending_exit = "TIMEOUT"
-            elif not exited_today and i >= 50:
+            elif not exited_today:
                 pending_entry = self.entry_signal(row)
 
+    def benchmark_result(self):
+        if self.df.empty:
+            return {}
+        first, last = self.df.iloc[0], self.df.iloc[-1]
+        buy = float(first["open"]) * (1 + self.slip)
+        sell = float(last["close"]) * (1 - self.slip)
+        units = float(self.quantity(self.initial_capital, buy))
+        entry_cost = units * buy * (1 + self.buy_fee)
+        fees = units * buy * self.buy_fee + units * sell * self.sell_fee
+        final = self.initial_capital - entry_cost + units * sell * (1 - self.sell_fee)
+        return {
+            "strategy": "buy_and_hold",
+            "quantity": units,
+            "data_start": str(first["trading_date"]),
+            "data_end": str(last["trading_date"]),
+            "final_equity": final,
+            "net_return_pct": (final / self.initial_capital - 1) * 100,
+            "total_fees": fees,
+            "remaining_cash": self.initial_capital - entry_cost,
+        }
+
     def _record_trade(
-        self, buy_date, sell_date, buy_price, sell_price, exit_reason, profit, days_held, reason
+        self,
+        buy_date,
+        sell_date,
+        buy_price,
+        sell_price,
+        exit_reason,
+        profit,
+        days_held,
+        reason,
+        **details,
     ):
         self.trades.append(
             {
@@ -140,13 +213,14 @@ class Backtester:
                 "exit_reason": exit_reason,
                 "reason": reason,
                 "days_held": days_held,
+                **details,
             }
         )
 
     def get_results_dict(self):
         total = len(self.trades)
         wins = sum(t["status"] == "WIN" for t in self.trades)
-        peak, drawdown = 100.0, 0.0
+        peak, drawdown = float(self.initial_capital), 0.0
         for point in self.equity_curve:
             peak = max(peak, point["equity"])
             drawdown = max(drawdown, (peak - point["equity"]) / peak * 100)
@@ -154,6 +228,11 @@ class Backtester:
             "years": self.years,
             "target_profit_pct": self.target_profit * 100,
             "stop_loss_pct": self.stop_loss * 100,
+            "initial_capital": self.initial_capital,
+            "lot_size": self.lot_size,
+            "buy_fee_bps": self.buy_fee * 10000,
+            "sell_fee_bps": self.sell_fee * 10000,
+            "slippage_bps": self.slip * 10000,
         }
         return {
             "ticker": self.ticker,
@@ -162,9 +241,15 @@ class Backtester:
             "effective_parameters": params,
             "data_start": str(self.df.iloc[0]["trading_date"]) if not self.df.empty else None,
             "data_end": str(self.df.iloc[-1]["trading_date"]) if not self.df.empty else None,
-            "source": "Yahoo Finance",
+            "source": self.source,
+            "data_revision": self.data_revision,
+            "net_return_pct": ((self.equity_curve[-1]["equity"] / self.initial_capital - 1) * 100)
+            if self.equity_curve
+            else 0,
+            "total_fees": sum(t.get("fees", 0) for t in self.trades),
+            "benchmark": self.benchmark_result(),
             "interval": "1d",
-            "strategy": "technical_daily_v1",
+            "strategy": "technical_daily_v2",
             "total_trades": total,
             "win_rate_pct": round(wins / total * 100, 6) if total else 0,
             "avg_profit_pct": round(sum(t["profit_pct"] for t in self.trades) / total, 6)
@@ -174,17 +259,20 @@ class Backtester:
             "trades": self.trades,
             "equity_curve": self.equity_curve,
             "assumptions": {
-                "initial_equity": 100,
+                "initial_equity": self.initial_capital,
+                "lot_size": self.lot_size,
                 "allocation_pct": 100,
                 "compounding": True,
                 "entry": "Keputusan close; entry open sesi berikutnya",
                 "exit": "Evaluasi TP/SL pada close; exit open berikutnya termasuk gap",
                 "max_holding_sessions": 30,
                 "final_position": "Tutup pada close akhir periode",
-                "price_adjustment": "split_and_dividend_adjusted",
-                "fee_bps": 0,
-                "slippage_bps": 0,
-                "limitations": "Simulasi strategi teknikal, bukan rekam jejak AI. Ukuran lot dan likuiditas belum dimodelkan; biaya/slippage diasumsikan nol. TP/SL bukan jaminan harga eksekusi intraday.",
+                "price_adjustment": self.price_adjustment,
+                "fee_bps": None,
+                "buy_fee_bps": self.buy_fee * 10000,
+                "sell_fee_bps": self.sell_fee * 10000,
+                "slippage_bps": self.slip * 10000,
+                "limitations": "Simulasi strategi teknikal, bukan rekam jejak AI. Lot sesuai parameter; lot null memakai lembar pecahan ternormalisasi. Likuiditas belum dimodelkan; biaya/slippage mengikuti input. Histori pemanasan tidak ditampilkan sebagai bagian periode simulasi. TP/SL bukan jaminan harga eksekusi intraday.",
             },
         }
 

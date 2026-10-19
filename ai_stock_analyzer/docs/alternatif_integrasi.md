@@ -2,7 +2,7 @@
 
 Tanggal kajian: 19 Oktober 2026. Acuan kebutuhan: [PRD perbaikan](prd_perbaikan_aplikasi.md) dan [implementasi R1](implementasi_r1.md).
 
-Status: riset dokumentasi dan rancangan langkah berikutnya. Provider aplikasi belum diganti. Perubahan R1 dan dokumen ini masih lokal, belum di-commit atau di-push.
+Status kajian awal: riset dokumentasi; R1 dan versi awal kajian ini sudah di-push ke origin/work pada commit 541c281. Pembaruan pelaksanaan 19 Oktober: adapter opsional Gemini dan EODHD sudah tersedia dan diuji dengan transport terkontrol, sebagaimana [laporan implementasi PRD](implementasi_prd_20261019.md). Default aplikasi tetap Anthropic/Yahoo sampai konfigurasi server dipilih. Integrasi nyata, biaya, kualitas dan hak display belum diterima; kriteria penerimaannya mengikuti [PRD versi 1.1](prd_perbaikan_aplikasi.md).
 
 ## Rekomendasi awal
 
@@ -61,7 +61,7 @@ Contoh kebutuhan: backfill satu tahun kalender membutuhkan sekitar 5 request per
 
 ## Batas verifikasi sesi ini
 
-- Git remote dapat dibaca. Remote HEAD dan checkout masih menunjuk commit `42d887a`; perubahan R1 belum di-commit atau di-push.
+- Saat riset dilakukan, Git remote dapat dibaca dan baseline checkout/remote HEAD adalah `42d887a`. Sesudah riset, R1 beserta kajian di-commit dan di-push sebagai `541c281` pada origin/work; ini tidak berarti sudah merge ke main atau deploy.
 - Situs dokumentasi utama `ai.google.dev`, `console.groq.com`, `eodhd.com`, `docs.sectors.app`, dan `twelvedata.com` gagal diakses melalui proxy cloud saat diperiksa. Dokumentasi/SDK resmi di GitHub serta metadata paket PyPI dapat dibaca. Tidak ada bypass jaringan atau perubahan kebijakan runtime.
 - Kajian Sectors memakai repository dokumentasi resmi commit `a820bd0` (15 Oktober 2026), termasuk `schema.json`, panduan IDX, panduan v2, dan tabel harga.
 - Referensi tambahan dari repository resmi EODHD mencantumkan bursa Jakarta, basis penyesuaian data, paket EOD global, dan pembedaan lisensi personal/display. Penyebutan kode `JK` adalah bukti dokumentasi; belum merupakan hasil smoke API dari environment ini.

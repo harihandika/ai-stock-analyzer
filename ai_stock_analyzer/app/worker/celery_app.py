@@ -2,14 +2,16 @@
 AI Stock Analyzer - Celery Application (Sprint 4 Stub)
 Akan dikonfigurasi penuh pada Sprint 4.
 """
+
 from celery import Celery
 from celery.schedules import crontab
+
 from app.core.config import settings
 
 celery_app = Celery(
     "ai_stock_worker",
-    broker="sqla+sqlite:///celery_broker.sqlite",
-    backend="db+sqlite:///celery_results.sqlite",
+    broker=settings.CELERY_BROKER_URL,
+    backend=settings.CELERY_RESULT_BACKEND,
     include=["app.worker.tasks"],
 )
 
@@ -23,7 +25,7 @@ celery_app.conf.update(
         "daily-eod-analysis-1730": {
             "task": "task_daily_batch_analysis",
             "schedule": crontab(hour=17, minute=30),
-            "options": {"queue": "default"}
+            "options": {"queue": "default"},
         },
-    }
+    },
 )

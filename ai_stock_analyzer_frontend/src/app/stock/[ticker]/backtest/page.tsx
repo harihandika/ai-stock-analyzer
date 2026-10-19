@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { runBacktest, errorMessage } from "@/services/api";
+import { EquityChart } from "@/components/charts/EquityChart";
+import { downloadResult } from "@/services/download";
+import { apiClient, runBacktest, errorMessage } from "@/services/api";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -21,12 +23,17 @@ interface TradeRecord {
   buy_price: number;
   sell_price: number;
   profit_pct: number;
-  status: "WIN" | "LOSS";
+  status: "WIN" | "LOSS" | "BREAKEVEN";
   reason: string;
   exit_reason: string;
 }
 
 interface BacktestResult {
+  run_id?: string;
+  net_return_pct: number;
+  total_fees: number;
+  equity_curve: { date: string; equity: number }[];
+  benchmark: { net_return_pct?: number; final_equity?: number };
   ticker: string;
   period_years: number;
   total_trades: number;
@@ -47,7 +54,9 @@ interface BacktestResult {
     limitations: string;
     initial_equity: number;
     max_holding_sessions: number;
-    fee_bps: number;
+    fee_bps: number | null;
+    buy_fee_bps: number;
+    sell_fee_bps: number;
     slippage_bps: number;
   };
 }
@@ -62,6 +71,30 @@ export default function BacktestPage() {
   const [stopLoss, setStopLoss] = useState(5);
 
   // Execution State
+  const [costs, setCosts] = useState({
+    initial_capital: ticker.endsWith(".JK") ? 10000000 : 10000,
+    lot_size: ticker.endsWith(".JK") ? 100 : 1,
+    buy_fee_bps: 0,
+    sell_fee_bps: 0,
+    slippage_bps: 0,
+  });
+  const [runs, setRuns] = useState<
+    { id: string; ticker: string; created_at: string }[]
+  >([]);
+  useEffect(() => {
+    const c = new AbortController();
+    apiClient
+      .get("/backtests", { signal: c.signal })
+      .then((r) =>
+        setRuns(
+          r.data.data.filter(
+            (run: { ticker: string }) => run.ticker === ticker,
+          ),
+        ),
+      )
+      .catch(() => undefined);
+    return () => c.abort();
+  }, [ticker]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BacktestResult | null>(null);
@@ -77,8 +110,13 @@ export default function BacktestPage() {
         years,
         target_profit_pct: targetProfit,
         stop_loss_pct: stopLoss,
+        ...costs,
       });
       setResult(response.data);
+      const saved = await apiClient.get("/backtests");
+      setRuns(
+        saved.data.data.filter((r: { ticker: string }) => r.ticker === ticker),
+      );
     } catch (err: unknown) {
       setError(errorMessage(err));
     } finally {
@@ -99,6 +137,36 @@ export default function BacktestPage() {
           <h1 className="text-3xl font-bold">Backtest Teknikal: {ticker}</h1>
         </div>
 
+        {!!runs.length && (
+          <label className="block mb-6">
+            Buka run tersimpan tanpa simulasi ulang
+            <select
+              className="block w-full bg-slate-900 rounded p-3"
+              value=""
+              onChange={async (e) => {
+                if (!e.target.value) return;
+                try {
+                  setResult(
+                    (await apiClient.get("/backtests/" + e.target.value)).data,
+                  );
+                  setError(null);
+                } catch (err) {
+                  setError(errorMessage(err));
+                }
+              }}
+            >
+              <option value="">Pilih run</option>
+              {runs.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {new Date(r.created_at).toLocaleString("id-ID", {
+                    timeZone: "Asia/Jakarta",
+                  })}{" "}
+                  WIB · {r.id.slice(0, 8)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Configuration Form */}
           <div className="lg:col-span-1">
@@ -177,6 +245,40 @@ export default function BacktestPage() {
                   />
                 </div>
 
+                <p className="text-sm text-slate-400">
+                  Modal memakai currency instrumen. Biaya 0 adalah asumsi awal;
+                  10 bps = 0,1%. Lot mengikuti input.
+                </p>
+                {(
+                  [
+                    ["initial_capital", "Modal awal"],
+                    ["lot_size", "Lembar per lot"],
+                    ["buy_fee_bps", "Fee beli (bps)"],
+                    ["sell_fee_bps", "Fee jual (bps)"],
+                    ["slippage_bps", "Slippage (bps)"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label key={key} className="block">
+                    {label}
+                    <input
+                      type="number"
+                      step="any"
+                      min={
+                        key === "initial_capital" || key === "lot_size" ? 1 : 0
+                      }
+                      max={key.endsWith("bps") ? 1000 : undefined}
+                      required
+                      value={costs[key]}
+                      onChange={(e) =>
+                        setCosts((v) => ({
+                          ...v,
+                          [key]: Number(e.target.value),
+                        }))
+                      }
+                      className="w-full rounded bg-slate-900 border border-slate-600 p-3"
+                    />
+                  </label>
+                ))}
                 <button
                   type="submit"
                   disabled={loading}
@@ -240,16 +342,43 @@ export default function BacktestPage() {
                     {result.assumptions.entry}. {result.assumptions.exit}.
                   </p>
                   <p>
-                    Ekuitas awal ternormalisasi{" "}
-                    {result.assumptions.initial_equity}; alokasi 100%,
-                    compounding. Maksimum{" "}
+                    Modal awal {result.assumptions.initial_equity}; alokasi
+                    100%, compounding. Maksimum{" "}
                     {result.assumptions.max_holding_sessions} sesi.
                   </p>
                   <p>
-                    Biaya: {result.assumptions.fee_bps} bps; slippage:{" "}
+                    Fee beli: {result.assumptions.buy_fee_bps} bps; fee jual:{" "}
+                    {result.assumptions.sell_fee_bps} bps; slippage:{" "}
                     {result.assumptions.slippage_bps} bps.{" "}
                     {result.assumptions.limitations}
                   </p>
+                  <p>
+                    Return bersih terhadap modal awal:{" "}
+                    {result.net_return_pct.toFixed(2)}% · Total fee{" "}
+                    {result.total_fees.toLocaleString("id-ID")}. Buy-and-hold
+                    pada periode/asumsi sama:{" "}
+                    {result.benchmark.net_return_pct?.toFixed(2) ??
+                      "Belum tersedia"}
+                    %.
+                  </p>
+                  {result.run_id && (
+                    <button
+                      className="rounded border border-sky-600 p-3"
+                      onClick={async () => {
+                        try {
+                          await downloadResult(
+                            "/backtests/" + result.run_id + "/export",
+                            "backtest.csv",
+                          );
+                        } catch (e) {
+                          setError(errorMessage(e));
+                        }
+                      }}
+                    >
+                      Ekspor seluruh transaksi CSV
+                    </button>
+                  )}
+                  <EquityChart points={result.equity_curve} />
                 </div>
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

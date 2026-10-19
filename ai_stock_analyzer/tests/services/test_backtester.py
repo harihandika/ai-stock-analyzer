@@ -125,3 +125,42 @@ def test_valid_no_trade_has_same_schema():
     assert result["trades"] == []
     assert result["total_trades"] == result["win_rate_pct"] == result["max_drawdown_pct"] == 0
     assert result["effective_parameters"]["target_profit_pct"] == 5
+
+
+def test_fees_lot_and_benchmark_use_real_cash_accounting():
+    engine = Backtester(
+        "AAPL", 1, initial_capital=100.1, lot_size=1, buy_fee_bps=10, sell_fee_bps=10
+    )
+    engine.df = manual()
+    engine.df.loc[58, ["is_spring", "stopping_volume"]] = True
+    engine.df.loc[59, ["open", "close"]] = [100, 110]
+    engine.run_simulation()
+    trade = engine.trades[0]
+    assert trade["quantity"] == 1
+    assert trade["fees"] == pytest.approx(0.21)
+    assert engine.equity_curve[-1]["equity"] == pytest.approx(109.89)
+    assert trade["profit_pct"] == pytest.approx(9.79 / 100.1 * 100)
+    result = engine.get_results_dict()
+    assert result["total_fees"] == pytest.approx(0.21)
+    assert result["benchmark"]["net_return_pct"] == pytest.approx(result["net_return_pct"])
+
+
+def test_insufficient_capital_for_lot_keeps_cash_and_has_no_trade():
+    engine = Backtester("BBCA.JK", 1, initial_capital=1000, lot_size=100)
+    engine.df = manual()
+    engine.df.loc[50, ["is_spring", "stopping_volume"]] = True
+    engine.run_simulation()
+    assert engine.trades == []
+    assert engine.get_results_dict()["net_return_pct"] == 0
+    assert engine.get_results_dict()["benchmark"]["quantity"] == 0
+
+
+def test_slippage_makes_buy_more_expensive_and_sell_less_valuable():
+    engine = Backtester("AAPL", 1, initial_capital=1000, lot_size=1, slippage_bps=100)
+    engine.df = manual()
+    engine.df.loc[58, ["is_spring", "stopping_volume"]] = True
+    engine.run_simulation()
+    trade = engine.trades[0]
+    assert (trade["buy_price"], trade["sell_price"]) == (101, 99)
+    assert trade["gross_profit_pct"] == 0
+    assert trade["profit_pct"] < 0

@@ -25,6 +25,11 @@ class BacktestRequest(BaseModel):
     years: int = Field(default=3, ge=1, le=5)
     target_profit_pct: float = Field(default=5, gt=0, le=20, allow_inf_nan=False)
     stop_loss_pct: float = Field(default=3, gt=0, le=10, allow_inf_nan=False)
+    initial_capital: float = Field(default=100, gt=0, le=1e15, allow_inf_nan=False)
+    lot_size: int | None = Field(default=None, ge=1, le=100000)
+    buy_fee_bps: float = Field(default=0, ge=0, le=1000, allow_inf_nan=False)
+    sell_fee_bps: float = Field(default=0, ge=0, le=1000, allow_inf_nan=False)
+    slippage_bps: float = Field(default=0, ge=0, le=1000, allow_inf_nan=False)
 
     @model_validator(mode="before")
     @classmethod
@@ -57,6 +62,9 @@ class BacktestTrade(BaseModel):
     exit_reason: Literal["TAKE_PROFIT", "STOP_LOSS", "TIMEOUT", "END_OF_PERIOD"]
     reason: str
     days_held: int = Field(ge=1)
+    quantity: float = 0
+    fees: float = 0
+    gross_profit_pct: float = 0
 
 
 class EquityPoint(BaseModel):
@@ -65,6 +73,7 @@ class EquityPoint(BaseModel):
 
 
 class BacktestResult(BaseModel):
+    run_id: uuid.UUID | None = None
     ticker: str
     period_years: int
     requested_parameters: BacktestRequest
@@ -81,6 +90,10 @@ class BacktestResult(BaseModel):
     trades: list[BacktestTrade]
     equity_curve: list[EquityPoint]
     assumptions: dict[str, Any]
+    net_return_pct: float = 0
+    total_fees: float = 0
+    benchmark: dict[str, Any] = Field(default_factory=dict)
+    data_revision: str | None = None
 
 
 class AnalysisResult(BaseModel):
@@ -95,6 +108,8 @@ class AnalysisResult(BaseModel):
     generated_at: datetime
     data_revision: str
     model_name: str
+    provider_name: str = "anthropic"
+    actual_model_name: str | None = None
     prompt_version: str
     provenance: Literal["real"]
     cached: bool

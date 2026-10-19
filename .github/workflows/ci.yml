@@ -99,10 +99,12 @@ jobs:
           cd ai_stock_analyzer
           .venv/bin/python -m uvicorn tests.browser_app:app --host 127.0.0.1 --port 8000 > "$RUNNER_TEMP/backend.log" 2>&1 &
           backend_pid=$!
+          .venv/bin/python -m tests.browser_worker > "$RUNNER_TEMP/worker.log" 2>&1 &
+          worker_pid=$!
           cd ../ai_stock_analyzer_frontend
           npm run start -- --hostname 127.0.0.1 --port 3001 > "$RUNNER_TEMP/frontend.log" 2>&1 &
           frontend_pid=$!
-          trap 'kill "$backend_pid" "$frontend_pid" 2>/dev/null || true' EXIT
+          trap 'kill "$backend_pid" "$worker_pid" "$frontend_pid" 2>/dev/null || true' EXIT
           cd ../ai_stock_analyzer
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:8000/health > /dev/null && curl --fail --silent http://127.0.0.1:3001/login > /dev/null; then

@@ -52,6 +52,7 @@ class UserResponse(BaseModel):
     full_name: str
     subscription_tier: str
     is_active: bool
+    notifications_enabled: bool = True
     created_at: datetime
     analysis_quota_used: int = 0
     quota_used: int = 0

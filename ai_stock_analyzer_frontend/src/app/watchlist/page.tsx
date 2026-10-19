@@ -12,11 +12,14 @@ interface Item {
   stock_ticker: string;
   company_name: string;
   notes: string | null;
+  currency: string | null;
+  exchange: string | null;
 }
 export default function WatchlistPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [quotes, setQuotes] = useState<Record<string, Quote>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [exchange, setExchange] = useState("");
   const [sort, setSort] = useState("name");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Stock[]>([]);
@@ -139,12 +142,31 @@ export default function WatchlistPage() {
       setBusy(false);
     }
   };
-  const sorted = [...items].sort((a, b) =>
-    sort === "change"
-      ? (quotes[b.stock_ticker]?.change_percent ?? -Infinity) -
-        (quotes[a.stock_ticker]?.change_percent ?? -Infinity)
-      : a.stock_ticker.localeCompare(b.stock_ticker),
-  );
+  const currencyOf = (item: Item) =>
+    quotes[item.stock_ticker]?.metadata.currency || item.currency || "";
+  const exchangeOf = (item: Item) =>
+    quotes[item.stock_ticker]?.metadata.exchange || item.exchange || "";
+  const sorted = items
+    .filter((i) => !exchange || exchangeOf(i) === exchange)
+    .sort((a, b) => {
+      if (sort.startsWith("price")) {
+        const currency = currencyOf(a).localeCompare(currencyOf(b));
+        if (currency) return currency;
+        const av = quotes[a.stock_ticker]?.current_price,
+          bv = quotes[b.stock_ticker]?.current_price;
+        if (av == null) return bv == null ? 0 : 1;
+        if (bv == null) return -1;
+        return sort === "price_asc" ? av - bv : bv - av;
+      }
+      if (sort.startsWith("change")) {
+        const av = quotes[a.stock_ticker]?.change_percent,
+          bv = quotes[b.stock_ticker]?.change_percent;
+        if (av == null) return bv == null ? 0 : 1;
+        if (bv == null) return -1;
+        return sort === "change_asc" ? av - bv : bv - av;
+      }
+      return a.stock_ticker.localeCompare(b.stock_ticker);
+    });
   return (
     <AppLayout>
       <div className="max-w-6xl mx-auto space-y-6">
@@ -174,6 +196,21 @@ export default function WatchlistPage() {
             </Button>
           </div>
         </header>
+        <label className="block">
+          Filter bursa{" "}
+          <select
+            className="bg-slate-900 p-2 rounded"
+            value={exchange}
+            onChange={(e) => setExchange(e.target.value)}
+          >
+            <option value="">Semua bursa</option>
+            {[...new Set(items.map(exchangeOf).filter(Boolean))]
+              .sort()
+              .map((v) => (
+                <option key={v}>{v}</option>
+              ))}
+          </select>
+        </label>
         <label>
           Urutkan{" "}
           <select
@@ -183,8 +220,15 @@ export default function WatchlistPage() {
           >
             <option value="name">Kode saham</option>
             <option value="change">Perubahan tertinggi</option>
+            <option value="change_asc">Perubahan terendah</option>
+            <option value="price_asc">Harga terendah per mata uang</option>
+            <option value="price_desc">Harga tertinggi per mata uang</option>
           </select>
         </label>
+        <p className="text-sm">
+          Harga diurutkan dalam kelompok mata uang yang sama, tanpa konversi
+          IDR/USD. Nilai kosong berada di akhir kelompok.
+        </p>
         {loading && <p role="status">Memuat watchlist…</p>}
         {error && (
           <p role="alert" className="text-red-300">
@@ -285,11 +329,16 @@ export default function WatchlistPage() {
             {results.map((s) => (
               <li key={s.ticker}>
                 <button
-                  disabled={busy}
+                  disabled={
+                    busy || items.some((i) => i.stock_ticker === s.ticker)
+                  }
                   className="w-full text-left border border-slate-700 rounded p-3"
                   onClick={() => add(s)}
                 >
-                  {s.ticker} · {s.company_name}
+                  {s.ticker} · {s.company_name}{" "}
+                  {items.some((i) => i.stock_ticker === s.ticker)
+                    ? "· Sudah ditambahkan"
+                    : ""}
                   <span className="block text-xs text-slate-400">
                     {s.exchange || "Bursa belum diketahui"} ·{" "}
                     {s.currency || "Mata uang belum diketahui"}

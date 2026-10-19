@@ -15,7 +15,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.api.routers import analysis, auth, stocks
+from app.api.routers import account, analysis, auth, jobs, monitoring, plans, research, stocks
 from app.core.cache import setup_redis_cache
 from app.core.config import settings
 from app.core.logging import setup_logging
@@ -88,7 +88,12 @@ app.add_middleware(CorrelationIdMiddleware)
 API_PREFIX = "/api/v1"
 
 app.include_router(auth.router, prefix=API_PREFIX)
+app.include_router(account.router, prefix=API_PREFIX)
 app.include_router(stocks.router, prefix=API_PREFIX)
+app.include_router(jobs.router, prefix=API_PREFIX)
+app.include_router(monitoring.router, prefix=API_PREFIX)
+app.include_router(research.router, prefix=API_PREFIX)
+app.include_router(plans.router, prefix=API_PREFIX)
 app.include_router(analysis.router, prefix=API_PREFIX)
 
 

@@ -48,6 +48,7 @@ class User(Base):
     analysis_quota_reserved: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_quota_reset: Mapped[date | None] = mapped_column(Date, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    notifications_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -75,6 +76,9 @@ class Stock(Base):
     sector: Mapped[str | None] = mapped_column(String(100), nullable=True)
     exchange: Mapped[str | None] = mapped_column(String(50), nullable=True)  # IDX, NYSE, NASDAQ
     currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
+    price_adjustment: Mapped[str] = mapped_column(String(50), nullable=False, default="unknown")
+    volume_adjustment: Mapped[str] = mapped_column(String(50), nullable=False, default="unknown")
+    publication_delay_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     market_source: Mapped[str | None] = mapped_column(String(50), nullable=True)
     data_revision: Mapped[str | None] = mapped_column(String(64), nullable=True)
     data_fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -202,6 +206,8 @@ class AIAnalysis(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     provenance: Mapped[str] = mapped_column(String(20), default="unknown", nullable=False)
+    provider_name: Mapped[str] = mapped_column(String(50), nullable=False, default="anthropic")
+    actual_model_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     model_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     prompt_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
     data_revision: Mapped[str | None] = mapped_column(String(64), nullable=True)
@@ -282,3 +288,112 @@ class AnalysisRequest(Base):
     result_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("ai_analyses.id"), nullable=True
     )
+
+
+class AnalysisJob(Base):
+    __tablename__ = "analysis_jobs"
+    __table_args__ = (UniqueConstraint("user_id", "request_key", name="uq_job_request"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), index=True
+    )
+    ticker: Mapped[str] = mapped_column(String(20), nullable=False)
+    request_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="queued", index=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    available_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    lease_token: Mapped[str | None] = mapped_column(String(36))
+    result_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("ai_analyses.id")
+    )
+    error: Mapped[dict | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class AlertRule(Base):
+    __tablename__ = "alert_rules"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), index=True
+    )
+    ticker: Mapped[str] = mapped_column(String(20), ForeignKey("stocks.ticker"), index=True)
+    kind: Mapped[str] = mapped_column(String(20), nullable=False)
+    direction: Mapped[str] = mapped_column(String(10), default="above")
+    threshold: Mapped[Decimal | None] = mapped_column(Numeric(20, 6))
+    signal: Mapped[str | None] = mapped_column(String(10))
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    previous_met: Mapped[bool | None] = mapped_column(Boolean)
+    last_market_date: Mapped[date | None] = mapped_column(Date)
+    last_analysis_id: Mapped[str | None] = mapped_column(String(36))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AlertEvent(Base):
+    __tablename__ = "alert_events"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), index=True
+    )
+    rule_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    event_key: Mapped[str] = mapped_column(String(160), unique=True)
+    ticker: Mapped[str] = mapped_column(String(20), nullable=False)
+    details: Mapped[dict] = mapped_column(JSON, nullable=False)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SavedFilter(Base):
+    __tablename__ = "saved_filters"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    criteria: Mapped[dict] = mapped_column(JSON, nullable=False)
+    schema_version: Mapped[int] = mapped_column(Integer, default=1)
+
+
+class TradePlan(Base):
+    __tablename__ = "trade_plans"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), index=True
+    )
+    ticker: Mapped[str] = mapped_column(String(20), ForeignKey("stocks.ticker"), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    details: Mapped[dict] = mapped_column(JSON, nullable=False)
+    versions: Mapped[list] = mapped_column(JSON, default=list)
+    data_revision: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class BacktestRun(Base):
+    __tablename__ = "backtest_runs"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), index=True
+    )
+    ticker: Mapped[str] = mapped_column(String(20), nullable=False)
+    result: Mapped[dict] = mapped_column(JSON, nullable=False)
+    data_revision: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PasswordReset(Base):
+    __tablename__ = "password_resets"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used: Mapped[bool] = mapped_column(Boolean, default=False)

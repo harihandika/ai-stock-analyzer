@@ -12,6 +12,7 @@ import { ChartData } from "@/components/charts/StockChart";
 import { apiClient, errorMessage } from "@/services/api";
 import {
   Analysis,
+  Stock,
   Quote,
   formatPrice,
   MarketMetadata,
@@ -46,6 +47,13 @@ function StockDetail({ ticker }: { ticker: string }) {
   const { addToast } = useToast();
   const [chart, setChart] = useState<ChartData[]>([]);
   const [metadata, setMetadata] = useState<MarketMetadata | null>(null);
+  const [profile, setProfile] = useState<Stock | null>(null);
+  const [watched, setWatched] = useState(false);
+  const [job, setJob] = useState<{
+    id: string;
+    status: string;
+    error: { message: string } | null;
+  } | null>(null);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [actionError, setActionError] = useState("");
@@ -105,41 +113,90 @@ function StockDetail({ ticker }: { ticker: string }) {
     [ticker],
   );
   useEffect(() => {
+    const c = new AbortController();
+    apiClient
+      .get("/stocks", {
+        params: { q: ticker, per_page: 100 },
+        signal: c.signal,
+      })
+      .then((r) =>
+        setProfile(r.data.data.find((s: Stock) => s.ticker === ticker) || null),
+      )
+      .catch(() => undefined);
+    apiClient
+      .get("/stocks/watchlist", { signal: c.signal })
+      .then((r) =>
+        setWatched(
+          r.data.some(
+            (i: { stock_ticker: string }) => i.stock_ticker === ticker,
+          ),
+        ),
+      )
+      .catch(() => undefined);
+    apiClient
+      .get("/analysis/jobs", {
+        signal: c.signal,
+        params: { ticker, active: true },
+      })
+      .then((r) => {
+        if (r.data.data[0]) setJob(r.data.data[0]);
+      })
+      .catch(() => undefined);
+    return () => c.abort();
+  }, [ticker]);
+  const jobId = job?.id;
+  const pendingJob = job && !["succeeded", "failed"].includes(job.status);
+  useEffect(() => {
+    if (!jobId || !pendingJob) return;
+    const c = new AbortController();
+    const timer = setInterval(async () => {
+      try {
+        const r = await apiClient.get("/analysis/jobs/" + jobId, {
+          signal: c.signal, skipAuthRefresh: true,
+        });
+        if (c.signal.aborted) return;
+        if (r.data.status === "failed")
+          setActionError(r.data.error?.message || "Job gagal; coba lagi.");
+        if (["succeeded", "failed"].includes(r.data.status)) {
+          await load(c.signal);
+          await fetchUser().catch(() => undefined);
+        }
+        if (!c.signal.aborted) setJob(r.data);
+      } catch (e) {
+        if (!c.signal.aborted) setActionError(errorMessage(e));
+      }
+    }, 1500);
+    return () => {
+      c.abort();
+      clearInterval(timer);
+    };
+  }, [jobId, pendingJob, load, fetchUser]);
+  useEffect(() => {
     const controller = new AbortController();
     void load(controller.signal);
     return () => controller.abort();
   }, [load]);
   const sync = async (withAI: boolean) => {
     setActionError("");
+    if (withAI) {
+      setStage("Mengantrekan analisis…");
+      try {
+        const response = await apiClient.post("/analysis/jobs", {
+          ticker,
+          idempotency_key: crypto.randomUUID(),
+        });
+        setJob(response.data);
+      } catch (e) {
+        setActionError(errorMessage(e));
+      } finally {
+        setStage("");
+      }
+      return;
+    }
     setStage("Menyinkronkan data pasar dan indikator…");
     try {
       await apiClient.post("/stocks/" + encodeURIComponent(ticker) + "/sync");
-      if (withAI) {
-        setStage("Menjalankan analisis AI…");
-        const response = await apiClient.post(
-          "/analysis/" + encodeURIComponent(ticker),
-        );
-        setStage("Memuat hasil tersimpan…");
-        const latest = await apiClient.get<Analysis>(
-          "/stocks/" + encodeURIComponent(ticker) + "/analysis/latest",
-        );
-        if (
-          latest.data.analysis_id !== response.data.result.id ||
-          !latest.data.analysis_matches_data
-        ) {
-          throw new Error(
-            "Hasil tersimpan belum cocok dengan data terbaru. Silakan muat ulang.",
-          );
-        }
-        setAnalysis(latest.data);
-        addToast(
-          "success",
-          response.data.result.cached
-            ? "Hasil tersimpan digunakan kembali; kuota tidak berkurang."
-            : "Analisis AI berhasil disimpan.",
-        );
-      } else
-        addToast("success", "Data pasar dan indikator berhasil disinkronkan.");
+      addToast("success", "Data pasar dan indikator berhasil disinkronkan.");
     } catch (error) {
       const message = errorMessage(error);
       setActionError(message);
@@ -154,6 +211,7 @@ function StockDetail({ ticker }: { ticker: string }) {
     setAdding(true);
     try {
       await apiClient.post("/stocks/watchlist", { ticker });
+      setWatched(true);
       addToast("success", "Saham ditambahkan ke watchlist.");
     } catch (error) {
       addToast("error", errorMessage(error));
@@ -173,7 +231,11 @@ function StockDetail({ ticker }: { ticker: string }) {
         <header className="flex flex-wrap justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold">{ticker}</h1>
-            <p>{quote?.company_name || "Informasi instrumen belum tersedia"}</p>
+            <p>
+              {profile?.company_name ||
+                quote?.company_name ||
+                "Informasi instrumen belum tersedia"}
+            </p>
             <p className="text-2xl mt-2">
               {formatPrice(quote?.current_price, quote?.metadata.currency)}
             </p>
@@ -188,21 +250,66 @@ function StockDetail({ ticker }: { ticker: string }) {
             <Link href={"/stock/" + encodeURIComponent(ticker) + "/backtest"}>
               <Button variant="outline">Backtest teknikal</Button>
             </Link>
-            <Button variant="outline" onClick={add} isLoading={adding}>
-              Tambah Watchlist
+            <Button
+              variant="outline"
+              onClick={add}
+              isLoading={adding}
+              disabled={watched}
+            >
+              {watched ? "Sudah ditambahkan" : "Tambah Watchlist"}
             </Button>
             <Button
               variant="outline"
-              disabled={!!stage}
+              disabled={!!stage || !!pendingJob}
               onClick={() => sync(false)}
             >
               Sinkronkan Data
             </Button>
-            <Button disabled={!!stage} onClick={() => sync(true)}>
+            <Button
+              disabled={!!stage || !!pendingJob}
+              onClick={() => sync(true)}
+            >
               Analisis Ulang AI
             </Button>
           </div>
         </header>
+        <div className="flex flex-wrap gap-3">
+          {[
+            ["history", "Riwayat AI"],
+            ["plans", "Rencana transaksi"],
+            ["monitoring", "Alert dan job"],
+          ].map(([tab, label]) => (
+            <Link
+              className="underline p-2"
+              key={tab}
+              href={
+                "/research?tab=" + tab + "&ticker=" + encodeURIComponent(ticker)
+              }
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
+        {job && (
+          <p role="status" aria-live="polite">
+            Job analisis:{" "}
+            {(
+              {
+                queued: "Dalam antrean; Anda dapat meninggalkan halaman",
+                syncing: "Mengambil data pasar",
+                calculating: "Menghitung indikator",
+                analyzing: "Menjalankan AI",
+                persisting: "Menyimpan hasil",
+                succeeded: "Hasil berhasil disimpan",
+                failed: "Gagal; hasil terakhir dipertahankan",
+              } as Record<string, string>
+            )[job.status] || job.status}
+            .{" "}
+            <Link className="underline" href="/research?tab=monitoring">
+              Lihat status job
+            </Link>
+          </p>
+        )}
         <DataStatus metadata={quote?.metadata || metadata} />
         {stage && (
           <p role="status" aria-live="polite">

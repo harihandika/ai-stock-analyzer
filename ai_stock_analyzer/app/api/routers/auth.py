@@ -123,6 +123,14 @@ async def login_for_access_token(
         )
 
     # 4. Buat JWT token dengan subject = user ID
+    validated = await db.execute(
+        update(User)
+        .where(User.id == user.id, User.password_hash == user.password_hash)
+        .values(password_hash=user.password_hash)
+        .execution_options(synchronize_session=False)
+    )
+    if not validated.rowcount:
+        raise HTTPException(401, "Akun berubah; silakan login kembali.")
     session_id = uuid.uuid4()
     access_token = create_access_token(subject=str(user.id), session_id=str(session_id))
     refresh_token = create_refresh_token(subject=str(user.id))

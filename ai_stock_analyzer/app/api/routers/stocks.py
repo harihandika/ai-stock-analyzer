@@ -18,10 +18,11 @@ import re
 import numpy as np
 import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
-from sqlalchemy import desc, func, select
+from sqlalchemy import desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import get_current_active_user, get_db
+from app.core.config import settings
 from app.core.errors import api_error
 from app.core.rate_limiter import get_user_id_or_ip, limiter
 from app.domain.models.models import (
@@ -43,7 +44,11 @@ from app.domain.schemas.stocks import (
     WatchlistResponse,
     WatchlistUpdateRequest,
 )
-from app.infrastructure.market_data import fetch_stock_history_async, fetch_stock_info_async
+from app.infrastructure.market_data import (
+    fetch_stock_history_async,
+    fetch_stock_info_async,
+    market_identity,
+)
 from app.services.indicator_engine import calculate_indicators, detect_vpa_signals
 from app.services.market_metadata import as_utc, history_revision, metadata, utcnow
 from app.services.pattern_engine import (
@@ -208,7 +213,7 @@ async def sync_stock_data(
         ) from exc
 
 
-async def do_sync_stock(ticker: str, db: AsyncSession):
+async def do_sync_stock(ticker: str, db: AsyncSession, *, progress=None):
     """Core logic for syncing stock data, safe to call from background tasks."""
     ticker_upper = ticker.upper()
 
@@ -216,7 +221,7 @@ async def do_sync_stock(ticker: str, db: AsyncSession):
         raise HTTPException(status_code=422, detail="Kode saham tidak valid.")
     stock = await db.get(Stock, ticker_upper)
     try:
-        df = await fetch_stock_history_async(ticker_upper, period="1y")
+        df = await fetch_stock_history_async(ticker_upper, period="5y")
     except Exception as exc:
         raise api_error(
             "MARKET_UNAVAILABLE",
@@ -249,8 +254,22 @@ async def do_sync_stock(ticker: str, db: AsyncSession):
             stage="syncing",
         )
     df = df.sort_values("trading_date").reset_index(drop=True)
-    revision = history_revision(df)
-    info = await fetch_stock_info_async(ticker_upper) if not stock or not stock.currency else {}
+    provenance = {
+        "source": market_identity(),
+        "price_adjustment": df.attrs.get("price_adjustment", "unknown"),
+        "volume_adjustment": df.attrs.get("volume_adjustment", "unknown"),
+    }
+    revision = history_revision(df, provenance)
+    try:
+        info = (
+            await fetch_stock_info_async(ticker_upper)
+            if not stock or not stock.currency or stock.company_name == ticker_upper
+            else {}
+        )
+    except Exception:
+        info = {}  # A profile failure must not discard valid prices or invent a company name.
+    if progress:
+        await progress("calculating")
     if not stock:
         stock = Stock(
             ticker=ticker_upper,
@@ -262,7 +281,14 @@ async def do_sync_stock(ticker: str, db: AsyncSession):
     currency = info.get("currency")
     if isinstance(currency, str) and re.fullmatch(r"[A-Z]{3}", currency):
         stock.currency = currency
-    stock.market_source = "Yahoo Finance"
+    if info.get("longName") or info.get("shortName"):
+        stock.company_name = info.get("longName") or info["shortName"]
+    if info.get("exchange"):
+        stock.exchange = info["exchange"]
+    stock.market_source = provenance["source"]
+    stock.price_adjustment = provenance["price_adjustment"]
+    stock.volume_adjustment = provenance["volume_adjustment"]
+    stock.publication_delay_minutes = settings.EOD_PUBLICATION_DELAY_MINUTES
     stock.data_revision = revision
     stock.data_fetched_at = utcnow()
     await db.flush()
@@ -520,6 +546,8 @@ async def get_latest_analysis(
         metadata=metadata(stock, latest_price.trading_date if latest_price else None),
         generated_at=as_utc(latest_analysis.generated_at) if latest_analysis else None,
         model_name=latest_analysis.model_name if latest_analysis else None,
+        provider_name=latest_analysis.provider_name if latest_analysis else None,
+        actual_model_name=latest_analysis.actual_model_name if latest_analysis else None,
         prompt_version=latest_analysis.prompt_version if latest_analysis else None,
         provenance=latest_analysis.provenance if latest_analysis else None,
         analysis_matches_data=bool(
@@ -559,7 +587,7 @@ async def get_watchlist(
 ) -> list[WatchlistResponse]:
     """Ambil semua item watchlist milik pengguna yang sedang login."""
     result = await db.execute(
-        select(Watchlist, Stock.company_name)
+        select(Watchlist, Stock)
         .join(Stock, Watchlist.stock_ticker == Stock.ticker)
         .where(Watchlist.user_id == current_user.id)
         .order_by(desc(Watchlist.added_at))
@@ -570,11 +598,13 @@ async def get_watchlist(
         WatchlistResponse(
             id=w.id,
             stock_ticker=w.stock_ticker,
-            company_name=company_name,
+            company_name=stock.company_name,
+            exchange=stock.exchange,
+            currency=stock.currency,
             notes=w.notes,
             added_at=w.added_at,
         )
-        for w, company_name in rows
+        for w, stock in rows
     ]
 
 
@@ -602,6 +632,13 @@ async def add_to_watchlist(
             detail=f"Saham '{ticker_upper}' tidak ditemukan.",
         )
 
+    # Serialize per-user inserts to prevent duplicates from concurrent clicks.
+    await db.execute(
+        update(User)
+        .where(User.id == current_user.id)
+        .values(analysis_quota_used=User.analysis_quota_used)
+        .execution_options(synchronize_session=False)
+    )
     # Cek duplikasi
     existing_result = await db.execute(
         select(Watchlist).where(

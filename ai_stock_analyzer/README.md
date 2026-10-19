@@ -102,3 +102,13 @@ pytest tests/ --ignore=tests/worker -v
 
 - **[CHANGELOG.md](CHANGELOG.md)**: Catatan rilis lengkap dari Sprint 1 hingga Sprint 10.
 - **[OpenAPI Spec](docs/openapi.yaml)**: Dokumentasi API lengkap 15 endpoint.
+# Implementasi tindak lanjut PRD
+
+Riset/pemantauan, job persisten, pilihan Gemini/EODHD, rencana transaksi, akun dan backtest berbiaya dijelaskan pada [laporan implementasi PRD](docs/implementasi_prd_20261019.md). Selain API dan frontend, jalankan worker produk terpisah dengan environment/database yang sama:
+
+```bash
+.venv/bin/alembic upgrade head
+.venv/bin/python -m app.worker.product_worker
+```
+
+Worker memakai antrean pada database aplikasi; jangan memakai broker SQLite lama sebagai antrean produk. Penggunaan provider/email nyata tetap membutuhkan konfigurasi dan verifikasi sebagaimana laporan.

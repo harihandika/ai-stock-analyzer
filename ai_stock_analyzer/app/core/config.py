@@ -4,6 +4,9 @@ Menggunakan Pydantic Settings untuk membaca environment variables dari file .env
 """
 
 from functools import lru_cache
+from typing import Literal
+
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,11 +15,9 @@ class Settings(BaseSettings):
     Konfigurasi utama aplikasi.
     Semua nilai akan dibaca dari environment variables atau file .env.
     """
+
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=True,
-        extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
     )
 
     # ----- Application -----
@@ -35,7 +36,10 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # ----- Anthropic AI -----
-    ANTHROPIC_API_KEY: str
+    AI_PROVIDER: Literal["anthropic", "gemini"] = "anthropic"
+    ANTHROPIC_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.5-flash"
     AI_MODEL_OPERATIONAL: str = "claude-sonnet-4-6"
     AI_MODEL_STRATEGIC: str = "claude-opus-4-6"
 
@@ -45,6 +49,18 @@ class Settings(BaseSettings):
     # ----- Market Data -----
     ALPACA_API_KEY: str = ""
     ALPACA_SECRET_KEY: str = ""
+    MARKET_DATA_PROVIDER: Literal["yahoo", "eodhd"] = "yahoo"
+    EODHD_API_KEY: str = ""
+    EOD_PUBLICATION_DELAY_MINUTES: int | None = Field(default=None, ge=0, le=1440)
+    MARKET_CALENDAR_VERIFIED: bool = False
+    CELERY_BROKER_URL: str = "redis://localhost:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""
+    APP_PUBLIC_URL: str = "http://localhost:3000"
 
     # ----- CORS -----
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"

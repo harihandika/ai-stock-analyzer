@@ -130,6 +130,106 @@ paths:
                 $ref: '#/components/schemas/UserResponse'
       security:
       - OAuth2PasswordBearer: []
+    patch:
+      tags:
+      - Account
+      summary: Update Profile
+      operationId: update_profile_api_v1_auth_me_patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdate'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - OAuth2PasswordBearer: []
+  /api/v1/auth/change-password:
+    post:
+      tags:
+      - Account
+      summary: Change Password
+      operationId: change_password_api_v1_auth_change_password_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - OAuth2PasswordBearer: []
+  /api/v1/auth/password-reset:
+    post:
+      tags:
+      - Account
+      summary: Request Reset
+      operationId: request_reset_api_v1_auth_password_reset_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/password-reset/confirm:
+    post:
+      tags:
+      - Account
+      summary: Confirm Reset
+      operationId: confirm_reset_api_v1_auth_password_reset_confirm_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetConfirm'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/stocks:
     get:
       tags:
@@ -437,6 +537,692 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/analysis/jobs:
+    post:
+      tags:
+      - Analysis jobs
+      summary: Create Job
+      operationId: create_job_api_v1_analysis_jobs_post
+      security:
+      - OAuth2PasswordBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobCreate'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - Analysis jobs
+      summary: My Jobs
+      operationId: my_jobs_api_v1_analysis_jobs_get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: ticker
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ticker
+      - name: active
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Active
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/analysis/jobs/{job_id}:
+    get:
+      tags:
+      - Analysis jobs
+      summary: Read Job
+      operationId: read_job_api_v1_analysis_jobs__job_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/alerts:
+    get:
+      tags:
+      - Monitoring
+      summary: List Alerts
+      operationId: list_alerts_api_v1_alerts_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertList'
+      security:
+      - OAuth2PasswordBearer: []
+    post:
+      tags:
+      - Monitoring
+      summary: Create Alert
+      operationId: create_alert_api_v1_alerts_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertCreate'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - OAuth2PasswordBearer: []
+  /api/v1/alerts/{rule_id}:
+    patch:
+      tags:
+      - Monitoring
+      summary: Toggle Alert
+      operationId: toggle_alert_api_v1_alerts__rule_id__patch
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Rule Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertToggle'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Monitoring
+      summary: Delete Alert
+      operationId: delete_alert_api_v1_alerts__rule_id__delete
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Rule Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/notifications:
+    get:
+      tags:
+      - Monitoring
+      summary: Notifications
+      operationId: notifications_api_v1_notifications_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - OAuth2PasswordBearer: []
+  /api/v1/notifications/{event_id}/read:
+    patch:
+      tags:
+      - Monitoring
+      summary: Mark Read
+      operationId: mark_read_api_v1_notifications__event_id__read_patch
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Event Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/screener:
+    get:
+      tags:
+      - Research
+      summary: Screener
+      operationId: screener_api_v1_screener_get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          title: Page
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Per Page
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreenResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/screener/presets:
+    get:
+      tags:
+      - Research
+      summary: Presets
+      operationId: presets_api_v1_screener_presets_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedFilterList'
+      security:
+      - OAuth2PasswordBearer: []
+    post:
+      tags:
+      - Research
+      summary: Save Preset
+      operationId: save_preset_api_v1_screener_presets_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresetCreate'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedFilterResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - OAuth2PasswordBearer: []
+  /api/v1/screener/presets/{preset_id}:
+    delete:
+      tags:
+      - Research
+      summary: Delete Preset
+      operationId: delete_preset_api_v1_screener_presets__preset_id__delete
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: preset_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Preset Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stocks/{ticker}/analyses:
+    get:
+      tags:
+      - Research
+      summary: History
+      operationId: history_api_v1_stocks__ticker__analyses_get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: ticker
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ticker
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          title: Page
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Per Page
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/analyses/compare:
+    get:
+      tags:
+      - Research
+      summary: Compare
+      operationId: compare_api_v1_analyses_compare_get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: first
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: First
+      - name: second
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Second
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompareResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/stocks/{ticker}/analyses/export:
+    get:
+      tags:
+      - Research
+      summary: Export History
+      operationId: export_history_api_v1_stocks__ticker__analyses_export_get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: ticker
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ticker
+      - name: format
+        in: query
+        required: false
+        schema:
+          enum:
+          - csv
+          - pdf
+          type: string
+          default: csv
+          title: Format
+      - name: ids
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 7500
+          - type: 'null'
+          title: Ids
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/backtests:
+    get:
+      tags:
+      - Research
+      summary: Backtest History
+      operationId: backtest_history_api_v1_backtests_get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          title: Page
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Per Page
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/backtests/{run_id}:
+    get:
+      tags:
+      - Research
+      summary: Backtest Detail
+      operationId: backtest_detail_api_v1_backtests__run_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/backtests/{run_id}/export:
+    get:
+      tags:
+      - Research
+      summary: Backtest Csv
+      operationId: backtest_csv_api_v1_backtests__run_id__export_get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/trade-plans:
+    get:
+      tags:
+      - Trade plans
+      summary: List Plans
+      operationId: list_plans_api_v1_trade_plans_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanList'
+      security:
+      - OAuth2PasswordBearer: []
+    post:
+      tags:
+      - Trade plans
+      summary: Create
+      operationId: create_api_v1_trade_plans_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanInput'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - OAuth2PasswordBearer: []
+  /api/v1/trade-plans/calculate:
+    post:
+      tags:
+      - Trade plans
+      summary: Calculate
+      operationId: calculate_api_v1_trade_plans_calculate_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanInput'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - OAuth2PasswordBearer: []
+  /api/v1/trade-plans/{plan_id}:
+    put:
+      tags:
+      - Trade plans
+      summary: Edit
+      operationId: edit_api_v1_trade_plans__plan_id__put
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: plan_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Plan Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Trade plans
+      summary: Delete Plan
+      operationId: delete_plan_api_v1_trade_plans__plan_id__delete
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: plan_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Plan Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/analysis/health:
     get:
       tags:
@@ -559,6 +1345,129 @@ paths:
                 title: Response Root  Get
 components:
   schemas:
+    AlertCreate:
+      properties:
+        ticker:
+          type: string
+          maxLength: 20
+          minLength: 1
+          title: Ticker
+        kind:
+          type: string
+          enum:
+          - price
+          - change_pct
+          - signal
+          title: Kind
+        direction:
+          type: string
+          enum:
+          - above
+          - below
+          title: Direction
+          default: above
+        threshold:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Threshold
+        signal:
+          anyOf:
+          - type: string
+            enum:
+            - BUY
+            - HOLD
+            - WAIT
+          - type: 'null'
+          title: Signal
+      additionalProperties: false
+      type: object
+      required:
+      - ticker
+      - kind
+      title: AlertCreate
+    AlertList:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/AlertResponse'
+          type: array
+          title: Data
+      type: object
+      required:
+      - data
+      title: AlertList
+    AlertResponse:
+      properties:
+        ticker:
+          type: string
+          maxLength: 20
+          minLength: 1
+          title: Ticker
+        kind:
+          type: string
+          enum:
+          - price
+          - change_pct
+          - signal
+          title: Kind
+        direction:
+          type: string
+          enum:
+          - above
+          - below
+          title: Direction
+          default: above
+        threshold:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Threshold
+        signal:
+          anyOf:
+          - type: string
+            enum:
+            - BUY
+            - HOLD
+            - WAIT
+          - type: 'null'
+          title: Signal
+        id:
+          type: string
+          format: uuid
+          title: Id
+        enabled:
+          type: boolean
+          title: Enabled
+        last_market_date:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Last Market Date
+        baseline_established:
+          type: boolean
+          title: Baseline Established
+      additionalProperties: false
+      type: object
+      required:
+      - ticker
+      - kind
+      - id
+      - enabled
+      - last_market_date
+      - baseline_established
+      title: AlertResponse
+    AlertToggle:
+      properties:
+        enabled:
+          type: boolean
+          title: Enabled
+      additionalProperties: false
+      type: object
+      required:
+      - enabled
+      title: AlertToggle
     AnalysisExecutionResponse:
       properties:
         message:
@@ -612,6 +1521,15 @@ components:
         model_name:
           type: string
           title: Model Name
+        provider_name:
+          type: string
+          title: Provider Name
+          default: anthropic
+        actual_model_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Actual Model Name
         prompt_version:
           type: string
           title: Prompt Version
@@ -683,11 +1601,48 @@ components:
           exclusiveMinimum: 0.0
           title: Stop Loss Pct
           default: 3
+        initial_capital:
+          type: number
+          maximum: 1000000000000000.0
+          exclusiveMinimum: 0.0
+          title: Initial Capital
+          default: 100
+        lot_size:
+          anyOf:
+          - type: integer
+            maximum: 100000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Lot Size
+        buy_fee_bps:
+          type: number
+          maximum: 1000.0
+          minimum: 0.0
+          title: Buy Fee Bps
+          default: 0
+        sell_fee_bps:
+          type: number
+          maximum: 1000.0
+          minimum: 0.0
+          title: Sell Fee Bps
+          default: 0
+        slippage_bps:
+          type: number
+          maximum: 1000.0
+          minimum: 0.0
+          title: Slippage Bps
+          default: 0
       additionalProperties: false
       type: object
       title: BacktestRequest
     BacktestResult:
       properties:
+        run_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Run Id
         ticker:
           type: string
           title: Ticker
@@ -748,6 +1703,22 @@ components:
         assumptions:
           type: object
           title: Assumptions
+        net_return_pct:
+          type: number
+          title: Net Return Pct
+          default: 0
+        total_fees:
+          type: number
+          title: Total Fees
+          default: 0
+        benchmark:
+          type: object
+          title: Benchmark
+        data_revision:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Data Revision
       type: object
       required:
       - ticker
@@ -810,6 +1781,18 @@ components:
           type: integer
           minimum: 1.0
           title: Days Held
+        quantity:
+          type: number
+          title: Quantity
+          default: 0
+        fees:
+          type: number
+          title: Fees
+          default: 0
+        gross_profit_pct:
+          type: number
+          title: Gross Profit Pct
+          default: 0
       type: object
       required:
       - buy_date
@@ -822,6 +1805,31 @@ components:
       - reason
       - days_held
       title: BacktestTrade
+    CompareResponse:
+      properties:
+        first:
+          $ref: '#/components/schemas/HistoryItem'
+        second:
+          $ref: '#/components/schemas/HistoryItem'
+        confidence_change_points:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Confidence Change Points
+        inputs_differ:
+          type: boolean
+          title: Inputs Differ
+        explanation:
+          type: string
+          title: Explanation
+      type: object
+      required:
+      - first
+      - second
+      - confidence_change_points
+      - inputs_differ
+      - explanation
+      title: CompareResponse
     DailyPriceResponse:
       properties:
         trading_date:
@@ -931,6 +1939,239 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    HistoryItem:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        ticker:
+          type: string
+          title: Ticker
+        recommendation:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Recommendation
+        confidence_score:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Confidence Score
+        ai_summary:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ai Summary
+        analysis_date:
+          type: string
+          format: date
+          title: Analysis Date
+        generated_at:
+          type: string
+          format: date-time
+          title: Generated At
+        provider_name:
+          type: string
+          title: Provider Name
+        model_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model Name
+        actual_model_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Actual Model Name
+        prompt_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Prompt Version
+        data_revision:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Data Revision
+        provenance:
+          type: string
+          enum:
+          - real
+          - unknown
+          title: Provenance
+        supporting_factors:
+          items:
+            type: string
+          type: array
+          title: Supporting Factors
+        opposing_factors:
+          items:
+            type: string
+          type: array
+          title: Opposing Factors
+        limitations:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Limitations
+        horizon:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Horizon
+        tokens_used:
+          type: integer
+          title: Tokens Used
+          default: 0
+        input_metadata:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Input Metadata
+      type: object
+      required:
+      - id
+      - ticker
+      - recommendation
+      - confidence_score
+      - ai_summary
+      - analysis_date
+      - generated_at
+      - provider_name
+      - model_name
+      - data_revision
+      - provenance
+      title: HistoryItem
+    HistoryResponse:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/HistoryItem'
+          type: array
+          title: Data
+        pagination:
+          $ref: '#/components/schemas/PageMeta'
+      type: object
+      required:
+      - data
+      - pagination
+      title: HistoryResponse
+    JobCreate:
+      properties:
+        ticker:
+          type: string
+          pattern: ^[A-Za-z0-9][A-Za-z0-9.\-]{0,19}$
+          title: Ticker
+        idempotency_key:
+          type: string
+          maxLength: 100
+          minLength: 8
+          title: Idempotency Key
+      additionalProperties: false
+      type: object
+      required:
+      - ticker
+      - idempotency_key
+      title: JobCreate
+    JobError:
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+        stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Stage
+        retryable:
+          type: boolean
+          title: Retryable
+          default: false
+      type: object
+      required:
+      - code
+      - message
+      title: JobError
+    JobList:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/JobResponse'
+          type: array
+          title: Data
+      type: object
+      required:
+      - data
+      title: JobList
+    JobResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        ticker:
+          type: string
+          title: Ticker
+        status:
+          type: string
+          enum:
+          - queued
+          - syncing
+          - calculating
+          - analyzing
+          - persisting
+          - succeeded
+          - failed
+          title: Status
+        attempts:
+          type: integer
+          minimum: 0.0
+          title: Attempts
+        result_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Result Id
+        error:
+          anyOf:
+          - $ref: '#/components/schemas/JobError'
+          - type: 'null'
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deadline:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deadline
+        expires_at:
+          type: string
+          format: date-time
+          title: Expires At
+      type: object
+      required:
+      - id
+      - ticker
+      - status
+      - attempts
+      - result_id
+      - error
+      - created_at
+      - updated_at
+      - deadline
+      - expires_at
+      title: JobResponse
     LogoutResponse:
       properties:
         message:
@@ -992,6 +2233,34 @@ components:
         price_adjustment:
           type: string
           title: Price Adjustment
+        volume_adjustment:
+          type: string
+          title: Volume Adjustment
+          default: unknown
+        market_status:
+          type: string
+          title: Market Status
+          default: unknown
+        session_timezone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Session Timezone
+        expected_market_date:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Expected Market Date
+        publication_delay_minutes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Publication Delay Minutes
+        calendar_verified:
+          type: boolean
+          title: Calendar Verified
+          default: false
       type: object
       required:
       - source
@@ -1004,6 +2273,28 @@ components:
       - data_state
       - price_adjustment
       title: MarketDataMetadata
+    PageMeta:
+      properties:
+        page:
+          type: integer
+          title: Page
+        per_page:
+          type: integer
+          title: Per Page
+        total:
+          type: integer
+          title: Total
+        total_pages:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Total Pages
+      type: object
+      required:
+      - page
+      - per_page
+      - total
+      title: PageMeta
     PaginatedResponse_DailyPriceResponse_:
       properties:
         data:
@@ -1062,6 +2353,315 @@ components:
       - total_pages
       title: PaginationMeta
       description: Metadata untuk pagination.
+    PasswordChange:
+      properties:
+        current_password:
+          type: string
+          maxLength: 72
+          minLength: 1
+          title: Current Password
+        new_password:
+          type: string
+          maxLength: 72
+          minLength: 8
+          title: New Password
+      additionalProperties: false
+      type: object
+      required:
+      - current_password
+      - new_password
+      title: PasswordChange
+    PlanInput:
+      properties:
+        ticker:
+          type: string
+          maxLength: 20
+          minLength: 1
+          title: Ticker
+        currency:
+          type: string
+          enum:
+          - IDR
+          - USD
+          title: Currency
+        entry_low:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Entry Low
+        entry_high:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Entry High
+        entry:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Entry
+        stop:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Stop
+        target:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Target
+        capital:
+          type: number
+          maximum: 1000000000000000.0
+          exclusiveMinimum: 0.0
+          title: Capital
+        risk_pct:
+          type: number
+          maximum: 100.0
+          exclusiveMinimum: 0.0
+          title: Risk Pct
+        lot_size:
+          type: integer
+          maximum: 100000.0
+          minimum: 1.0
+          title: Lot Size
+        buy_fee_bps:
+          type: number
+          maximum: 1000.0
+          minimum: 0.0
+          title: Buy Fee Bps
+          default: 0
+        sell_fee_bps:
+          type: number
+          maximum: 1000.0
+          minimum: 0.0
+          title: Sell Fee Bps
+          default: 0
+        slippage_bps:
+          type: number
+          maximum: 1000.0
+          minimum: 0.0
+          title: Slippage Bps
+          default: 0
+        horizon:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Horizon
+        reason:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Reason
+        invalidation:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Invalidation
+      additionalProperties: false
+      type: object
+      required:
+      - ticker
+      - currency
+      - entry_low
+      - entry_high
+      - entry
+      - stop
+      - target
+      - capital
+      - risk_pct
+      - lot_size
+      - horizon
+      - reason
+      - invalidation
+      title: PlanInput
+    PlanList:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/PlanResponse'
+          type: array
+          title: Data
+      type: object
+      required:
+      - data
+      title: PlanList
+    PlanResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        ticker:
+          type: string
+          title: Ticker
+        version:
+          type: integer
+          title: Version
+        details:
+          type: object
+          title: Details
+        versions:
+          items:
+            type: object
+          type: array
+          title: Versions
+        data_revision:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Data Revision
+        needs_review:
+          type: boolean
+          title: Needs Review
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - ticker
+      - version
+      - details
+      - versions
+      - data_revision
+      - needs_review
+      - created_at
+      - updated_at
+      title: PlanResponse
+    PlanUpdate:
+      properties:
+        ticker:
+          type: string
+          maxLength: 20
+          minLength: 1
+          title: Ticker
+        currency:
+          type: string
+          enum:
+          - IDR
+          - USD
+          title: Currency
+        entry_low:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Entry Low
+        entry_high:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Entry High
+        entry:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Entry
+        stop:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Stop
+        target:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Target
+        capital:
+          type: number
+          maximum: 1000000000000000.0
+          exclusiveMinimum: 0.0
+          title: Capital
+        risk_pct:
+          type: number
+          maximum: 100.0
+          exclusiveMinimum: 0.0
+          title: Risk Pct
+        lot_size:
+          type: integer
+          maximum: 100000.0
+          minimum: 1.0
+          title: Lot Size
+        buy_fee_bps:
+          type: number
+          maximum: 1000.0
+          minimum: 0.0
+          title: Buy Fee Bps
+          default: 0
+        sell_fee_bps:
+          type: number
+          maximum: 1000.0
+          minimum: 0.0
+          title: Sell Fee Bps
+          default: 0
+        slippage_bps:
+          type: number
+          maximum: 1000.0
+          minimum: 0.0
+          title: Slippage Bps
+          default: 0
+        horizon:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Horizon
+        reason:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Reason
+        invalidation:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Invalidation
+        expected_version:
+          type: integer
+          minimum: 1.0
+          title: Expected Version
+      additionalProperties: false
+      type: object
+      required:
+      - ticker
+      - currency
+      - entry_low
+      - entry_high
+      - entry
+      - stop
+      - target
+      - capital
+      - risk_pct
+      - lot_size
+      - horizon
+      - reason
+      - invalidation
+      - expected_version
+      title: PlanUpdate
+    PresetCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 1
+          title: Name
+        criteria:
+          $ref: '#/components/schemas/ScreenCriteria'
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - criteria
+      title: PresetCreate
+    ProfileUpdate:
+      properties:
+        full_name:
+          type: string
+          maxLength: 255
+          minLength: 2
+          title: Full Name
+        notifications_enabled:
+          type: boolean
+          title: Notifications Enabled
+          default: true
+      additionalProperties: false
+      type: object
+      required:
+      - full_name
+      title: ProfileUpdate
     RefreshRequest:
       properties:
         refresh_token:
@@ -1084,6 +2684,242 @@ components:
       - user
       title: RegisterResponse
       description: Response setelah registrasi berhasil.
+    ResetConfirm:
+      properties:
+        token:
+          type: string
+          maxLength: 200
+          minLength: 32
+          title: Token
+        new_password:
+          type: string
+          maxLength: 72
+          minLength: 8
+          title: New Password
+      additionalProperties: false
+      type: object
+      required:
+      - token
+      - new_password
+      title: ResetConfirm
+    ResetRequest:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+      additionalProperties: false
+      type: object
+      required:
+      - email
+      title: ResetRequest
+    SavedFilterList:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/SavedFilterResponse'
+          type: array
+          title: Data
+      type: object
+      required:
+      - data
+      title: SavedFilterList
+    SavedFilterResponse:
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 1
+          title: Name
+        criteria:
+          $ref: '#/components/schemas/ScreenCriteria'
+        id:
+          type: string
+          format: uuid
+          title: Id
+        schema_version:
+          type: integer
+          title: Schema Version
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - criteria
+      - id
+      - schema_version
+      title: SavedFilterResponse
+    ScreenCoverage:
+      properties:
+        registered_active:
+          type: integer
+          title: Registered Active
+        with_aligned_data:
+          type: integer
+          title: With Aligned Data
+        scope:
+          type: string
+          title: Scope
+      type: object
+      required:
+      - registered_active
+      - with_aligned_data
+      - scope
+      title: ScreenCoverage
+    ScreenCriteria:
+      properties:
+        exchange:
+          anyOf:
+          - type: string
+            maxLength: 50
+          - type: 'null'
+          title: Exchange
+        sector:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          title: Sector
+        min_volume:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Min Volume
+        rsi_min:
+          anyOf:
+          - type: number
+            maximum: 100.0
+            minimum: 0.0
+          - type: 'null'
+          title: Rsi Min
+        rsi_max:
+          anyOf:
+          - type: number
+            maximum: 100.0
+            minimum: 0.0
+          - type: 'null'
+          title: Rsi Max
+        wyckoff_phase:
+          anyOf:
+          - type: string
+            maxLength: 20
+          - type: 'null'
+          title: Wyckoff Phase
+        smc:
+          anyOf:
+          - type: string
+            enum:
+            - bullish_fvg
+            - bearish_fvg
+            - bos
+            - choch
+            - bullish_ob
+            - bearish_ob
+          - type: 'null'
+          title: Smc
+        missing_only:
+          type: boolean
+          title: Missing Only
+          default: false
+        sort:
+          type: string
+          enum:
+          - ticker
+          - volume
+          - rsi
+          title: Sort
+          default: ticker
+        descending:
+          type: boolean
+          title: Descending
+          default: false
+      additionalProperties: false
+      type: object
+      title: ScreenCriteria
+    ScreenResult:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/ScreenRow'
+          type: array
+          title: Data
+        criteria:
+          $ref: '#/components/schemas/ScreenCriteria'
+        coverage:
+          $ref: '#/components/schemas/ScreenCoverage'
+        pagination:
+          $ref: '#/components/schemas/PageMeta'
+      type: object
+      required:
+      - data
+      - criteria
+      - coverage
+      - pagination
+      title: ScreenResult
+    ScreenRow:
+      properties:
+        ticker:
+          type: string
+          title: Ticker
+        company_name:
+          type: string
+          title: Company Name
+        sector:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sector
+        exchange:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Exchange
+        currency:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Currency
+        close:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Close
+        volume:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Volume
+        rsi:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rsi
+        wyckoff_phase:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Wyckoff Phase
+        smc_patterns:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Smc Patterns
+        metadata:
+          $ref: '#/components/schemas/MarketDataMetadata'
+      type: object
+      required:
+      - ticker
+      - company_name
+      - sector
+      - exchange
+      - currency
+      - close
+      - volume
+      - rsi
+      - wyckoff_phase
+      - smc_patterns
+      - metadata
+      title: ScreenRow
     StockAnalysisLatestResponse:
       properties:
         ticker:
@@ -1113,6 +2949,16 @@ components:
             format: date-time
           - type: 'null'
           title: Generated At
+        provider_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider Name
+        actual_model_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Actual Model Name
         model_name:
           anyOf:
           - type: string
@@ -1437,6 +3283,10 @@ components:
         is_active:
           type: boolean
           title: Is Active
+        notifications_enabled:
+          type: boolean
+          title: Notifications Enabled
+          default: true
         created_at:
           type: string
           format: date-time
@@ -1523,6 +3373,16 @@ components:
       description: Request untuk menambahkan saham ke watchlist.
     WatchlistResponse:
       properties:
+        currency:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Currency
+        exchange:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Exchange
         id:
           type: string
           format: uuid
@@ -1549,7 +3409,6 @@ components:
       - company_name
       - added_at
       title: WatchlistResponse
-      description: Response data watchlist pengguna.
     WatchlistUpdateRequest:
       properties:
         notes:

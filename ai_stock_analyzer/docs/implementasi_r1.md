@@ -1,10 +1,12 @@
 # Implementasi Perbaikan R1
 
-Tanggal laporan: 18 Oktober 2026, Asia/Jakarta. Perubahan tersedia pada checkout untuk ditinjau; belum dipublikasikan atau dideploy ke produksi.
+Tanggal laporan: 18 Oktober 2026, Asia/Jakarta. Pembaruan distribusi 19 Oktober: source R1 sudah di-push ke origin/work pada commit 541c281; belum dideploy ke produksi. Hasil verifikasi di bawah adalah catatan implementasi R1, bukan pengujian ulang pada revisi PRD.
 
 Acuan: [PRD perbaikan](prd_perbaikan_aplikasi.md). Rilis inti telah diimplementasikan dan diuji secara lokal. Gerbang integrasi provider nyata masih terbuka, sehingga laporan ini tidak menyatakan aplikasi siap rilis publik.
 
-Kajian lanjutan 19 Oktober 2026: [alternatif integrasi AI dan data pasar](alternatif_integrasi.md), termasuk Gemini, Groq, Ollama, Sectors v2, EODHD, dan Twelve Data. Pemilihan dan migrasi provider belum dilakukan.
+Kajian lanjutan 19 Oktober 2026: [alternatif integrasi AI dan data pasar](alternatif_integrasi.md), termasuk Gemini, Groq, Ollama, Sectors v2, EODHD, dan Twelve Data. Pada akhir R1 belum ada migrasi provider. Adapter opsional dan fitur lanjutan sesudah R1 dicatat terpisah dalam [laporan implementasi PRD](implementasi_prd_20261019.md).
+
+Tindak lanjut [review pengguna pada baseline 42d887a](review_pengguna_2026-10-19.md) dipetakan dalam PRD versi 1.1: 12 temuan, 8 usulan fitur, status sesudah R1, serta kriteria dan backlog paket berikutnya.
 
 ## Perubahan yang tersedia
 
@@ -122,9 +124,13 @@ Smoke browser opsional:
 
 ## Sisa pekerjaan PRD
 
-- B10/R2: antrean job persisten, status lintas reload, retry worker, dan pemulihan restart. AnalysisRequest saat ini hanya reservasi/idempotensi, bukan job queue.
-- B07/B11/R2: daftar saham berhalaman yang lengkap, penyempurnaan bahasa/glosarium, audit aksesibilitas lebih luas, dan pilot lima pengguna.
-- B13–B15/R3: alert berbasis kejadian, pemulihan akun/email/preferensi, biaya/slippage/lot serta riwayat/ekspor simulasi.
-- Operasional: smoke provider nyata, kalender bursa terverifikasi, pengukuran performa/beban, biaya AI, dan pilot tujuh hari sebelum perluasan rilis.
+Urutan berikut mengikuti revisi PRD 1.1; status implementasi R1 di atas tetap menjadi baseline.
+
+- B16/B12/R1.1: pemilihan dan integrasi provider, provenance/adjustment, kalender serta jadwal EOD, smoke IDX/AS dan AI nyata, CI/staging.
+- B07/B08/B09b/B11/B20/R2.1: daftar saham/rentang/metadata, filter dan sort watchlist, status sudah ditambahkan, bahasa/onboarding/tier, audit aksesibilitas/390 × 844, serta pilot lima pengguna.
+- B10/B13/R2.2: job persisten, status lintas reload, retry dan pemulihan restart, lalu alert EOD berbasis kejadian. AnalysisRequest saat ini hanya reservasi/idempotensi, bukan job queue.
+- B17/B18/R2.3: screener dan filter tersimpan, riwayat/perbandingan analisis dan ekspor CSV.
+- B14/B15/B19/B21/R3: pemulihan akun/email/preferensi, biaya/slippage/lot/benchmark dan run backtest, rencana transaksi/kalkulator, serta PDF sesuai paket yang dipilih.
+- Operasional lintas paket: pengukuran performa/beban, biaya AI, dan pilot tujuh hari sebelum perluasan rilis; bukti fixture dibedakan dari akses provider nyata.
 
 Tidak ada deployment, publikasi environment, merge, atau pengiriman pesan eksternal sebagai bagian dari implementasi lokal ini.
