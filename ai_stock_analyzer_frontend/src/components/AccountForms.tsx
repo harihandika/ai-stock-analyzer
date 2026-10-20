@@ -54,7 +54,7 @@ export function AccountForms({
     }
   };
   return (
-    <section className="space-y-6">
+    <section id="notification-preferences" className="space-y-6">
       <h2 className="text-xl">Profil dan preferensi</h2>
       <form onSubmit={save} className="space-y-4">
         <Input

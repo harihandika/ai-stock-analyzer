@@ -113,6 +113,19 @@ jobs:
             sleep 1
           done
           export BROWSER_EXECUTABLE="$(.venv/bin/python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
-          .venv/bin/python tests/browser_smoke.py
-          .venv/bin/python tests/browser_post_audit.py
-          .venv/bin/python -m tests.browser_audit_followup
+          # A public annotation identifies the failing suite without exposing
+          # fixture credentials or relying on access to the full job logs.
+          check_browser() {
+            suite="$1"
+            shift
+            if .venv/bin/python -m scripts.browser_check "$@"; then
+              echo "Passed browser suite: $suite"
+            else
+              echo "::error title=Browser suite failed::$suite failed; inspect its assertion in the job log."
+              return 1
+            fi
+          }
+          check_browser smoke tests/browser_smoke.py
+          check_browser post-audit tests/browser_post_audit.py
+          check_browser audit-followup -m tests.browser_audit_followup
+          check_browser stabilization-v3 -m tests.browser_stabilization_v3

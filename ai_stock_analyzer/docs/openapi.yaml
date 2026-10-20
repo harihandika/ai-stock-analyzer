@@ -1034,7 +1034,8 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/BacktestHistory'
         '422':
           description: Validation Error
           content:
@@ -1062,7 +1063,8 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/BacktestResult'
         '422':
           description: Validation Error
           content:
@@ -1609,6 +1611,23 @@ components:
       - horizon
       - tokens_used
       title: AnalysisResult
+    BacktestHistory:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/BacktestRunSummary'
+          type: array
+          title: Data
+        pagination:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Pagination
+      type: object
+      required:
+      - data
+      - pagination
+      title: BacktestHistory
     BacktestRequest:
       properties:
         years:
@@ -1671,6 +1690,12 @@ components:
             format: uuid
           - type: 'null'
           title: Run Id
+        created_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Created At
         ticker:
           type: string
           title: Ticker
@@ -1766,6 +1791,44 @@ components:
       - equity_curve
       - assumptions
       title: BacktestResult
+    BacktestRunSummary:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        ticker:
+          type: string
+          title: Ticker
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        parameters:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Parameters
+        total_trades:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Total Trades
+        net_return_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Net Return Pct
+        data_revision:
+          type: string
+          title: Data Revision
+      type: object
+      required:
+      - id
+      - ticker
+      - created_at
+      - data_revision
+      title: BacktestRunSummary
     BacktestTrade:
       properties:
         buy_date:

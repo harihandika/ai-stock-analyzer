@@ -61,7 +61,8 @@ export function FirstSteps() {
               bila data belum tersedia; data harian bukan harga realtime.
             </li>
             <li>
-              Simpan saham ke watchlist dan tulis alasan yang ingin dipantau.
+              Simpan saham ke daftar pantauan dan tulis alasan yang ingin
+              dipantau.
             </li>
           </ol>
           <Link className="inline-block underline p-2" href="/guide">

@@ -63,7 +63,7 @@ def main():
         page.wait_for_url(re.compile(r".*/stock/BBCA.JK$"))
         print("PASS search company name + Enter resolves ticker")
         page.get_by_role("button", name="Analisis Ulang AI", exact=True).click()
-        expect(page.get_by_text("Skor model: 88%", exact=True)).to_be_visible()
+        expect(page.get_by_text("Skor model: 88%", exact=True)).to_be_visible(timeout=30000)
         expect(page.get_by_role("button", name="Analisis Ulang AI", exact=True)).to_be_enabled(
             timeout=30000
         )
@@ -80,10 +80,10 @@ def main():
         expect(page.get_by_role("button", name="Analisis Ulang AI", exact=True)).to_be_enabled(
             timeout=30000
         )
-        expect(page.get_by_text("Skor model: 88%", exact=True)).to_be_visible()
+        expect(page.get_by_text("Skor model: 88%", exact=True)).to_be_visible(timeout=30000)
         page.goto(BASE + "/stock/BBCA.JK", wait_until="domcontentloaded")
         print("PASS job status and completion survive a full page reload")
-        page.get_by_role("button", name="Tambah Watchlist", exact=True).click()
+        page.get_by_role("button", name="Tambah pantauan", exact=True).click()
         expect(page.get_by_text("Saham ditambahkan ke watchlist.", exact=True)).to_be_visible()
         page.get_by_role("link", name="Backtest teknikal", exact=True).click()
         page.get_by_label("Target keuntungan (%)", exact=True).fill("10")
@@ -95,7 +95,7 @@ def main():
         expect(page.get_by_text("Penurunan modal maksimum", exact=True)).to_be_visible()
         expect(page.get_by_text("Riwayat transaksi", exact=True)).to_be_visible()
         print("PASS backtest effective parameters, statistics and trades render")
-        page.get_by_role("link", name="Watchlist", exact=True).click()
+        page.get_by_role("link", name="Daftar pantauan", exact=True).click()
         expect(page.get_by_role("link", name="BBCA.JK", exact=True)).to_be_visible()
         page.get_by_label("Catatan pribadi").fill("Pantau volume pada penutupan.")
         page.get_by_role("button", name="Simpan Catatan", exact=True).click()
@@ -120,7 +120,7 @@ def main():
         assert download.value.suggested_filename.endswith(".csv")
         print("PASS full-universe screener, saved filter, analysis history and CSV")
         page.goto(BASE + "/research?tab=plans&ticker=BBCA.JK", wait_until="domcontentloaded")
-        page.get_by_text("2. Lengkapi rencana untuk disimpan", exact=True).click()
+        page.get_by_text("3. Lengkapi rencana untuk disimpan", exact=True).click()
         for name, value in [
             ("Area entry bawah", "990"),
             ("Area entry atas", "1010"),
@@ -158,19 +158,23 @@ def main():
         expect(page.get_by_role("heading", name="Free dan Premium", exact=True)).to_be_visible()
         page.goto(BASE + "/watchlist", wait_until="domcontentloaded")
         print("PASS profile editing, quota explanation and onboarding glossary")
-        expect(page.get_by_role("heading", name="Watchlist Saham", exact=True)).to_be_visible()
+        expect(
+            page.get_by_role("heading", name="Daftar pantauan saham", exact=True)
+        ).to_be_visible()
         page.wait_for_load_state("networkidle")
         before = len(refreshes)
         context.add_cookies(
             [{"name": "access_token", "value": "expired", "url": BASE, "sameSite": "Strict"}]
         )
         page.reload()
-        expect(page.get_by_role("heading", name="Watchlist Saham", exact=True)).to_be_visible()
+        expect(
+            page.get_by_role("heading", name="Daftar pantauan saham", exact=True)
+        ).to_be_visible()
         expect(page.get_by_label("Catatan pribadi")).to_have_value("Pantau volume pada penutupan.")
         assert len(refreshes) - before == 1, "Concurrent 401 must share one refresh"
         print("PASS concurrent 401 refresh, no request queue hang")
         tokens = {c["name"]: c["value"] for c in context.cookies()}
-        page.get_by_role("button", name="Sign Out", exact=True).click()
+        page.get_by_role("button", name="Keluar", exact=True).click()
         page.wait_for_url(re.compile(r".*/login$"))
         assert (
             context.request.post(
@@ -226,9 +230,11 @@ def main():
             "document.documentElement.scrollWidth > innerWidth"
         ), "Mobile dashboard overflows"
         page.get_by_role("button", name="Buka navigasi", exact=True).click()
-        expect(page.get_by_role("link", name="Watchlist", exact=True)).to_be_visible()
-        page.get_by_role("link", name="Watchlist", exact=True).click()
-        expect(page.get_by_role("heading", name="Watchlist Saham", exact=True)).to_be_visible()
+        expect(page.get_by_role("link", name="Daftar pantauan", exact=True)).to_be_visible()
+        page.get_by_role("link", name="Daftar pantauan", exact=True).click()
+        expect(
+            page.get_by_role("heading", name="Daftar pantauan saham", exact=True)
+        ).to_be_visible()
         assert not page.evaluate(
             "document.documentElement.scrollWidth > innerWidth"
         ), "Mobile watchlist overflows"

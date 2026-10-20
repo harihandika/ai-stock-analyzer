@@ -37,8 +37,8 @@ const basicFields = [
   ["lot_size", "Lembar per lot"],
 ] as const;
 const fees = [
-  ["buy_fee_bps", "Fee beli (bps)"],
-  ["sell_fee_bps", "Fee jual (bps)"],
+  ["buy_fee_bps", "Biaya beli (bps)"],
+  ["sell_fee_bps", "Biaya jual (bps)"],
   ["slippage_bps", "Slippage (bps)"],
 ] as const;
 const fullFields = [
@@ -314,13 +314,67 @@ export function TradePlans({ initialTicker }: { initialTicker: string }) {
         >
           Hitung risiko dan lot
         </button>
+        <section
+          aria-label="Periksa hasil sebelum menyimpan"
+          className="space-y-3"
+        >
+          <h3 className="text-lg font-semibold">
+            2. Periksa risiko, lot dan biaya
+          </h3>
+          {result && (
+            <div
+              role="status"
+              aria-label="Hasil kalkulator terkini"
+              className="border border-sky-700 rounded p-4 space-y-2"
+            >
+              <p>
+                {result.shares} lembar / {result.lots} lot · Rasio
+                imbalan/risiko sebelum biaya{" "}
+                {result.reward_risk_before_fees.toFixed(2)}:1
+              </p>
+              <p>
+                Nilai beli termasuk estimasi biaya{" "}
+                {formatPrice(result.purchase_value, draft.currency)} · Risiko{" "}
+                {formatPrice(result.estimated_risk, draft.currency)} · Sisa
+                modal {formatPrice(result.remaining_capital, draft.currency)}
+              </p>
+              {result.lots === 0 && (
+                <p>
+                  Modal atau batas risiko belum cukup untuk satu lot sesuai
+                  input.
+                </p>
+              )}
+              <p>{result.limitations}</p>
+            </div>
+          )}
+          {!result && (
+            <p>
+              Hitung input terkini untuk melihat risiko, lot dan asumsi biaya
+              sebelum menyimpan.
+            </p>
+          )}
+          {result && (
+            <button
+              type="button"
+              className={actionClass}
+              onClick={() => {
+                setCompleteOpen(true);
+                requestAnimationFrame(() =>
+                  document.getElementById("plan-entry_low")?.focus(),
+                );
+              }}
+            >
+              Lanjutkan melengkapi rencana
+            </button>
+          )}
+        </section>
         <details
           open={completeOpen}
           onToggle={(e) => setCompleteOpen(e.currentTarget.open)}
           className="rounded border border-slate-700 p-4"
         >
           <summary className="cursor-pointer min-h-11 py-2">
-            2. Lengkapi rencana untuk disimpan
+            3. Lengkapi rencana untuk disimpan
           </summary>
           <p className="my-3 text-sm text-slate-300">
             Field berikut wajib saat menyimpan. Kalkulator dapat dicoba tanpa
@@ -332,6 +386,17 @@ export function TradePlans({ initialTicker }: { initialTicker: string }) {
             )}
           </div>
         </details>
+        <p role="status">
+          {fullFields.some(([name]) => !draft[name]?.trim())
+            ? "Untuk menyimpan, lengkapi: " +
+              fullFields
+                .filter(([name]) => !draft[name]?.trim())
+                .map(([, label]) => label)
+                .join(", ") +
+              "."
+            : "Uraian rencana lengkap. Periksa input dan hasil sebelum menyimpan."}
+        </p>
+        <h3 className="text-lg font-semibold">4. Simpan rencana</h3>
         <div className="flex flex-wrap gap-3">
           <button
             name="action"
@@ -378,30 +443,6 @@ export function TradePlans({ initialTicker }: { initialTicker: string }) {
         >
           Muat ulang versi tersimpan
         </button>
-      )}
-      {result && (
-        <div
-          role="status"
-          aria-label="Hasil kalkulator terkini"
-          className="border border-sky-700 rounded p-4 space-y-2"
-        >
-          <p>
-            {result.shares} lembar / {result.lots} lot · Reward/risk sebelum
-            biaya {result.reward_risk_before_fees.toFixed(2)}:1
-          </p>
-          <p>
-            Nilai beli termasuk estimasi biaya{" "}
-            {formatPrice(result.purchase_value, draft.currency)} · Risiko{" "}
-            {formatPrice(result.estimated_risk, draft.currency)} · Sisa modal{" "}
-            {formatPrice(result.remaining_capital, draft.currency)}
-          </p>
-          {result.lots === 0 && (
-            <p>
-              Modal atau batas risiko belum cukup untuk satu lot sesuai input.
-            </p>
-          )}
-          <p>{result.limitations}</p>
-        </div>
       )}
       {plans.map((p) => (
         <article

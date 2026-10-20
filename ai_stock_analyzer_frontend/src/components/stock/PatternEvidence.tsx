@@ -1,13 +1,6 @@
 import { Analysis } from "@/services/market";
 
-const names: Record<string, string> = {
-  bullish_fvg: "Fair value gap naik",
-  bearish_fvg: "Fair value gap turun",
-  bos: "Break of structure",
-  choch: "Change of character",
-  bullish_ob: "Order block naik",
-  bearish_ob: "Order block turun",
-};
+import { patternLabels as names } from "@/services/labels";
 export function PatternEvidence({
   analysis,
   canSelect,

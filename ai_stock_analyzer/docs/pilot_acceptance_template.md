@@ -1,6 +1,6 @@
-# Lembar penerimaan pilot PRD 1.3
+# Lembar penerimaan pilot PRD 1.4
 
-Template ini belum berisi hasil peserta atau keputusan rilis. Isi setelah pengamatan nyata; tidak mengganti nilai kosong dengan hasil tes otomatis. Acuan: [PRD](prd_kesiapan_pilot_8d9645d.md) dan [runbook operator](operasional_pilot.md).
+Template ini belum berisi hasil peserta atau keputusan rilis. Isi setelah pengamatan nyata; tidak mengganti nilai kosong dengan hasil tes otomatis. Acuan: [PRD 1.4](prd_stabilisasi_audit_v3_dc67ff9.md) dan [runbook operator](operasional_pilot.md).
 
 ## Identitas kandidat dan layanan
 
@@ -31,6 +31,18 @@ Jangan memberi jawaban sumber/tanggal sebelum pertanyaan pemahaman. Bedakan wakt
 | P03 | Belum diisi | Belum diuji | Belum diuji | Belum diuji | Belum diuji | Belum dicatat |
 | P04 | Belum diisi | Belum diuji | Belum diuji | Belum diuji | Belum diuji | Belum dicatat |
 | P05 | Belum diisi | Belum diuji | Belum diuji | Belum diuji | Belum diuji | Belum dicatat |
+
+## Tugas stabilisasi V3
+
+Tugas C: pilih run A lalu B, sebutkan ID/ticker/parameter/waktu WIB hasil aktif. Lanjutkan dengan menulis catatan BBCA tanpa menyimpan dan menambah ticker lain. Catat salah baca hasil, kehilangan draft, keputusan simpan/buang, bantuan, browser/zona dan waktu. Target pengamatan: tidak ada draft hilang tanpa keputusan peserta. Catat juga pemahaman perbedaan form simulasi berikutnya dan hasil tersimpan.
+
+| Peserta | Run/parameter/waktu disebut benar | Draft tetap ada saat tambah ticker | Simpan/buang dipahami | Waktu/bantuan/bukti |
+|---|---|---|---|---|
+| P01 | Belum diuji | Belum diuji | Belum diuji | Belum dicatat |
+| P02 | Belum diuji | Belum diuji | Belum diuji | Belum dicatat |
+| P03 | Belum diuji | Belum diuji | Belum diuji | Belum dicatat |
+| P04 | Belum diuji | Belum diuji | Belum diuji | Belum dicatat |
+| P05 | Belum diuji | Belum diuji | Belum diuji | Belum dicatat |
 
 ## Pengamatan tujuh hari
 

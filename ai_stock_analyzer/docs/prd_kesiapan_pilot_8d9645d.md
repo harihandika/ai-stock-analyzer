@@ -1,5 +1,7 @@
 # PRD 1.3 — Perbaikan audit dan kesiapan pilot AI Stock Analyzer
 
+Acuan perbaikan terbaru: [PRD 1.4 setelah audit V3 pada dc67ff9](prd_stabilisasi_audit_v3_dc67ff9.md). BUG-005–007 di bawah sudah diverifikasi diperbaiki oleh V3; gerbang layanan nyata dan pilot yang belum diterima tetap berlaku.
+
 Tanggal: 20 Oktober 2026, Asia/Jakarta (WIB). Status: **acuan implementasi; capaian dan gerbang tersisa dicatat pada [laporan pelaksanaan](implementasi_prd_1_3_20261020.md)**. Baseline audit aplikasi: `8d9645d` pada `work`; `main` masih `d17f260` ketika penyusunan dimulai. Bukti audit diterbitkan pada commit `9c36fcf` di branch `audit/user-testing-8d9645d-20261020`. Acceptance di bawah adalah target; bukan pernyataan seluruh layanan/pilot telah diterima.
 
 Dokumen ini melanjutkan [PRD 1.2](prd_perbaikan_pasca_audit_d17f260.md). [Ringkasan audit terbaru dan bukti sumber](review_audit_8d9645d_2026-10-20.md) serta [catatan baseline](status_baseline_8d9645d_2026-10-20.md) membedakan hasil auditor, pencocokan source dan batas penerimaan. Akses lintas sesi tidak diperlukan lagi: laporan GitHub, matriks final dan evidence utama sudah diperiksa.

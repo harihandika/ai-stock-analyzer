@@ -1,0 +1,67 @@
+{
+  "baseline_sha": "dc67ff9445d91ce8a83270bcb08d4ca72282cd8b",
+  "candidate": "Commit containing this manifest; see Git history and final CI run for exact SHA",
+  "date": "2026-10-20",
+  "timezone": "Asia/Jakarta",
+  "backend": {
+    "sqlite": {
+      "passed": 119,
+      "failed": 0
+    },
+    "postgresql_16": {
+      "passed": 119,
+      "failed": 0
+    },
+    "warning_count_per_database": 163,
+    "databases": "disposable; no development/production drop-create"
+  },
+  "browser": [
+    {
+      "suite": "stabilization-v3",
+      "passed": 27,
+      "failed": 0
+    },
+    {
+      "suite": "smoke",
+      "passed": 19,
+      "failed": 0
+    },
+    {
+      "suite": "post-audit",
+      "passed": 72,
+      "failed": 0
+    },
+    {
+      "suite": "audit-followup",
+      "passed": 25,
+      "failed": 0
+    }
+  ],
+  "browser_total": 143,
+  "frontend": {
+    "lint": "passed",
+    "production_build": "passed",
+    "browser_engine": "system Chromium; production Next; controlled market/AI fixtures"
+  },
+  "contracts": {
+    "openapi": "matches runtime",
+    "ruff": "passed",
+    "new_migration": false,
+    "schema_head": "r4_operations"
+  },
+  "scope": {
+    "live_providers_verified": false,
+    "smtp_verified": false,
+    "deployed_staging_tested": false,
+    "physical_devices_tested": false,
+    "human_participants": 0,
+    "seven_day_observation_complete": false
+  },
+  "remote_ci": "This is a local validation manifest. Verify the run attached to the candidate SHA; no remote success inferred here.",
+  "evidence_directory_private": "/workspace/.cloud-setup/ai-stock-analyzer/v14",
+  "notes": [
+    "Audit V3 87/3/5/4 remains historical and is not recomputed.",
+    "Stabilization and smoke rechecked after the final note-save/loading guard; other unchanged journeys retain their passing regression results.",
+    "No credentials, database snapshots or private screenshots included in Git."
+  ]
+}

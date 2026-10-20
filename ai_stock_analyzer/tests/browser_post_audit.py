@@ -132,7 +132,7 @@ def main():
             page.get_by_role("button", name="Hitung risiko dan lot", exact=True).click()
             expect(result).to_be_visible()
         page.get_by_text("Biaya dan slippage", exact=True).click()
-        for label in ("Fee beli (bps)", "Fee jual (bps)", "Slippage (bps)"):
+        for label in ("Biaya beli (bps)", "Biaya jual (bps)", "Slippage (bps)"):
             page.get_by_label(label, exact=True).fill("10")
             expect(result).to_have_count(0)
             page.get_by_label(label, exact=True).fill("0")

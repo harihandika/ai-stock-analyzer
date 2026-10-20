@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { formatWib } from "@/services/time";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { EquityChart } from "@/components/charts/EquityChart";
 import { downloadResult } from "@/services/download";
@@ -30,6 +32,9 @@ interface TradeRecord {
 
 interface BacktestResult {
   run_id?: string;
+  created_at?: string | null;
+  data_revision?: string | null;
+  source?: string;
   net_return_pct: number;
   total_fees: number;
   equity_curve: { date: string; equity: number }[];
@@ -45,6 +50,8 @@ interface BacktestResult {
   data_end: string;
   effective_parameters: {
     years: number;
+    initial_capital?: number;
+    lot_size?: number | null;
     target_profit_pct: number;
     stop_loss_pct: number;
   };
@@ -63,8 +70,18 @@ interface BacktestResult {
 
 export default function BacktestPage() {
   const params = useParams();
-  const ticker = params.ticker as string;
+  const ticker = String(params.ticker).toUpperCase();
 
+  const { user } = useAuth();
+  return (
+    <BacktestWorkspace
+      key={`${user?.id || "anonymous"}:${ticker}`}
+      ticker={ticker}
+    />
+  );
+}
+
+function BacktestWorkspace({ ticker }: { ticker: string }) {
   // Form State
   const [years, setYears] = useState(3);
   const [targetProfit, setTargetProfit] = useState(10);
@@ -81,47 +98,109 @@ export default function BacktestPage() {
   const [runs, setRuns] = useState<
     { id: string; ticker: string; created_at: string }[]
   >([]);
-  useEffect(() => {
-    const c = new AbortController();
-    apiClient
-      .get("/backtests", { signal: c.signal })
-      .then((r) =>
-        setRuns(
-          r.data.data.filter(
-            (run: { ticker: string }) => run.ticker === ticker,
-          ),
-        ),
-      )
-      .catch(() => undefined);
-    return () => c.abort();
-  }, [ticker]);
+  const [selected, setSelected] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState("");
   const [result, setResult] = useState<BacktestResult | null>(null);
+  const generation = useRef(0);
+  const historyGeneration = useRef(0);
+  const alive = useRef(true);
+  const request = useRef<AbortController | null>(null);
+  const loadRuns = useCallback(
+    async (signal?: AbortSignal) => {
+      const revision = ++historyGeneration.current;
+      try {
+        const response = await apiClient.get("/backtests", { signal });
+        if (
+          alive.current &&
+          revision === historyGeneration.current &&
+          !signal?.aborted
+        ) {
+          setRuns(
+            response.data.data.filter(
+              (r: { ticker: string }) => r.ticker === ticker,
+            ),
+          );
+          setHistoryError("");
+        }
+      } catch (e) {
+        if (
+          alive.current &&
+          revision === historyGeneration.current &&
+          !signal?.aborted
+        )
+          setHistoryError("Riwayat belum dapat diperbarui. " + errorMessage(e));
+      }
+    },
+    [ticker],
+  );
+  const invalidate = useCallback(() => {
+    alive.current = false;
+    generation.current++;
+    historyGeneration.current++;
+    request.current?.abort();
+  }, []);
+  useEffect(() => {
+    alive.current = true;
+    const controller = new AbortController();
+    void Promise.resolve().then(() => {
+      if (!controller.signal.aborted) return loadRuns(controller.signal);
+    });
+    return () => {
+      controller.abort();
+      invalidate();
+    };
+  }, [loadRuns, invalidate]);
 
-  const handleRunBacktest = async (e: React.FormEvent) => {
-    e.preventDefault();
+  async function execute(runId?: string) {
+    const current = ++generation.current;
+    request.current?.abort();
+    const controller = new AbortController();
+    request.current = controller;
+    const active = () => alive.current && generation.current === current;
+    setSelected(runId || "");
     setLoading(true);
     setError(null);
     setResult(null);
-
     try {
-      const response = await runBacktest(ticker, {
-        years,
-        target_profit_pct: targetProfit,
-        stop_loss_pct: stopLoss,
-        ...costs,
-      });
-      setResult(response.data);
-      const saved = await apiClient.get("/backtests");
-      setRuns(
-        saved.data.data.filter((r: { ticker: string }) => r.ticker === ticker),
-      );
-    } catch (err: unknown) {
-      setError(errorMessage(err));
+      const response = runId
+        ? await apiClient.get<BacktestResult>(
+            "/backtests/" + encodeURIComponent(runId),
+            { signal: controller.signal },
+          )
+        : await runBacktest(
+            ticker,
+            {
+              years,
+              target_profit_pct: targetProfit,
+              stop_loss_pct: stopLoss,
+              ...costs,
+            },
+            controller.signal,
+          );
+      if (!active()) return;
+      const value = response.data as BacktestResult;
+      if (
+        !value.run_id ||
+        value.ticker !== ticker ||
+        (runId && value.run_id !== runId)
+      )
+        throw new Error(
+          "Identitas hasil berbeda dari run yang dipilih. Coba muat ulang riwayat.",
+        );
+      setResult(value);
+      setSelected(value.run_id);
+      if (!runId) void loadRuns();
+    } catch (e) {
+      if (active() && !controller.signal.aborted) setError(errorMessage(e));
     } finally {
-      setLoading(false);
+      if (active()) setLoading(false);
     }
+  }
+  const handleRunBacktest = (e: React.FormEvent) => {
+    e.preventDefault();
+    void execute();
   };
 
   return (
@@ -138,34 +217,49 @@ export default function BacktestPage() {
         </div>
 
         {!!runs.length && (
-          <label className="block mb-6">
-            Buka run tersimpan tanpa simulasi ulang
+          <label className="block mb-6" htmlFor="backtest-run">
+            <span id="backtest-run-label">
+              Buka run tersimpan tanpa simulasi ulang
+            </span>
             <select
+              id="backtest-run"
+              aria-labelledby="backtest-run-label"
               className="block w-full bg-slate-900 rounded p-3"
-              value=""
-              onChange={async (e) => {
-                if (!e.target.value) return;
-                try {
-                  setResult(
-                    (await apiClient.get("/backtests/" + e.target.value)).data,
-                  );
-                  setError(null);
-                } catch (err) {
-                  setError(errorMessage(err));
-                }
+              value={selected}
+              onChange={(e) => {
+                if (e.target.value) void execute(e.target.value);
               }}
             >
               <option value="">Pilih run</option>
+              {selected && !runs.some((run) => run.id === selected) && (
+                <option value={selected}>
+                  {formatWib(result?.created_at)} · {selected.slice(0, 8)}
+                </option>
+              )}
               {runs.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {new Date(r.created_at).toLocaleString("id-ID", {
-                    timeZone: "Asia/Jakarta",
-                  })}{" "}
-                  WIB · {r.id.slice(0, 8)}
+                  {formatWib(r.created_at)} · {r.id.slice(0, 8)}
                 </option>
               ))}
             </select>
           </label>
+        )}
+        {historyError && (
+          <p role="status">
+            {historyError}{" "}
+            <button className="underline" onClick={() => void loadRuns()}>
+              Muat ulang riwayat
+            </button>
+          </p>
+        )}
+        {loading && <p role="status">Memuat hasil pilihan terkini…</p>}
+        {error && selected && (
+          <button
+            className="underline min-h-11"
+            onClick={() => void execute(selected)}
+          >
+            Coba muat run lagi
+          </button>
         )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Pengaturan simulasi Form */}
@@ -339,7 +433,30 @@ export default function BacktestPage() {
             )}
 
             {result && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div
+                role="region"
+                aria-label="Hasil backtest aktif"
+                className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+              >
+                <div className="rounded border border-sky-700 p-4 mb-5 space-y-2 break-words">
+                  <h2 className="text-xl">Hasil tersimpan: {result.ticker}</h2>
+                  <p>
+                    ID run: <span className="break-all">{result.run_id}</span>
+                  </p>
+                  <p>Dibuat: {formatWib(result.created_at)}</p>
+                  <p>
+                    Sumber: {result.source || "Belum tersedia"} · Revisi:{" "}
+                    <span className="break-all">
+                      {result.data_revision || "Belum tersedia"}
+                    </span>
+                  </p>
+                  <p>
+                    Lot:{" "}
+                    {result.effective_parameters.lot_size ?? "Belum tersedia"}{" "}
+                    lembar. Parameter di bawah milik hasil ini; form di samping
+                    menyiapkan simulasi berikutnya.
+                  </p>
+                </div>
                 <div className="text-sm text-slate-400 mb-6 space-y-2">
                   <p>
                     Simulasi strategi teknikal harian, bukan rekam jejak
@@ -381,13 +498,20 @@ export default function BacktestPage() {
                     <button
                       className="rounded border border-sky-600 p-3"
                       onClick={async () => {
+                        const current = generation.current;
                         try {
                           await downloadResult(
                             "/backtests/" + result.run_id + "/export",
-                            "backtest.csv",
+                            `backtest-${ticker}-${result.run_id}.csv`,
+                            {
+                              signal: request.current?.signal,
+                              isCurrent: () =>
+                                alive.current && current === generation.current,
+                            },
                           );
                         } catch (e) {
-                          setError(errorMessage(e));
+                          if (alive.current && current === generation.current)
+                            setError(errorMessage(e));
                         }
                       }}
                     >

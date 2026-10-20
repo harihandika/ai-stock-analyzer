@@ -138,8 +138,10 @@ export const runBacktest = (
     sell_fee_bps?: number;
     slippage_bps?: number;
   },
+  signal?: AbortSignal,
 ) =>
   apiClient.post(
     "/analysis/" + encodeURIComponent(ticker) + "/backtest",
     params,
+    { signal },
   );

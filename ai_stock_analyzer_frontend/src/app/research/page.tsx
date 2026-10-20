@@ -21,6 +21,8 @@ import {
   readScreener,
   screenerParams,
 } from "@/services/screener-state";
+import { AlertNextStep } from "@/components/research/AlertNextStep";
+import { patternLabels } from "@/services/labels";
 import { publishUnread } from "@/services/notifications";
 import { TradePlans } from "@/components/TradePlans";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -296,7 +298,9 @@ function Screener() {
               "bullish_ob",
               "bearish_ob",
             ].map((v) => (
-              <option key={v}>{v}</option>
+              <option key={v} value={v}>
+                {patternLabels[v] || v}
+              </option>
             ))}
           </select>
         </Field>
@@ -542,6 +546,9 @@ function Monitoring({ initialTicker }: { initialTicker: string }) {
     },
     [user?.id],
   );
+  const invalidateLoad = useCallback(() => {
+    loadVersion.current++;
+  }, []);
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
@@ -555,11 +562,11 @@ function Monitoring({ initialTicker }: { initialTicker: string }) {
     const timer = setInterval(refresh, 5000);
     return () => {
       active = false;
-      loadVersion.current++;
+      invalidateLoad();
       controller.abort();
       clearInterval(timer);
     };
-  }, [load]);
+  }, [load, invalidateLoad]);
   const act = async (action: () => Promise<unknown>) => {
     setBusy(true);
     setError("");
@@ -701,6 +708,7 @@ function Monitoring({ initialTicker }: { initialTicker: string }) {
             )[r.evaluation_state] || "Kesiapan evaluasi belum terverifikasi"}
             {r.market_as_of && <> · Sesi data {r.market_as_of}</>}
           </p>
+          <AlertNextStep state={r.evaluation_state} ticker={r.ticker} />
           <div className="flex gap-3">
             <button
               disabled={busy}
@@ -743,7 +751,9 @@ function Monitoring({ initialTicker }: { initialTicker: string }) {
           )}
         </article>
       ))}
-      <h3 className="text-xl">Job analisis terakhir</h3>
+      <h3 id="monitoring-jobs" tabIndex={-1} className="text-xl">
+        Pekerjaan analisis terakhir
+      </h3>
       {!jobs.length && <p>Belum ada job. Mulai analisis dari halaman saham.</p>}
       {jobs.map((j) => (
         <article key={j.id} className="border border-slate-700 rounded p-3">

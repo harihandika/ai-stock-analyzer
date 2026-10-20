@@ -20,12 +20,14 @@ import { apiClient, errorMessage } from "@/services/api";
 import { Stock } from "@/services/market";
 import { NOTIFICATIONS_UPDATED } from "@/services/notifications";
 import styles from "./layout.module.css";
+import { menuLabels } from "@/services/labels";
 
 interface AppLayoutProps {
   children: React.ReactNode;
+  beforeLeave?: () => boolean;
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
+export function AppLayout({ children, beforeLeave }: AppLayoutProps) {
   const { isAuthenticated, isLoading, logout, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -179,7 +181,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           justifyContent: "center",
         }}
       >
-        Loading...
+        Memuat…
       </div>
     );
   }
@@ -188,6 +190,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     e.preventDefault();
     const stock = searchResults[activeResult];
     if (stock) {
+      if (beforeLeave && !beforeLeave()) return;
       setIsSearchOpen(false);
       setSearchQuery("");
       router.push("/stock/" + encodeURIComponent(stock.ticker));
@@ -198,9 +201,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   };
 
   const navItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Watchlist", href: "/watchlist", icon: Star },
-    { name: "Settings", href: "/settings", icon: Settings },
+    { name: menuLabels.dashboard, href: "/dashboard", icon: LayoutDashboard },
+    { name: menuLabels.watchlist, href: "/watchlist", icon: Star },
+    { name: menuLabels.settings, href: "/settings", icon: Settings },
   ];
 
   return (
@@ -274,9 +277,14 @@ export function AppLayout({ children }: AppLayoutProps) {
               <p className={styles.userTier}>{user?.subscription_tier} Tier</p>
             </div>
           </div>
-          <button onClick={logout} className={styles.signOutBtn}>
+          <button
+            onClick={() => {
+              if (!beforeLeave || beforeLeave()) void logout();
+            }}
+            className={styles.signOutBtn}
+          >
             <LogOut width={16} height={16} />
-            Sign Out
+            {menuLabels.logout}
           </button>
         </div>
       </aside>
@@ -360,6 +368,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                         type="button"
                         className={styles.dropdownItem}
                         onClick={() => {
+                          if (beforeLeave && !beforeLeave()) return;
                           setIsSearchOpen(false);
                           setSearchQuery("");
                           router.push(`/stock/${stock.ticker}`);
@@ -394,6 +403,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                         type="button"
                         className={styles.dropdownItem}
                         onClick={() => {
+                          if (beforeLeave && !beforeLeave()) return;
                           setIsSearchOpen(false);
                           router.push(
                             "/stock/" +
@@ -427,7 +437,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               </button>
               {isNotificationsOpen && (
                 <div className={styles.dropdown} style={{ minWidth: "250px" }}>
-                  <div className={styles.dropdownHeader}>Notifications</div>
+                  <div className={styles.dropdownHeader}>Notifikasi</div>
                   <div
                     className={styles.dropdownItem}
                     style={{
@@ -492,7 +502,9 @@ export function AppLayout({ children }: AppLayoutProps) {
                     }}
                   ></div>
                   <button
-                    onClick={logout}
+                    onClick={() => {
+                      if (!beforeLeave || beforeLeave()) void logout();
+                    }}
                     className={styles.dropdownItem}
                     style={{ color: "#fb7185" }}
                   >
@@ -503,7 +515,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                         gap: "8px",
                       }}
                     >
-                      <LogOut size={16} /> Sign Out
+                      <LogOut size={16} /> {menuLabels.logout}
                     </span>
                   </button>
                 </div>

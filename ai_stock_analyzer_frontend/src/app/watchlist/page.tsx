@@ -1,6 +1,12 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  useUnsavedChanges,
+  confirmDiscard,
+} from "@/components/useUnsavedChanges";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -15,12 +21,71 @@ interface Item {
   currency: string | null;
   exchange: string | null;
 }
+type NoteDraft = {
+  value: string;
+  saved: string;
+  state: "saved" | "dirty" | "saving" | "failed";
+  error?: string;
+};
 export default function WatchlistPage() {
+  const { user } = useAuth();
+  return (
+    <Suspense fallback={<p>Memuat daftar pantauan…</p>}>
+      <WatchlistWorkspace
+        key={user?.id || "anonymous"}
+        account={user?.id || ""}
+      />
+    </Suspense>
+  );
+}
+function WatchlistWorkspace({ account }: { account: string }) {
   const [items, setItems] = useState<Item[]>([]);
   const [quotes, setQuotes] = useState<Record<string, Quote>>({});
-  const [notes, setNotes] = useState<Record<string, string>>({});
-  const [exchange, setExchange] = useState("");
-  const [sort, setSort] = useState("name");
+  const [notes, setNotes] = useState<Record<string, NoteDraft>>({});
+  const notesRef = useRef(notes);
+  const updateNotes = useCallback(
+    (
+      update: (value: Record<string, NoteDraft>) => Record<string, NoteDraft>,
+    ) => {
+      notesRef.current = update(notesRef.current);
+      // Rebase low-priority server updates against the latest keystrokes.
+      setNotes((previous) => update(previous));
+    },
+    [],
+  );
+  const dirty = Object.values(notes).some((n) => n.value !== n.saved);
+  const beforeLeave = useUnsavedChanges(dirty);
+  const params = useSearchParams();
+  const rawExchange = params.get("wl_exchange") || "";
+  const rawSort = params.get("wl_sort") || "name";
+  const validExchange =
+    !rawExchange ||
+    (/^[A-Z0-9._-]{1,20}$/.test(rawExchange) &&
+      (!items.length ||
+        items.some(
+          (item) =>
+            (quotes[item.stock_ticker]?.metadata.exchange || item.exchange) ===
+            rawExchange,
+        )));
+  const validSort = [
+    "name",
+    "change",
+    "change_asc",
+    "price_asc",
+    "price_desc",
+  ].includes(rawSort);
+  const exchange = validExchange ? rawExchange : "";
+  const sort = validSort ? rawSort : "name";
+  const changeView = (key: string, value: string) => {
+    const next = new URLSearchParams(params.toString());
+    if (value && value !== "name") next.set(key, value);
+    else next.delete(key);
+    window.history.pushState(
+      null,
+      "",
+      "/watchlist" + (next.size ? "?" + next : ""),
+    );
+  };
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,30 +93,49 @@ export default function WatchlistPage() {
   const [error, setError] = useState("");
   const [dialogError, setDialogError] = useState("");
   const dialog = useRef<HTMLDialogElement>(null);
-  const load = useCallback((signal?: AbortSignal) => {
-    return apiClient
-      .get<Item[]>("/stocks/watchlist", { signal })
-      .then(async (response) => {
-        if (signal?.aborted) return;
+  const loadVersion = useRef(0);
+  const alive = useRef(true);
+  const load = useCallback(
+    async (signal?: AbortSignal) => {
+      const version = ++loadVersion.current;
+      const current = () =>
+        alive.current && version === loadVersion.current && !signal?.aborted;
+      try {
+        const response = await apiClient.get<Item[]>("/stocks/watchlist", {
+          signal,
+        });
+        if (!current()) return;
         setItems(response.data);
         setError("");
-        setNotes(
+        updateNotes((previous) =>
           Object.fromEntries(
-            response.data.map((i) => [i.stock_ticker, i.notes || ""]),
+            response.data.map((item) => {
+              const old = previous[item.stock_ticker];
+              const saved = item.notes || "";
+              return [
+                item.stock_ticker,
+                old && (old.value !== old.saved || old.state === "saving")
+                  ? {
+                      ...old,
+                      saved: old.state === "saving" ? old.saved : saved,
+                    }
+                  : { value: saved, saved, state: "saved" },
+              ];
+            }),
           ),
         );
         const values = await Promise.allSettled(
           response.data.map(
-            async (i) =>
+            async (item) =>
               (
                 await apiClient.get<Quote>(
-                  "/stocks/" + encodeURIComponent(i.stock_ticker) + "/price",
+                  "/stocks/" + encodeURIComponent(item.stock_ticker) + "/price",
                   { signal },
                 )
               ).data,
           ),
         );
-        if (signal?.aborted) return;
+        if (!current()) return;
         setQuotes((previous) => ({
           ...previous,
           ...Object.fromEntries(
@@ -64,19 +148,50 @@ export default function WatchlistPage() {
           setError(
             "Sebagian harga gagal diperbarui; data terakhir yang tersedia tetap ditampilkan.",
           );
-      })
-      .catch((e) => {
-        if (!signal?.aborted) setError(errorMessage(e));
-      })
-      .finally(() => {
-        if (!signal?.aborted) setLoading(false);
-      });
+      } catch (e) {
+        if (current()) setError(errorMessage(e));
+      } finally {
+        if (current()) setLoading(false);
+      }
+    },
+    [updateNotes],
+  );
+  const invalidate = useCallback(() => {
+    alive.current = false;
+    loadVersion.current++;
   }, []);
   useEffect(() => {
-    const c = new AbortController();
-    void load(c.signal);
-    return () => c.abort();
-  }, [load]);
+    alive.current = true;
+    const controller = new AbortController();
+    void load(controller.signal);
+    return () => {
+      invalidate();
+      controller.abort();
+    };
+  }, [load, invalidate]);
+  useEffect(() => {
+    if (loading) return;
+    const saved = window.history.state?.watchlistReturn;
+    if (
+      saved?.account !== account ||
+      saved.url !== location.pathname + location.search
+    )
+      return;
+    const timer = setTimeout(() => {
+      const anchor = document.getElementById("watch-stock-" + saved.ticker);
+      if (anchor) {
+        anchor.focus({ preventScroll: true });
+        const container =
+          document.querySelector<HTMLElement>("[data-page-scroll]");
+        if (container) container.scrollTop = saved.top;
+        window.history.replaceState(
+          { ...window.history.state, watchlistReturn: undefined },
+          "",
+        );
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [loading, account, items, params]);
   useEffect(() => {
     const c = new AbortController();
     const timer = setTimeout(async () => {
@@ -114,11 +229,24 @@ export default function WatchlistPage() {
     }
   };
   const remove = async (ticker: string) => {
+    if (
+      notesRef.current[ticker]?.value !== notesRef.current[ticker]?.saved &&
+      !confirmDiscard()
+    )
+      return;
     if (!window.confirm("Hapus " + ticker + " dari watchlist?")) return;
     setBusy(true);
     try {
       await apiClient.delete("/stocks/watchlist/" + encodeURIComponent(ticker));
+      if (!alive.current) return;
+      loadVersion.current++;
+      setLoading(false);
       setItems((prev) => prev.filter((i) => i.stock_ticker !== ticker));
+      updateNotes((previous) =>
+        Object.fromEntries(
+          Object.entries(previous).filter(([key]) => key !== ticker),
+        ),
+      );
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -126,20 +254,44 @@ export default function WatchlistPage() {
     }
   };
   const save = async (ticker: string) => {
+    const sent = notesRef.current[ticker]?.value ?? "";
     setBusy(true);
-    setError("");
+    updateNotes((previous) => ({
+      ...previous,
+      [ticker]: { ...previous[ticker], state: "saving", error: "" },
+    }));
     try {
       const r = await apiClient.patch<Item>(
         "/stocks/watchlist/" + encodeURIComponent(ticker),
-        { notes: notes[ticker] },
+        { notes: sent },
       );
-      setItems((prev) =>
-        prev.map((i) => (i.stock_ticker === ticker ? r.data : i)),
+      if (!alive.current) return;
+      loadVersion.current++;
+      setLoading(false);
+      setItems((previous) =>
+        previous.map((item) => (item.stock_ticker === ticker ? r.data : item)),
       );
+      updateNotes((previous) => ({
+        ...previous,
+        [ticker]: {
+          value: previous[ticker].value,
+          saved: r.data.notes || "",
+          state:
+            previous[ticker].value === (r.data.notes || "") ? "saved" : "dirty",
+        },
+      }));
     } catch (e) {
-      setError(errorMessage(e));
+      if (alive.current)
+        updateNotes((previous) => ({
+          ...previous,
+          [ticker]: {
+            ...previous[ticker],
+            state: "failed",
+            error: errorMessage(e),
+          },
+        }));
     } finally {
-      setBusy(false);
+      if (alive.current) setBusy(false);
     }
   };
   const currencyOf = (item: Item) =>
@@ -168,11 +320,11 @@ export default function WatchlistPage() {
       return a.stock_ticker.localeCompare(b.stock_ticker);
     });
   return (
-    <AppLayout>
+    <AppLayout beforeLeave={beforeLeave}>
       <div className="max-w-6xl mx-auto space-y-6">
         <header className="flex flex-wrap justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Watchlist Saham</h1>
+            <h1 className="text-3xl font-bold">Daftar pantauan saham</h1>
             <p>Harga penutupan harian dan catatan pribadi.</p>
           </div>
           <div className="flex gap-2">
@@ -196,12 +348,14 @@ export default function WatchlistPage() {
             </Button>
           </div>
         </header>
-        <label className="block">
-          Filter bursa{" "}
+        <label className="block" htmlFor="watchlist-exchange">
+          <span id="watchlist-exchange-label">Filter bursa</span>{" "}
           <select
+            id="watchlist-exchange"
+            aria-labelledby="watchlist-exchange-label"
             className="bg-slate-900 p-2 rounded"
             value={exchange}
-            onChange={(e) => setExchange(e.target.value)}
+            onChange={(e) => changeView("wl_exchange", e.target.value)}
           >
             <option value="">Semua bursa</option>
             {[...new Set(items.map(exchangeOf).filter(Boolean))]
@@ -211,12 +365,14 @@ export default function WatchlistPage() {
               ))}
           </select>
         </label>
-        <label>
-          Urutkan{" "}
+        <label htmlFor="watchlist-sort">
+          <span id="watchlist-sort-label">Urutkan</span>{" "}
           <select
+            id="watchlist-sort"
+            aria-labelledby="watchlist-sort-label"
             className="bg-slate-900 p-2 rounded"
             value={sort}
-            onChange={(e) => setSort(e.target.value)}
+            onChange={(e) => changeView("wl_sort", e.target.value)}
           >
             <option value="name">Kode saham</option>
             <option value="change">Perubahan tertinggi</option>
@@ -229,7 +385,13 @@ export default function WatchlistPage() {
           Harga diurutkan dalam kelompok mata uang yang sama, tanpa konversi
           IDR/USD. Nilai kosong berada di akhir kelompok.
         </p>
-        {loading && <p role="status">Memuat watchlist…</p>}
+        {(!validSort || !validExchange) && (
+          <p role="status">
+            Filter URL tidak valid; pilihan default digunakan. Pilih bursa atau
+            urutan lagi.
+          </p>
+        )}
+        {loading && <p role="status">Memuat daftar pantauan…</p>}
         {error && (
           <p role="alert" className="text-red-300">
             {error}
@@ -237,8 +399,8 @@ export default function WatchlistPage() {
         )}
         {!loading && !items.length && (
           <p>
-            Watchlist masih kosong. Tambahkan saham dari pencarian atau halaman
-            detail.
+            Daftar pantauan masih kosong. Tambahkan saham dari pencarian atau
+            halaman detail.
           </p>
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -246,6 +408,23 @@ export default function WatchlistPage() {
             <Card key={i.id} variant="glass">
               <CardContent>
                 <Link
+                  id={"watch-stock-" + i.stock_ticker}
+                  onNavigate={() => {
+                    const container =
+                      document.querySelector<HTMLElement>("[data-page-scroll]");
+                    window.history.replaceState(
+                      {
+                        ...window.history.state,
+                        watchlistReturn: {
+                          account,
+                          url: location.pathname + location.search,
+                          ticker: i.stock_ticker,
+                          top: container?.scrollTop || 0,
+                        },
+                      },
+                      "",
+                    );
+                  }}
                   className="text-xl font-semibold underline"
                   href={"/stock/" + encodeURIComponent(i.stock_ticker)}
                 >
@@ -272,19 +451,46 @@ export default function WatchlistPage() {
                   id={"notes-" + i.id}
                   className="w-full rounded bg-slate-900 border border-slate-700 p-2"
                   maxLength={500}
-                  value={notes[i.stock_ticker] || ""}
-                  onChange={(e) =>
-                    setNotes((prev) => ({
-                      ...prev,
-                      [i.stock_ticker]: e.target.value,
-                    }))
-                  }
+                  value={notes[i.stock_ticker]?.value ?? ""}
+                  onChange={(e) => {
+                    const value = e.currentTarget.value;
+                    updateNotes((previous) => ({
+                      ...previous,
+                      [i.stock_ticker]: {
+                        ...previous[i.stock_ticker],
+                        value,
+                        state:
+                          previous[i.stock_ticker]?.state === "saving"
+                            ? "saving"
+                            : value === previous[i.stock_ticker]?.saved
+                              ? "saved"
+                              : "dirty",
+                        error: "",
+                      },
+                    }));
+                  }}
                 />
+                <p role="status" data-note-status={i.stock_ticker}>
+                  {notes[i.stock_ticker]?.state === "saving"
+                    ? "Menyimpan catatan…"
+                    : notes[i.stock_ticker]?.value !==
+                        notes[i.stock_ticker]?.saved
+                      ? "Catatan belum disimpan"
+                      : "Catatan tersimpan"}
+                </p>
+                {notes[i.stock_ticker]?.error && (
+                  <p role="alert">
+                    {notes[i.stock_ticker].error} Draft tetap tersedia; coba
+                    Simpan Catatan lagi.
+                  </p>
+                )}
                 <div className="flex gap-2 mt-2">
                   <Button
                     variant="outline"
                     disabled={
-                      busy || (notes[i.stock_ticker] || "") === (i.notes || "")
+                      busy ||
+                      notes[i.stock_ticker]?.value ===
+                        notes[i.stock_ticker]?.saved
                     }
                     onClick={() => save(i.stock_ticker)}
                   >
@@ -308,7 +514,7 @@ export default function WatchlistPage() {
           className="rounded-xl bg-slate-900 text-white p-6 border border-slate-600 w-[min(90vw,520px)] backdrop:bg-black/60"
         >
           <h2 id="watchlist-dialog-title" className="text-xl mb-4">
-            Tambah Saham ke Watchlist
+            Tambah saham ke daftar pantauan
           </h2>
           <label htmlFor="watchlist-query">
             Cari kode atau nama perusahaan

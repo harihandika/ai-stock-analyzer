@@ -1,5 +1,7 @@
 # AI Stock Analyzer
 
+Acuan terbaru: [PRD 1.4 — stabilisasi audit V3](docs/prd_stabilisasi_audit_v3_dc67ff9.md) dan [laporan implementasi](docs/implementasi_prd_1_4_20261020.md).
+
 Perbaikan R1 tersedia pada checkout: [laporan implementasi dan cara menjalankan](docs/implementasi_r1.md), [PRD perbaikan](docs/prd_perbaikan_aplikasi.md). Gunakan Alembic untuk schema baru/upgrade; jangan mengandalkan create_tables.py untuk memigrasikan database lama.
 
 Platform riset saham yang menggabungkan data teknikal, **Volume Price Analysis (VPA)**, **Wyckoff Theory**, **Smart Money Concepts (SMC)**, analisis AI, watchlist dan rencana transaksi.

@@ -1,5 +1,5 @@
 import asyncio
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock
 
 import pytest
@@ -90,6 +90,8 @@ async def test_backtest_run_and_export_are_stored_and_private(client, db_session
     )
     assert response.status_code == 200, response.text
     run = response.json()
+    assert datetime.fromisoformat(run["created_at"]).tzinfo is not None
+    assert run["data_revision"] == "fixture-prices"
     assert run["total_fees"] == pytest.approx(0.21)
     path = "/api/v1/backtests/" + run["run_id"]
     assert (await client.get(path, headers=owner)).json()["effective_parameters"][
@@ -97,7 +99,27 @@ async def test_backtest_run_and_export_are_stored_and_private(client, db_session
     ] == 10
     assert (await client.get(path, headers=other)).status_code == 404
     assert (await client.get(path + "/export", headers=other)).status_code == 404
+    # SQL-generated SQLite timestamps lose tzinfo on read. The documented
+    # writer contract is UTC; list/detail/export must retain the same instant.
+    import uuid
+
+    from app.domain.models.models import BacktestRun
+
+    instant = datetime(2026, 10, 20, 4, 58, 39, tzinfo=UTC)
+    await db_session.execute(
+        update(BacktestRun)
+        .where(BacktestRun.id == uuid.UUID(run["run_id"]))
+        .values(created_at=instant)
+    )
+    await db_session.commit()
+    history = (await client.get("/api/v1/backtests", headers=owner)).json()["data"][0]
+    detail = (await client.get(path, headers=owner)).json()
+    assert datetime.fromisoformat(history["created_at"]) == instant
+    assert datetime.fromisoformat(detail["created_at"]) == instant
+    assert detail["data_revision"] == history["data_revision"] == "fixture-prices"
+    assert detail["run_id"] == history["id"]
     exported = await client.get(path + "/export", headers=owner)
+    assert instant.isoformat() in exported.text
     assert exported.status_code == 200
     assert (
         "fixture-prices" in exported.text

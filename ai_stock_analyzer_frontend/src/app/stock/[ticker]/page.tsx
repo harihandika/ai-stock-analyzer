@@ -260,7 +260,7 @@ function StockDetail({ ticker }: { ticker: string }) {
               isLoading={adding}
               disabled={watched}
             >
-              {watched ? "Sudah ditambahkan" : "Tambah Watchlist"}
+              {watched ? "Sudah ditambahkan" : "Tambah pantauan"}
             </Button>
             <Button
               variant="outline"

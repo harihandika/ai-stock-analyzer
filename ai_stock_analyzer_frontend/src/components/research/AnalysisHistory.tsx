@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { apiClient, errorMessage } from "@/services/api";
 import { downloadResult } from "@/services/download";
+import { formatWib } from "@/services/time";
 
 type Analysis = {
   id: string;
@@ -26,9 +27,7 @@ type Comparison = {
 };
 const action =
   "inline-flex min-h-11 items-center justify-center rounded border border-sky-500 px-4 py-2 disabled:opacity-50";
-const date = (value: string) =>
-  new Date(value).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }) +
-  " WIB";
+const date = formatWib;
 
 function Identity({ record }: { record: Analysis }) {
   return (

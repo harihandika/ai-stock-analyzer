@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from app.api.dependencies import get_current_active_user, get_db
 from app.api.routers.monitoring import owned
 from app.domain.models.models import AIAnalysis, BacktestRun, SavedFilter
+from app.domain.schemas.analysis import BacktestHistory, BacktestResult
 from app.domain.schemas.product import (
     CompareResponse,
     HistoryResponse,
@@ -18,6 +19,7 @@ from app.domain.schemas.product import (
     ScreenResult,
 )
 from app.services.ai_service import result_payload
+from app.services.backtest_records import run_metadata, run_payload
 from app.services.exports import analysis_pdf, csv_response
 from app.services.research import screen
 
@@ -211,7 +213,7 @@ async def export_history(
     )
 
 
-@router.get("/backtests")
+@router.get("/backtests", response_model=BacktestHistory)
 async def backtest_history(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
@@ -234,7 +236,7 @@ async def backtest_history(
             {
                 "id": str(r.id),
                 "ticker": r.ticker,
-                "created_at": r.created_at,
+                "created_at": run_metadata(r)["created_at"],
                 "parameters": r.result.get("effective_parameters"),
                 "total_trades": r.result.get("total_trades"),
                 "net_return_pct": r.result.get("net_return_pct"),
@@ -246,12 +248,12 @@ async def backtest_history(
     }
 
 
-@router.get("/backtests/{run_id}")
+@router.get("/backtests/{run_id}", response_model=BacktestResult)
 async def backtest_detail(
     run_id: uuid.UUID, db=Depends(get_db), user=Depends(get_current_active_user)
 ):
     run = await owned(db, BacktestRun, run_id, user)
-    return {**run.result, "run_id": str(run.id)}
+    return run_payload(run)
 
 
 @router.get("/backtests/{run_id}/export")
@@ -262,6 +264,7 @@ async def backtest_csv(
     result = run.result
     common = {
         "run_id": str(run.id),
+        "created_at": run_metadata(run)["created_at"].isoformat(),
         "ticker": run.ticker,
         "strategy": result.get("strategy"),
         "data_revision": run.data_revision,

@@ -51,8 +51,8 @@ export default function Guide() {
         <h1 className="text-3xl font-bold">Panduan dan glosarium</h1>
         <p>
           Mulai dari pencarian nama/kode, buka detail, periksa sumber dan
-          tanggal, lalu simpan ke watchlist. Jalankan AI setelah data tersedia;
-          status job dapat dibuka kembali dari halaman riset.
+          tanggal, lalu simpan ke daftar pantauan. Jalankan AI setelah data
+          tersedia; status job dapat dibuka kembali dari halaman riset.
         </p>
         <Link
           className="inline-block p-3 rounded border border-sky-600"

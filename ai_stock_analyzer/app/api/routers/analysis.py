@@ -113,4 +113,6 @@ async def run_backtest(
     )
     db.add(run)
     await db.commit()
-    return {**result, "run_id": str(run.id)}
+    from app.services.backtest_records import run_payload
+
+    return run_payload(run)

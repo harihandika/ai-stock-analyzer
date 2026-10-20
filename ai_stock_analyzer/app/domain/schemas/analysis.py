@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 
 class ModelAnalysis(BaseModel):
@@ -74,6 +74,7 @@ class EquityPoint(BaseModel):
 
 class BacktestResult(BaseModel):
     run_id: uuid.UUID | None = None
+    created_at: AwareDatetime | None = None
     ticker: str
     period_years: int
     requested_parameters: BacktestRequest
@@ -94,6 +95,21 @@ class BacktestResult(BaseModel):
     total_fees: float = 0
     benchmark: dict[str, Any] = Field(default_factory=dict)
     data_revision: str | None = None
+
+
+class BacktestRunSummary(BaseModel):
+    id: uuid.UUID
+    ticker: str
+    created_at: AwareDatetime
+    parameters: dict[str, Any] | None = None
+    total_trades: int | None = None
+    net_return_pct: float | None = None
+    data_revision: str
+
+
+class BacktestHistory(BaseModel):
+    data: list[BacktestRunSummary]
+    pagination: dict[str, int]
 
 
 class AnalysisResult(BaseModel):
