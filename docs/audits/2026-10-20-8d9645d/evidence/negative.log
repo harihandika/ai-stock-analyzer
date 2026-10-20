@@ -1,0 +1,9 @@
+N01 Passed Hitung lambat tidak mengaktifkan hasil modal lama
+N02 Passed Simpan lambat tidak menimpa draft terbaru
+N03 Passed Kalkulator inputinvalid dan errorAPI tidak memakai hasil lama
+N04 Failed Alert sinyalBUY dapat dibuat dari UI
+N05 Failed Response perbandingan lama tidak muncul setelah ticker diganti
+N06 Passed Watchlist: catatan/filter/sorting dengan selector label aktual
+N07 Passed Kegagalanparsial AI mempertahankan chart, retry pulih
+N08 Passed Badge data lama bertahan walau waktu fetch baru
+N09 Passed Sesi expired tanpa refresh kembali ke login

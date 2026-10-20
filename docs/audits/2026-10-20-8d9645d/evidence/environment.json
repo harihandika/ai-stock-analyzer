@@ -1,0 +1,17 @@
+{
+  "sha": "8d9645df458c92efa01a5ec279ff98c4f2dee785",
+  "origin_work": "8d9645df458c92efa01a5ec279ff98c4f2dee785",
+  "date_wib": "2026-10-20",
+  "browser": "Chromium 154.0.8037.57 built on Debian GNU/Linux 13 (trixie)",
+  "frontend": "Next.js16.2.10production;build--webpack;nextstart3012",
+  "backend": "FastAPI;8012;tests.browser_app guarded fixture",
+  "worker": "separate process tests.browser_worker",
+  "database": "SQLite disposable /tmp/qa-browser-r1-20261020.db;headr3_read_paths",
+  "tracked_files_checked": 194,
+  "changed_snapshot_files": [],
+  "original_checkout_status": "",
+  "reinstalled_dependencies": false,
+  "activated_paid_ingestion": false,
+  "sent_real_email": false,
+  "physical_device": false
+}

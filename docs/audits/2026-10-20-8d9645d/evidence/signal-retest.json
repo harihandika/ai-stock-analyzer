@@ -1,0 +1,34 @@
+[
+  {
+    "id": "R-signal",
+    "name": "Alert sinyalBUY dari UI dengan selector benar",
+    "status": "Failed",
+    "detail": {
+      "http": 422,
+      "request": {
+        "ticker": "BBCA.JK",
+        "kind": "signal",
+        "direction": null,
+        "threshold": null,
+        "signal": "BUY"
+      },
+      "response": {
+        "detail": [
+          {
+            "type": "literal_error",
+            "loc": [
+              "body",
+              "direction"
+            ],
+            "msg": "Input should be 'above' or 'below'",
+            "input": null,
+            "ctx": {
+              "expected": "'above' or 'below'"
+            }
+          }
+        ]
+      },
+      "text": "AI Analyzer\nRiset dan pemantauan\nPanduan dan glosarium\nDashboard\nWatchlist\nSettings\nS\n\nSignal Tester\n\nFree Tier\n\nSign Out\nRiset dan pemantauan\nScreener\nRiwayat AI\nAlert dan job\nRencana transaksi\nPemantauan EOD\n\nAlert memakai penutupan harian dan worker. Evaluasi pertama membentuk baseline; notifikasi berikutnya hanya muncul saat kondisi bertransisi. Data stale atau keterkinian unknown tidak memicu alert.\n\nKode saham alert\nJenis alert\nHarga penutupan\nPerubahan dari sesi sebelumnya (%)\nSinyal AI baru\nSinyal\nBUY\nHOLD\nWAIT\nSimpan alert\n\nInput should be 'above' or 'below'\n\nNotifikasi\n\nBelum ada kejadian alert.\n\nJob analisis terakhir\n\nBelum ada job. Mulai analisis dari halaman saham."
+    }
+  }
+]

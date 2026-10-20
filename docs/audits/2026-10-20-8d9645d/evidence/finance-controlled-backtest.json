@@ -1,0 +1,118 @@
+{
+  "ticker": "AAPL",
+  "period_years": 1,
+  "requested_parameters": {
+    "years": 1,
+    "target_profit_pct": 5.0,
+    "stop_loss_pct": 3.0,
+    "initial_capital": 10000,
+    "lot_size": 1,
+    "buy_fee_bps": 10.0,
+    "sell_fee_bps": 20.0,
+    "slippage_bps": 10.0
+  },
+  "effective_parameters": {
+    "years": 1,
+    "target_profit_pct": 5.0,
+    "stop_loss_pct": 3.0,
+    "initial_capital": 10000,
+    "lot_size": 1,
+    "buy_fee_bps": 10.0,
+    "sell_fee_bps": 20.0,
+    "slippage_bps": 10.0
+  },
+  "data_start": "2026-01-01 00:00:00",
+  "data_end": "2026-01-06 00:00:00",
+  "source": "Yahoo Finance",
+  "data_revision": null,
+  "net_return_pct": -10.959101999999998,
+  "total_fees": 63.3402,
+  "benchmark": {
+    "strategy": "buy_and_hold",
+    "quantity": 99.0,
+    "data_start": "2026-01-01 00:00:00",
+    "data_end": "2026-01-06 00:00:00",
+    "final_equity": 9456.993910000001,
+    "net_return_pct": -5.430060899999988,
+    "total_fees": 28.70109,
+    "remaining_cash": 80.19010000000162
+  },
+  "interval": "1d",
+  "strategy": "technical_daily_v2",
+  "total_trades": 2,
+  "win_rate_pct": 50.0,
+  "avg_profit_pct": -2.986429,
+  "max_drawdown_pct": 25.329912,
+  "trades": [
+    {
+      "buy_date": "2026-01-02 00:00:00",
+      "sell_date": "2026-01-03 00:00:00",
+      "buy_price": 100.1,
+      "sell_price": 119.88,
+      "profit_pct": 19.401318,
+      "status": "WIN",
+      "exit_reason": "TAKE_PROFIT",
+      "reason": "Wyckoff Spring + Stopping Volume",
+      "days_held": 2,
+      "quantity": 99.0,
+      "fees": 33.64614,
+      "gross_profit_pct": 19.999999999999996
+    },
+    {
+      "buy_date": "2026-01-05 00:00:00",
+      "sell_date": "2026-01-06 00:00:00",
+      "buy_price": 120.11999999999999,
+      "sell_price": 89.91,
+      "profit_pct": -25.374176,
+      "status": "LOSS",
+      "exit_reason": "STOP_LOSS",
+      "reason": "Wyckoff Spring + Stopping Volume",
+      "days_held": 2,
+      "quantity": 99.0,
+      "fees": 29.69406,
+      "gross_profit_pct": -25.0
+    }
+  ],
+  "equity_curve": [
+    {
+      "date": "2026-01-01 00:00:00",
+      "equity": 10000.0
+    },
+    {
+      "date": "2026-01-02 00:00:00",
+      "equity": 10970.1901
+    },
+    {
+      "date": "2026-01-03 00:00:00",
+      "equity": 11924.57386
+    },
+    {
+      "date": "2026-01-04 00:00:00",
+      "equity": 11924.57386
+    },
+    {
+      "date": "2026-01-05 00:00:00",
+      "equity": 9920.80198
+    },
+    {
+      "date": "2026-01-06 00:00:00",
+      "equity": 8904.0898
+    }
+  ],
+  "assumptions": {
+    "initial_equity": 10000,
+    "lot_size": 1,
+    "allocation_pct": 100,
+    "compounding": true,
+    "entry": "Keputusan close; entry open sesi berikutnya",
+    "exit": "Evaluasi TP/SL pada close; exit open berikutnya termasuk gap",
+    "max_holding_sessions": 30,
+    "final_position": "Tutup pada close akhir periode",
+    "price_adjustment": "unknown",
+    "fee_bps": null,
+    "buy_fee_bps": 10.0,
+    "sell_fee_bps": 20.0,
+    "slippage_bps": 10.0,
+    "limitations": "Simulasi strategi teknikal, bukan rekam jejak AI. Lot sesuai parameter; lot null memakai lembar pecahan ternormalisasi. Likuiditas belum dimodelkan; biaya/slippage mengikuti input. Histori pemanasan tidak ditampilkan sebagai bagian periode simulasi. TP/SL bukan jaminan harga eksekusi intraday."
+  }
+}

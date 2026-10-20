@@ -1,0 +1,13 @@
+
+> ai_stock_analyzer_frontend@0.1.0 start
+> next start --hostname 127.0.0.1 --port 3012
+
+▲ Next.js 16.2.10
+- Local:         http://127.0.0.1:3012
+- Network:       http://127.0.0.1:3012
+✓ Ready in 136ms
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

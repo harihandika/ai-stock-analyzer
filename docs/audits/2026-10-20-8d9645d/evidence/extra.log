@@ -1,0 +1,6 @@
+X01 Passed Harga/currency/tanggal konsisten dashboard-detail-watchlist
+X02 Passed Perbandingan normal78→88 menyebut poinpersentase
+X03 Passed Kegagalan watchlist lambat dan pemulihan
+X04 Passed AlertsignalAPI valid bila direction tidakdikirim
+X-mobile-320 Passed Simpan/edit rencana dan jalankanbacktest pada320px
+X-mobile-390 Passed Simpan/edit rencana dan jalankanbacktest pada390px

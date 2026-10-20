@@ -1,0 +1,55 @@
+{
+  "cases": [
+    {
+      "id": "M390-workflow",
+      "name": "Navigasi, pencarian, candle, watchlist dan kalkulator 390px",
+      "status": "Passed",
+      "detail": {
+        "selected_day": "2025-05-20",
+        "close_display": "Rp 107,9696",
+        "close_expected": "107.9696",
+        "currency": "IDR",
+        "form_20_to_2_lots": true
+      }
+    },
+    {
+      "id": "M390-spacing",
+      "name": "Padding dan target sentuh tab 390px",
+      "status": "Passed",
+      "detail": {
+        "input_padding": "12px",
+        "tab": {
+          "x": 16,
+          "y": -575,
+          "width": 166.515625,
+          "height": 44
+        }
+      }
+    },
+    {
+      "id": "M390-dialog",
+      "name": "Modal watchlist dan dropdown akun 390px",
+      "status": "Passed",
+      "detail": {
+        "modal": {
+          "x": 0,
+          "y": 0,
+          "width": 351,
+          "height": 234
+        },
+        "escape_focus": true
+      }
+    },
+    {
+      "id": "M-landscape",
+      "name": "Perubahan orientasi390→844→390 dan chart",
+      "status": "Passed",
+      "detail": {
+        "landscape": "844x390",
+        "portrait": "390x844",
+        "note": "Emulasi, bukan perangkat fisik."
+      }
+    }
+  ],
+  "errors": []
+}

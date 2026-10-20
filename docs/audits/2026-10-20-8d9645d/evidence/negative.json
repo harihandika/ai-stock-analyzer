@@ -1,0 +1,64 @@
+{
+  "cases": [
+    {
+      "id": "N01",
+      "name": "Hitung lambat tidak mengaktifkan hasil modal lama",
+      "status": "Passed",
+      "detail": "Response untuk10juta tidak menjadi hasil aktif untuk1juta; hitungbaru2lot."
+    },
+    {
+      "id": "N02",
+      "name": "Simpan lambat tidak menimpa draft terbaru",
+      "status": "Passed",
+      "detail": {
+        "draft_capital": 1000000,
+        "saved_snapshot_capital": 10000000,
+        "saved_lots": 20,
+        "active_result": false
+      }
+    },
+    {
+      "id": "N03",
+      "name": "Kalkulator inputinvalid dan errorAPI tidak memakai hasil lama",
+      "status": "Passed",
+      "detail": "Stop>entry ditolak;503jelas; retry berhasil tanpa angka pengganti."
+    },
+    {
+      "id": "N04",
+      "name": "Alert sinyalBUY dapat dibuat dari UI",
+      "status": "Failed",
+      "detail": "locator.selectOption: Error: strict mode violation: getByLabel('Sinyal') resolved to 2 elements:\n    1) <select class=\"w-full rounded border border-slate-600 bg-slate-900 p-3\">…</select> aka getByLabel('Jenis alertHarga')\n    2) <select name=\"signal\" class=\"w-full rounded border border-slate-600 bg-slate-900 p-3\">…</select> aka getByLabel('SinyalBUYHOLDWAIT')\n\nCall log:\n\u001b[2m  - waiting for getByLabel('Sinyal')\u001b[22m\n"
+    },
+    {
+      "id": "N05",
+      "name": "Response perbandingan lama tidak muncul setelah ticker diganti",
+      "status": "Failed",
+      "detail": "{\"current_ticker\":\"AAPL\",\"old_comparison_visible\":true,\"text\":\"AI Analyzer\\nRiset dan pemantauan\\nPanduan dan glosarium\\nDashboard\\nWatchlist\\nSettings\\nI\\n\\nInvestor Lanjutan\\n\\nFree Tier\\n\\nSign Out\\nRiset dan pemantauan\\nScreener\\nRiwayat AI\\nAlert dan job\\nRencana transaksi\\nRiwayat analisis\\nKode saham\\nMuat riwayat\\n\\nSkor model bukan peluang profit. Pilih dua hasil sesuai urutan perbandingan; ekspor memakai pilihan atau seluruh hasil bila tidak ada yang dipilih.\\n\\n1 hasil tersimpan\\n\\nPilih BUY · Skor 88%\\n\\n20/10/2026, 07.29.44 WIB · Data 2025-07-01\\n\\nanthropic/claude-sonnet-4-6 · Provenance real\\n\\nRingkasan aktual berdasarkan indikator.\\n\\nRevisi data: 7b630fa71b234ac73fa976624c8a1f5f8a222e6656aa8ffd30e2fd01fcf5074d\\n\\nSebelumnya\\nHalaman 1\\nBerikutnya\\nBandingkan dua hasil\\nEkspor CSV\\nEkspor PDF\\nBUY → BUY\\n\\nPerubahan skor: -10 poin persentase.\\n\\nInput/model/prompt berbeda: Tidak.\\n\\nPerubahan skor dalam poin persentase, bukan return atau peluang profit; hasil dibandingkan sesuai urutan yang dipilih.\\n\\nRingkasan aktual berdasarkan indikator.\\n\\nFixture pembanding khusus BBCA.JK, bukan AAPL\"}"
+    },
+    {
+      "id": "N06",
+      "name": "Watchlist: catatan/filter/sorting dengan selector label aktual",
+      "status": "Passed",
+      "detail": "Urutkan harga dan filterIDX berfungsi; catatan tersimpan sesudahreload."
+    },
+    {
+      "id": "N07",
+      "name": "Kegagalanparsial AI mempertahankan chart, retry pulih",
+      "status": "Passed",
+      "detail": "503analisis tidak menghilangkan chart atau mengarang skor."
+    },
+    {
+      "id": "N08",
+      "name": "Badge data lama bertahan walau waktu fetch baru",
+      "status": "Passed",
+      "detail": "Tanggalpenutupan lama dan fetched_at baru terpisah; badge tetapData lama."
+    },
+    {
+      "id": "N09",
+      "name": "Sesi expired tanpa refresh kembali ke login",
+      "status": "Passed",
+      "detail": "Tidak ada loop atau loadingtanpaakhir."
+    }
+  ],
+  "errors": []
+}

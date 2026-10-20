@@ -1,0 +1,610 @@
+[
+  {
+    "path": "/api/v1/auth/register",
+    "status": 201
+  },
+  {
+    "path": "/api/v1/auth/token",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/watchlist",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/recommendations",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BROWSE01.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BROWSE02.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/AAPL/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BROWSE04.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BBCA.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BROWSE03.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/watchlist",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/recommendations",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BROWSE02.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BROWSE01.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BROWSE04.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BROWSE03.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BBCA.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/AAPL/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BBCA.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/watchlist",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BBCA.JK/chart",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BBCA.JK/analysis/latest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs",
+    "status": 202
+  },
+  {
+    "path": "/api/v1/analysis/jobs/dc8e63c4-14a7-499b-b49b-c23473a88d0e",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs/dc8e63c4-14a7-499b-b49b-c23473a88d0e",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BBCA.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BBCA.JK/chart",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BBCA.JK/analysis/latest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/watchlist",
+    "status": 201
+  },
+  {
+    "path": "/api/v1/stocks",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/AAPL/chart",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/AAPL/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/watchlist",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/AAPL/analysis/latest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs",
+    "status": 202
+  },
+  {
+    "path": "/api/v1/analysis/jobs/b1ac32b7-bf02-4ffd-b3cc-6f5e195e8832",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs/b1ac32b7-bf02-4ffd-b3cc-6f5e195e8832",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/AAPL/chart",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/AAPL/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/AAPL/analysis/latest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/watchlist",
+    "status": 201
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/watchlist",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/AAPL/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BBCA.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/watchlist",
+    "status": 201
+  },
+  {
+    "path": "/api/v1/stocks/watchlist",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BROWSE01.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BBCA.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/AAPL/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/watchlist/BROWSE01.JK",
+    "status": 204
+  },
+  {
+    "path": "/api/v1/screener/presets",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/screener",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/screener",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/screener/presets",
+    "status": 201
+  },
+  {
+    "path": "/api/v1/screener/presets",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/screener/presets",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/screener",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/screener",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/screener",
+    "status": 422
+  },
+  {
+    "path": "/api/v1/screener",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/alerts",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/alerts",
+    "status": 201
+  },
+  {
+    "path": "/api/v1/alerts",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/alerts/b3691085-7859-4003-b52e-4e0cf0807de0",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/alerts",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/alerts/b3691085-7859-4003-b52e-4e0cf0807de0",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/alerts",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/alerts",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/backtests",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/BBCA.JK/backtest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/backtests",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/BBCA.JK/backtest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/backtests",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/trade-plans",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/trade-plans/calculate",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/trade-plans/calculate",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/trade-plans",
+    "status": 201
+  },
+  {
+    "path": "/api/v1/trade-plans",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/trade-plans",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/trade-plans/e8a6608a-00ef-4f3f-baff-f04a7cd18d54",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/trade-plans",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BBCA.JK/analyses",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BBCA.JK/analyses/export",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/BBCA.JK/analyses/export",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/INVALIDXYZ/chart",
+    "status": 404
+  },
+  {
+    "path": "/api/v1/stocks/INVALIDXYZ/price",
+    "status": 404
+  },
+  {
+    "path": "/api/v1/stocks",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/INVALIDXYZ/analysis/latest",
+    "status": 404
+  },
+  {
+    "path": "/api/v1/stocks/watchlist",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/FAILAI.JK/chart",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/FAILAI.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/watchlist",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/FAILAI.JK/analysis/latest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs",
+    "status": 202
+  },
+  {
+    "path": "/api/v1/analysis/jobs/e5058fb4-7d8d-4ba5-b7d5-1d9aab363b44",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs/e5058fb4-7d8d-4ba5-b7d5-1d9aab363b44",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs/e5058fb4-7d8d-4ba5-b7d5-1d9aab363b44",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs/e5058fb4-7d8d-4ba5-b7d5-1d9aab363b44",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/analysis/jobs/e5058fb4-7d8d-4ba5-b7d5-1d9aab363b44",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/FAILAI.JK/price",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/FAILAI.JK/chart",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/stocks/FAILAI.JK/analysis/latest",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/notifications",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/logout",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/token",
+    "status": 200
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "status": 200
+  }
+]

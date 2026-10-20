@@ -1,0 +1,28 @@
+[
+  {
+    "id": "F01",
+    "name": "Oracle independen dua transaksi dengan biaya/slippage pada engine target",
+    "status": "Passed",
+    "detail": {
+      "oracle": [
+        {
+          "quantity": 99,
+          "buy": 100.1,
+          "sell": 119.88,
+          "profit_pct": 19.401317962756526
+        },
+        {
+          "quantity": 99,
+          "buy": 120.12,
+          "sell": 89.91,
+          "profit_pct": -25.374176273277172
+        }
+      ],
+      "final_cash_expected": 8904.0898,
+      "final_equity": 8904.0898,
+      "fees": 63.3402,
+      "drawdown": 25.329912,
+      "win_rate_pct": 50.0
+    }
+  }
+]

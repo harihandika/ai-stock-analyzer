@@ -1,0 +1,10 @@
+INFO:     Started server process [50177]
+INFO:     Waiting for application startup.
+{"asctime": "2026-10-20 00:27:51,962", "levelname": "INFO", "name": "app.main", "message": "\ud83d\ude80 AI Stock Analyzer starting up in 'development' mode..."}
+{"asctime": "2026-10-20 00:27:51,969", "levelname": "ERROR", "name": "app.core.cache", "message": "\u274c Gagal inisialisasi Redis Cache, fallback ke InMemory: Error 111 connecting to localhost:6379. 111."}
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8012 (Press CTRL+C to quit)
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [50177]

@@ -1,0 +1,11 @@
+{
+  "snapshot_tracked_files_checked": 194,
+  "changed_snapshot_source_files": [],
+  "original_repo_status": "",
+  "audit_fixture_processes": "stopped after audit",
+  "existing_application": "left running unchanged",
+  "reinstall": false,
+  "production_data_modified": false,
+  "paid_ingestion_enabled": false,
+  "real_email_sent": false
+}

@@ -1,0 +1,6 @@
+{
+  id: 'F02',
+  name: 'Renderdua trade ledger dan persen di320/390/768/1440px',
+  status: 'Passed',
+  detail: 'Responsrenderer terkontrol dari engine targetF01;winrate50%,dua trade,scrolltabeltersedia. Bukan backtestprovider nyata.'
+}

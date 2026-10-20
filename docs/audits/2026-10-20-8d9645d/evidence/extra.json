@@ -1,0 +1,57 @@
+[
+  {
+    "id": "X01",
+    "name": "Harga/currency/tanggal konsisten dashboard-detail-watchlist",
+    "status": "Passed",
+    "detail": [
+      {
+        "ticker": "BBCA.JK",
+        "price": "Rp 99,7111",
+        "day": "2025-07-01",
+        "currency": "IDR",
+        "consistent": true
+      },
+      {
+        "ticker": "AAPL",
+        "price": "US$99,7111",
+        "day": "2025-07-01",
+        "currency": "USD",
+        "consistent": true
+      }
+    ]
+  },
+  {
+    "id": "X02",
+    "name": "Perbandingan normal78→88 menyebut poinpersentase",
+    "status": "Passed",
+    "detail": "Normalcomparebenar; racegantiticker diuji terpisahN05."
+  },
+  {
+    "id": "X03",
+    "name": "Kegagalan watchlist lambat dan pemulihan",
+    "status": "Passed",
+    "detail": "Loadingterlihat;503dapatdipahami;retrymengembalikan data."
+  },
+  {
+    "id": "X04",
+    "name": "AlertsignalAPI valid bila direction tidakdikirim",
+    "status": "Passed",
+    "detail": {
+      "http": 201,
+      "direction": "above",
+      "note": "KontrolAPI membuktikan kegagalanUI bukan karena provider/izin."
+    }
+  },
+  {
+    "id": "X-mobile-320",
+    "name": "Simpan/edit rencana dan jalankanbacktest pada320px",
+    "status": "Passed",
+    "detail": "Formrencana dan backtestselesai padalayar320px;fixturebacktestnoltrade."
+  },
+  {
+    "id": "X-mobile-390",
+    "name": "Simpan/edit rencana dan jalankanbacktest pada390px",
+    "status": "Passed",
+    "detail": "Formrencana dan backtestselesai padalayar390px;fixturebacktestnoltrade."
+  }
+]

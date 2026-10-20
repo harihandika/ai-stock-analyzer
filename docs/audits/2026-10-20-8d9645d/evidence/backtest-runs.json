@@ -1,0 +1,1174 @@
+[
+  {
+    "run_id": "fdf455a1-e742-4eae-8a8c-9b8e8c6bd1c4",
+    "ticker": "BBCA.JK",
+    "period_years": 3,
+    "requested_parameters": {
+      "years": 3,
+      "target_profit_pct": 10,
+      "stop_loss_pct": 5,
+      "initial_capital": 10000000,
+      "lot_size": 100,
+      "buy_fee_bps": 15,
+      "sell_fee_bps": 25,
+      "slippage_bps": 10
+    },
+    "effective_parameters": {
+      "years": 3,
+      "target_profit_pct": 10,
+      "stop_loss_pct": 5,
+      "initial_capital": 10000000,
+      "lot_size": 100,
+      "buy_fee_bps": 15,
+      "sell_fee_bps": 25,
+      "slippage_bps": 10
+    },
+    "data_start": "2025-01-01",
+    "data_end": "2025-07-01",
+    "source": "Yahoo Finance",
+    "interval": "1d",
+    "strategy": "technical_daily_v2",
+    "total_trades": 0,
+    "win_rate_pct": 0,
+    "avg_profit_pct": 0,
+    "max_drawdown_pct": 0,
+    "trades": [],
+    "equity_curve": [
+      {
+        "date": "2025-01-01",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-02",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-03",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-06",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-07",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-08",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-09",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-10",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-13",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-14",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-15",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-16",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-17",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-20",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-21",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-22",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-23",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-24",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-27",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-28",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-29",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-30",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-31",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-03",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-04",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-05",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-06",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-07",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-10",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-11",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-12",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-13",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-14",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-17",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-18",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-19",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-20",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-21",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-24",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-25",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-26",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-27",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-28",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-03",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-04",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-05",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-06",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-07",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-10",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-11",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-12",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-13",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-14",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-17",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-18",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-19",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-20",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-21",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-24",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-25",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-26",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-27",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-28",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-31",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-01",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-02",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-03",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-04",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-07",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-08",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-09",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-10",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-11",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-14",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-15",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-16",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-17",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-18",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-21",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-22",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-23",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-24",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-25",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-28",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-29",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-30",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-01",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-02",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-05",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-06",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-07",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-08",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-09",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-12",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-13",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-14",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-15",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-16",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-19",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-20",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-21",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-22",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-23",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-26",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-27",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-28",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-29",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-30",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-02",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-03",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-04",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-05",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-06",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-09",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-10",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-11",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-12",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-13",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-16",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-17",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-18",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-19",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-20",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-23",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-24",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-25",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-26",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-27",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-30",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-07-01",
+        "equity": 10000000
+      }
+    ],
+    "assumptions": {
+      "initial_equity": 10000000,
+      "lot_size": 100,
+      "allocation_pct": 100,
+      "compounding": true,
+      "entry": "Keputusan close; entry open sesi berikutnya",
+      "exit": "Evaluasi TP/SL pada close; exit open berikutnya termasuk gap",
+      "max_holding_sessions": 30,
+      "final_position": "Tutup pada close akhir periode",
+      "price_adjustment": "unknown",
+      "fee_bps": null,
+      "buy_fee_bps": 15,
+      "sell_fee_bps": 25,
+      "slippage_bps": 10,
+      "limitations": "Simulasi strategi teknikal, bukan rekam jejak AI. Lot sesuai parameter; lot null memakai lembar pecahan ternormalisasi. Likuiditas belum dimodelkan; biaya/slippage mengikuti input. Histori pemanasan tidak ditampilkan sebagai bagian periode simulasi. TP/SL bukan jaminan harga eksekusi intraday."
+    },
+    "net_return_pct": 0,
+    "total_fees": 0,
+    "benchmark": {
+      "strategy": "buy_and_hold",
+      "quantity": 99900,
+      "data_start": "2025-01-01",
+      "data_end": "2025-07-01",
+      "final_equity": 9931342.418574609,
+      "net_return_pct": -0.6865758142539091,
+      "total_fees": 39847.935966352394,
+      "remaining_cash": 5039.99497000128
+    },
+    "data_revision": "8b1250307359761fa101ce3d212c3225e1deda3b87ea88334cfe73117592ae62"
+  },
+  {
+    "run_id": "36139670-87bb-4968-8c18-67f663f9d012",
+    "ticker": "BBCA.JK",
+    "period_years": 3,
+    "requested_parameters": {
+      "years": 3,
+      "target_profit_pct": 5,
+      "stop_loss_pct": 3,
+      "initial_capital": 10000000,
+      "lot_size": 100,
+      "buy_fee_bps": 15,
+      "sell_fee_bps": 25,
+      "slippage_bps": 10
+    },
+    "effective_parameters": {
+      "years": 3,
+      "target_profit_pct": 5,
+      "stop_loss_pct": 3,
+      "initial_capital": 10000000,
+      "lot_size": 100,
+      "buy_fee_bps": 15,
+      "sell_fee_bps": 25,
+      "slippage_bps": 10
+    },
+    "data_start": "2025-01-01",
+    "data_end": "2025-07-01",
+    "source": "Yahoo Finance",
+    "interval": "1d",
+    "strategy": "technical_daily_v2",
+    "total_trades": 0,
+    "win_rate_pct": 0,
+    "avg_profit_pct": 0,
+    "max_drawdown_pct": 0,
+    "trades": [],
+    "equity_curve": [
+      {
+        "date": "2025-01-01",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-02",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-03",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-06",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-07",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-08",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-09",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-10",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-13",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-14",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-15",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-16",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-17",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-20",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-21",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-22",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-23",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-24",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-27",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-28",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-29",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-30",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-01-31",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-03",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-04",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-05",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-06",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-07",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-10",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-11",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-12",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-13",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-14",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-17",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-18",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-19",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-20",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-21",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-24",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-25",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-26",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-27",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-02-28",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-03",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-04",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-05",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-06",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-07",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-10",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-11",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-12",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-13",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-14",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-17",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-18",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-19",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-20",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-21",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-24",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-25",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-26",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-27",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-28",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-03-31",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-01",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-02",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-03",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-04",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-07",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-08",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-09",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-10",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-11",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-14",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-15",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-16",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-17",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-18",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-21",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-22",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-23",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-24",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-25",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-28",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-29",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-04-30",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-01",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-02",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-05",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-06",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-07",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-08",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-09",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-12",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-13",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-14",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-15",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-16",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-19",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-20",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-21",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-22",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-23",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-26",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-27",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-28",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-29",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-05-30",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-02",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-03",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-04",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-05",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-06",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-09",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-10",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-11",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-12",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-13",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-16",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-17",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-18",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-19",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-20",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-23",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-24",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-25",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-26",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-27",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-06-30",
+        "equity": 10000000
+      },
+      {
+        "date": "2025-07-01",
+        "equity": 10000000
+      }
+    ],
+    "assumptions": {
+      "initial_equity": 10000000,
+      "lot_size": 100,
+      "allocation_pct": 100,
+      "compounding": true,
+      "entry": "Keputusan close; entry open sesi berikutnya",
+      "exit": "Evaluasi TP/SL pada close; exit open berikutnya termasuk gap",
+      "max_holding_sessions": 30,
+      "final_position": "Tutup pada close akhir periode",
+      "price_adjustment": "unknown",
+      "fee_bps": null,
+      "buy_fee_bps": 15,
+      "sell_fee_bps": 25,
+      "slippage_bps": 10,
+      "limitations": "Simulasi strategi teknikal, bukan rekam jejak AI. Lot sesuai parameter; lot null memakai lembar pecahan ternormalisasi. Likuiditas belum dimodelkan; biaya/slippage mengikuti input. Histori pemanasan tidak ditampilkan sebagai bagian periode simulasi. TP/SL bukan jaminan harga eksekusi intraday."
+    },
+    "net_return_pct": 0,
+    "total_fees": 0,
+    "benchmark": {
+      "strategy": "buy_and_hold",
+      "quantity": 99900,
+      "data_start": "2025-01-01",
+      "data_end": "2025-07-01",
+      "final_equity": 9931342.418574609,
+      "net_return_pct": -0.6865758142539091,
+      "total_fees": 39847.935966352394,
+      "remaining_cash": 5039.99497000128
+    },
+    "data_revision": "8b1250307359761fa101ce3d212c3225e1deda3b87ea88334cfe73117592ae62"
+  }
+]

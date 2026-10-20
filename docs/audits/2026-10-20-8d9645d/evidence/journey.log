@@ -1,0 +1,18 @@
+J01 Passed Pengguna baru: register, validasi password dan login
+J02 Passed Memahami dashboard dan panduan pertama kali
+J03 Passed Cari BBCA lalu buka detail dengan keyboard
+J04 Passed Analisis BBCA melalui worker, baca alasan dan sumber
+J05 Passed Ubah periode chart dan baca OHLC/indikator
+J06 Passed Tambah watchlist dan ulangi analisis AAPL
+J07 Failed Watchlist catatan, urutan harga, filter dan reload
+J08 Passed Tambah/hapus watchlist lewat modal dan escape
+J09 Passed Screener kombinasi filter dan preset tersimpan
+J10 Failed Buka hasil screener lalu browser Back mempertahankan konteks
+J11 Passed Muat ulang preset dan tangani filter tidak valid
+J12 Passed Buat alert harga, jeda/aktifkan, pahami status
+J13 Passed Backtest modal/fee/slippage dan dua parameter
+J14 Passed Trade plan dasar20lot lalu ubah modal menjadi2lot
+J15 Passed Simpan rencana: validasi uraian, refresh, edit dan batal
+J16 Passed Histori dan eksporCSV/PDF tersimpan
+J17 Passed Ticker invalid dan providerAI gagal tanpa sinyal buatan
+J18 Passed Settings, kuota, logout dan loginulang

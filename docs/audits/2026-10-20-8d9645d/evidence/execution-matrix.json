@@ -1,0 +1,3550 @@
+[
+  {
+    "id": "J01",
+    "name": "Pengguna baru: register, validasi password dan login",
+    "status": "Passed",
+    "detail": "Validasi terlihat; login menuju dashboard.",
+    "duration_ms": 4797,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J02",
+    "name": "Memahami dashboard dan panduan pertama kali",
+    "status": "Passed",
+    "detail": {
+      "dashboard": "AI Analyzer\nRiset dan pemantauan\nPanduan dan glosarium\nDashboard\nWatchlist\nSettings\nI\n\nInvestor Baru\n\nFree Tier\n\nSign Out\nSelamat Datang, Investor\n\nPantau harga penutupan harian dan analisis teknikal saham.\n\nMuat ulang dashboard\n\nMemuat dashboard…\n\nSaham Pantauan\n\n0\n\nTotal Saham Tersedia\n\n12\n\nSisa Kuota AI\n\n3\nRekomendasi BUY\n\nHasil terverifikasi dari seluruh daftar saham, diurutkan menurut skor model. Bukan probabilitas keuntungan.\n\nRingkasan Saham\nAAPL\n\nUS Fixture\n\nBelum tersedia\n\nData pasar belum tersedia.\n\nBBCA.JK\n\nBank Fixture\n\nBelum tersedia\n\nData pasar belum tersedia.\n\nBROWSE01.JK\n\nSaham Pengujian BROWSE01.JK\n\nBelum tersedia\n\nData pasar belum tersedia.\n\nBROWSE02.JK\n\nSaham Pengujian BROWSE02.JK\n\nBelum tersedia\n\nData pasar belum tersedia.\n\nBROWSE03.JK\n\nSaham Pengujian BROWSE03.JK\n\nBelum tersedia\n\nData pasar belum tersedia.\n\nBROWSE04.JK\n\nSaham Pengujian BROWSE04.JK\n\nBelum tersedia\n\nData pasar belum tersedia.\n\nSaham sebelumnya\nHalaman 1 / 2\nSaham berikutnya\nBuka screener",
+      "guide": "AI Analyzer\nRiset dan pemantauan\nPanduan dan glosarium\nDashboard\nWatchlist\nSettings\nI\n\nInvestor Baru\n\nFree Tier\n\nSign Out\nPanduan dan glosarium\n\nMulai dari pencarian nama/kode, buka detail, periksa sumber dan tanggal, lalu simpan ke watchlist. Jalankan AI setelah data tersedia; status job dapat dibuka kembali dari halaman riset.\n\nBuka riset dan pemantauan\nFree dan Premium\n\nFree: maksimal tiga analisis baru yang berhasil per hari. Cache hit dan kegagalan tidak mengurangi kuota. Reservasi yang sedang diproses ditampilkan terpisah; reset pukul 00.00 WIB.\n\nPremium: aplikasi saat ini menampilkan kuota harian tidak terbatas untuk akun dengan tier premium, tetap mengikuti rate limit dan ketersediaan provider. Pengaturan akun menunjukkan entitlement dari server.\n\nPembayaran dan upgrade mandiri belum tersedia. Halaman ini tidak mengaktifkan langganan atau menjanjikan layanan yang belum dikonfigurasi.\n\nLihat kuota akun\nTicker .JK\n\nAkhiran .JK menunjukkan saham Indonesia pada aplikasi, misalnya BBCA.JK. Instrumen AS menggunakan ticker dan currency USD; aplikasi tidak mengonversi harga secara otomatis.\n\nEOD dan waktu data\n\nHarga penutupan harian berbeda dari harga real-time. Tanggal sesi, waktu pengambilan, sumber, dan zona waktu memiliki makna berbeda. Status unknown berarti keterkinian belum dapat diverifikasi.\n\nBUY / HOLD / WAIT\n\nLabel analisis teknikal tersimpan. Data atau analisis yang belum tersedia tidak otomatis berarti HOLD. Periksa alasan pendukung, penyangkal, horizon, serta keterbatasannya.\n\nConfidence\n\nSkor dari model, bukan probabilitas profit atau janji akurasi. Perubahan 80 menjadi 60 adalah -20 poin persentase, bukan return -20%.\n\nRSI\n\nIndikator momentum pada skala 0–100. RSI tinggi/rendah saja tidak memastikan harga akan berbalik. Nilai kosong berarti indikator belum tersedia.\n\nEMA dan MACD\n\nEMA merangkum harga historis dengan bobot lebih besar pada data baru; MACD membandingkan rata-rata bergerak. Histori pemanasan dibutuhkan dan sinyal tetap dapat salah.\n\nVPA, Wyckoff, SMC\n\nKerangka teknikal untuk membaca hubungan harga/volume, fase pasar dan struktur harga. Pola yang memerlukan konfirmasi baru boleh dipakai setelah data konfirmasinya tersedia.\n\nAlert EOD\n\nNotifikasi dari transisi kondisi pada sesi lengkap yang terverifikasi. Worker harus berjalan. Data stale atau unknown tidak memicu alert. Notifikasi bukan order otomatis.\n\nRisiko dan lot\n\nKalkulator membatasi lembar oleh modal dan risiko per rencana. IDX memakai lot 100 lembar; AS pada versi ini memakai lembar utuh. Gap, biaya, slippage dan likuiditas dapat membuat kerugian melebihi perhitungan stop.\n\nBacktest\n\nSimulasi strategi teknikal pada histori, bukan rekam jejak keputusan AI. Keputusan close dieksekusi pada open berikutnya; TP/SL tidak menjamin harga fill. Periksa seluruh transaksi, equity, biaya, dan pembanding buy-and-hold."
+    },
+    "duration_ms": 426,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J03",
+    "name": "Cari BBCA lalu buka detail dengan keyboard",
+    "status": "Passed",
+    "detail": "BBCA dikenali sebagai BBCA.JK; belum ada harga/chart buatan.",
+    "duration_ms": 1232,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J04",
+    "name": "Analisis BBCA melalui worker, baca alasan dan sumber",
+    "status": "Passed",
+    "detail": {
+      "analysis_id": "f68f112e-fa12-4615-9e6d-5146f57556c9",
+      "metadata": {
+        "source": "Yahoo Finance",
+        "currency": "IDR",
+        "exchange": "IDX",
+        "market_as_of": "2025-07-01",
+        "fetched_at": "2026-10-20T00:29:36.967142Z",
+        "interval": "1d",
+        "data_revision": "7b630fa71b234ac73fa976624c8a1f5f8a222e6656aa8ffd30e2fd01fcf5074d",
+        "data_state": "unknown",
+        "price_adjustment": "unknown",
+        "volume_adjustment": "unknown",
+        "market_status": "unknown",
+        "session_timezone": "Asia/Jakarta",
+        "expected_market_date": null,
+        "publication_delay_minutes": null,
+        "calendar_verified": false
+      },
+      "score": 88,
+      "text": "AI Analyzer\nRiset dan pemantauan\nPanduan dan glosarium\nDashboard\nWatchlist\nSettings\nI\n\nInvestor Baru\n\nFree Tier\n\nSign Out\nBBCA.JK\n\nBank Fixture\n\nRp 99,7111\n\nPerubahan antar penutupan: 0.72%\n\nBacktest teknikal\nTambah Watchlist\nSinkronkan Data\nAnalisis Ulang AI\nRiwayat AI\nRencana transaksi\nAlert dan job\n\nJob analisis: Hasil berhasil disimpan. Lihat status job\n\nPenutupan pasar: 2025-07-01 · Candle harian\n\nYahoo Finance · IDX · IDR\n\nKeterkinian belum terverifikasi\n\nRincian sumber dan waktu\n1M\n3M\n6M\n1Y\n\nCandle harian. Rentang aktual: 2025-01-01 sampai 2025-07-01. Indikator kosong berarti histori belum cukup.\n\n\t\n\t\n\n\t\n\t\n\nCandle 2025-07-01 · IDR\n\nCandle terbaru\nPilih candle\nOpen\nRp 99,5111\nHigh\nRp 101,7111\nLow\nRp 97,7111\nClose\nRp 99,7111\nVolume (lembar)\n1.867\nEMA (20)\nRp 102,3363\nEMA (50)\nRp 102,6819\nEMA (200)\nBelum tersedia\nRSI (14)\n38,6833\nMACD\n-0,9613\nMACD signal\n-0,1733\n\t\n\t\n\n\t\n\t\n\t\n\t\n\n\t\n\t\nAnalisis Teknikal AI\nBUY\nSkor model: 88%\n\nSkor model belum terkalibrasi sebagai probabilitas keuntungan.\n\nRingkasan aktual berdasarkan indikator.\n\nHorizon: Swing trading berdasarkan data harian\n\nFaktor pendukung\nVolume meningkat\nFaktor penyangkal\nHistori terbatas\n\nAnalisis teknikal harian; bukan probabilitas keuntungan terkalibrasi.\n\nTarget harga dan tingkat risiko belum tersedia dari metode yang terverifikasi.\n\nData analisis: 2025-07-01. Dibuat: 20/10/2026, 07.29.37."
+    },
+    "duration_ms": 3969,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J05",
+    "name": "Ubah periode chart dan baca OHLC/indikator",
+    "status": "Passed",
+    "detail": [
+      {
+        "range": "1M",
+        "date": "2025-07-01",
+        "values": "Candle 2025-07-01 · IDR\n\nCandle terbaru\nPilih candle\nOpen\nRp 99,5111\nHigh\nRp 101,7111\nLow\nRp 97,7111\nClose\nRp 99,7111\nVolume (lembar)\n1.867\nEMA (20)\nRp 102,3363\nEMA (50)\nRp 102,6819\nEMA (200)\nBelum tersedia\nRSI (14)\n38,6833\nMACD\n-0,9613\nMACD signal\n-0,1733"
+      },
+      {
+        "range": "3M",
+        "date": "2025-07-01",
+        "values": "Candle 2025-07-01 · IDR\n\nCandle terbaru\nPilih candle\nOpen\nRp 99,5111\nHigh\nRp 101,7111\nLow\nRp 97,7111\nClose\nRp 99,7111\nVolume (lembar)\n1.867\nEMA (20)\nRp 102,3363\nEMA (50)\nRp 102,6819\nEMA (200)\nBelum tersedia\nRSI (14)\n38,6833\nMACD\n-0,9613\nMACD signal\n-0,1733"
+      },
+      {
+        "range": "6M",
+        "date": "2025-07-01",
+        "values": "Candle 2025-07-01 · IDR\n\nCandle terbaru\nPilih candle\nOpen\nRp 99,5111\nHigh\nRp 101,7111\nLow\nRp 97,7111\nClose\nRp 99,7111\nVolume (lembar)\n1.867\nEMA (20)\nRp 102,3363\nEMA (50)\nRp 102,6819\nEMA (200)\nBelum tersedia\nRSI (14)\n38,6833\nMACD\n-0,9613\nMACD signal\n-0,1733"
+      },
+      {
+        "range": "1Y",
+        "date": "2025-07-01",
+        "values": "Candle 2025-07-01 · IDR\n\nCandle terbaru\nPilih candle\nOpen\nRp 99,5111\nHigh\nRp 101,7111\nLow\nRp 97,7111\nClose\nRp 99,7111\nVolume (lembar)\n1.867\nEMA (20)\nRp 102,3363\nEMA (50)\nRp 102,6819\nEMA (200)\nBelum tersedia\nRSI (14)\n38,6833\nMACD\n-0,9613\nMACD signal\n-0,1733"
+      }
+    ],
+    "duration_ms": 985,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J06",
+    "name": "Tambah watchlist dan ulangi analisis AAPL",
+    "status": "Passed",
+    "detail": {
+      "metadata": {
+        "source": "Yahoo Finance",
+        "currency": "USD",
+        "exchange": "NASDAQ",
+        "market_as_of": "2025-07-01",
+        "fetched_at": "2026-10-20T00:29:43.836218Z",
+        "interval": "1d",
+        "data_revision": "7b630fa71b234ac73fa976624c8a1f5f8a222e6656aa8ffd30e2fd01fcf5074d",
+        "data_state": "unknown",
+        "price_adjustment": "unknown",
+        "volume_adjustment": "unknown",
+        "market_status": "unknown",
+        "session_timezone": "America/New_York",
+        "expected_market_date": null,
+        "publication_delay_minutes": null,
+        "calendar_verified": false
+      },
+      "current_price": 99.7111
+    },
+    "duration_ms": 5709,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J07",
+    "name": "Watchlist catatan, urutan harga, filter dan reload",
+    "status": "Passed",
+    "detail": "Urutkan harga dan filterIDX berfungsi; catatan tersimpan sesudahreload.",
+    "duration_ms": 20182,
+    "suite": "journey",
+    "evidence": "evidence/journey.json",
+    "initial_observation": "locator.selectOption: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Urutkan', { exact: true })\u001b[22m\n",
+    "retest": "N06",
+    "retest_note": "Selector label exact pada percobaan awal tidak cocok nama aksesibel select yang juga mencakup option. Retest memakai label aktual dan menyelesaikan sorting/filter/catatan/reload."
+  },
+  {
+    "id": "J08",
+    "name": "Tambah/hapus watchlist lewat modal dan escape",
+    "status": "Passed",
+    "detail": "Ticker ditambah dari autocomplete lalu dihapus; konfirmasi tampil.",
+    "duration_ms": 1364,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J09",
+    "name": "Screener kombinasi filter dan preset tersimpan",
+    "status": "Passed",
+    "detail": "Filter bursa+volume+RSI menghasilkan BBCA; preset tersimpan.",
+    "duration_ms": 1068,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J10",
+    "name": "Buka hasil screener lalu browser Back mempertahankan konteks",
+    "status": "Failed",
+    "detail": "{\"exchange\":\"\",\"volume\":\"\",\"rsi_min\":\"\",\"url\":\"http://127.0.0.1:3012/research\"}",
+    "duration_ms": 367,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J11",
+    "name": "Muat ulang preset dan tangani filter tidak valid",
+    "status": "Passed",
+    "detail": "Preset dapat dipakai ulang; batasRSI salah ditolak, perbaikan pulih.",
+    "duration_ms": 550,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J12",
+    "name": "Buat alert harga, jeda/aktifkan, pahami status",
+    "status": "Passed",
+    "detail": "AI Analyzer\nRiset dan pemantauan\nPanduan dan glosarium\nDashboard\nWatchlist\nSettings\nI\n\nInvestor Baru\n\nFree Tier\n\nSign Out\nRiset dan pemantauan\nScreener\nRiwayat AI\nAlert dan job\nRencana transaksi\nPemantauan EOD\n\nAlert memakai penutupan harian dan worker. Evaluasi pertama membentuk baseline; notifikasi berikutnya hanya muncul saat kondisi bertransisi. Data stale atau keterkinian unknown tidak memicu alert.\n\nKode saham alert\nJenis alert\nHarga penutupan\nPerubahan dari sesi sebelumnya (%)\nSinyal AI baru\nAmbang harga (currency instrumen)\nArah\nNaik melewati / mencapai\nTurun melewati / mencapai\nSimpan alert\n\nBBCA.JK · price · above · 110 · Aktif\n\nMenunggu data lengkap dan kalender terverifikasi\n\nJeda\nHapus alert\nNotifikasi\n\nBelum ada kejadian alert.\n\nJob analisis terakhir\nAAPL\n\nsucceeded · Percobaan 1 · 20/10/2026, 07.29.41 WIB\n\nBBCA.JK\n\nsucceeded · Percobaan 1 · 20/10/2026, 07.29.35 WIB",
+    "duration_ms": 956,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J13",
+    "name": "Backtest modal/fee/slippage dan dua parameter",
+    "status": "Passed",
+    "detail": [
+      {
+        "params": {
+          "years": 3,
+          "target_profit_pct": 10,
+          "stop_loss_pct": 5,
+          "initial_capital": 10000000,
+          "lot_size": 100,
+          "buy_fee_bps": 15,
+          "sell_fee_bps": 25,
+          "slippage_bps": 10
+        },
+        "trades": 0,
+        "net_return": 0,
+        "drawdown": 0,
+        "fees": 0
+      },
+      {
+        "params": {
+          "years": 3,
+          "target_profit_pct": 5,
+          "stop_loss_pct": 3,
+          "initial_capital": 10000000,
+          "lot_size": 100,
+          "buy_fee_bps": 15,
+          "sell_fee_bps": 25,
+          "slippage_bps": 10
+        },
+        "trades": 0,
+        "net_return": 0,
+        "drawdown": 0,
+        "fees": 0
+      }
+    ],
+    "duration_ms": 1416,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J14",
+    "name": "Trade plan dasar20lot lalu ubah modal menjadi2lot",
+    "status": "Passed",
+    "detail": "200 lembar / 2 lot · Reward/risk sebelum biaya 2.00:1\n\nNilai beli termasuk estimasi biaya Rp 200.000 · Risiko Rp 10.000 · Sisa modal Rp 800.000\n\nSimulasi long; stop tidak menjamin harga eksekusi saat gap/likuiditas rendah. Tidak mengirim order broker.",
+    "duration_ms": 733,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J15",
+    "name": "Simpan rencana: validasi uraian, refresh, edit dan batal",
+    "status": "Passed",
+    "detail": "Uraian wajib ditunjukkan; versi2 tersimpan; batal tidak meninggalkan kalkulasi lama.",
+    "duration_ms": 895,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J16",
+    "name": "Histori dan eksporCSV/PDF tersimpan",
+    "status": "Passed",
+    "detail": [
+      {
+        "format": "CSV",
+        "bytes": 616
+      },
+      {
+        "format": "PDF",
+        "bytes": 2328
+      }
+    ],
+    "duration_ms": 488,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J17",
+    "name": "Ticker invalid dan providerAI gagal tanpa sinyal buatan",
+    "status": "Passed",
+    "detail": "INVALIDXYZ kosong; FAILAI gagal, chart tetap tersedia.",
+    "duration_ms": 8866,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "J18",
+    "name": "Settings, kuota, logout dan loginulang",
+    "status": "Passed",
+    "detail": "AI Analyzer\nRiset dan pemantauan\nPanduan dan glosarium\nDashboard\nWatchlist\nSettings\nI\n\nInvestor Baru\n\nFree Tier\n\nSign Out\nPengaturan akun",
+    "duration_ms": 1729,
+    "suite": "journey",
+    "evidence": "evidence/journey.json"
+  },
+  {
+    "id": "M320-dashboard",
+    "name": "dashboard: kontrol dan isi 320px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 204,
+          "width": 140,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 212,
+          "right": 256,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 264,
+          "right": 308,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M320-watchlist",
+    "name": "watchlist: kontrol dan isi 320px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 204,
+          "width": 140,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 212,
+          "right": 256,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 264,
+          "right": 308,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Tambah Saham",
+          "left": 16,
+          "right": 148.0625,
+          "width": 132.0625,
+          "height": 44
+        },
+        {
+          "name": "Muat Ulang",
+          "left": 156.0625,
+          "right": 261.65625,
+          "width": 105.59375,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M320-detail",
+    "name": "detail: kontrol dan isi 320px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 204,
+          "width": 140,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 212,
+          "right": 256,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 264,
+          "right": 308,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Backtest teknikal",
+          "left": 16,
+          "right": 155.0625,
+          "width": 139.0625,
+          "height": 44
+        },
+        {
+          "name": "Sudah ditambahkan",
+          "left": 16,
+          "right": 174.546875,
+          "width": 158.546875,
+          "height": 44
+        },
+        {
+          "name": "Sinkronkan Data",
+          "left": 16,
+          "right": 153.515625,
+          "width": 137.515625,
+          "height": 44
+        },
+        {
+          "name": "Analisis Ulang AI",
+          "left": 161.515625,
+          "right": 300.578125,
+          "width": 139.0625,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M320-backtest",
+    "name": "backtest: kontrol dan isi 320px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 204,
+          "width": 140,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 212,
+          "right": 256,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 264,
+          "right": 308,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M320-screener",
+    "name": "screener: kontrol dan isi 320px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 204,
+          "width": 140,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 212,
+          "right": 256,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 264,
+          "right": 308,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M320-history",
+    "name": "history: kontrol dan isi 320px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 204,
+          "width": 140,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 212,
+          "right": 256,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 264,
+          "right": 308,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M320-monitoring",
+    "name": "monitoring: kontrol dan isi 320px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 204,
+          "width": 140,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 212,
+          "right": 256,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 264,
+          "right": 308,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M320-plans",
+    "name": "plans: kontrol dan isi 320px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 204,
+          "width": 140,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 212,
+          "right": 256,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 264,
+          "right": 308,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M320-settings",
+    "name": "settings: kontrol dan isi 320px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 204,
+          "width": 140,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 212,
+          "right": 256,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 264,
+          "right": 308,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M320-guide",
+    "name": "guide: kontrol dan isi 320px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 204,
+          "width": 140,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 212,
+          "right": 256,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 264,
+          "right": 308,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M320-workflow",
+    "name": "Navigasi, pencarian, candle, watchlist dan kalkulator 320px",
+    "status": "Passed",
+    "detail": {
+      "selected_day": "2025-04-01",
+      "close_display": "Rp 104,9769",
+      "close_expected": "104.9769",
+      "currency": "IDR",
+      "form_20_to_2_lots": true
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M320-spacing",
+    "name": "Padding dan target sentuh tab 320px",
+    "status": "Passed",
+    "detail": {
+      "input_padding": "12px",
+      "tab": {
+        "x": 16,
+        "y": -657,
+        "width": 166.515625,
+        "height": 44
+      }
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M320-dialog",
+    "name": "Modal watchlist dan dropdown akun 320px",
+    "status": "Passed",
+    "detail": {
+      "modal": {
+        "x": 0,
+        "y": 0,
+        "width": 282,
+        "height": 286
+      },
+      "escape_focus": true
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M360-dashboard",
+    "name": "dashboard: kontrol dan isi 360px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 244,
+          "width": 180,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 252,
+          "right": 296,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 304,
+          "right": 348,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M360-watchlist",
+    "name": "watchlist: kontrol dan isi 360px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 244,
+          "width": 180,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 252,
+          "right": 296,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 304,
+          "right": 348,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Tambah Saham",
+          "left": 16,
+          "right": 148.0625,
+          "width": 132.0625,
+          "height": 44
+        },
+        {
+          "name": "Muat Ulang",
+          "left": 156.0625,
+          "right": 261.65625,
+          "width": 105.59375,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M360-detail",
+    "name": "detail: kontrol dan isi 360px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 244,
+          "width": 180,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 252,
+          "right": 296,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 304,
+          "right": 348,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Backtest teknikal",
+          "left": 16,
+          "right": 155.0625,
+          "width": 139.0625,
+          "height": 44
+        },
+        {
+          "name": "Sudah ditambahkan",
+          "left": 163.0625,
+          "right": 321.609375,
+          "width": 158.546875,
+          "height": 44
+        },
+        {
+          "name": "Sinkronkan Data",
+          "left": 16,
+          "right": 153.515625,
+          "width": 137.515625,
+          "height": 44
+        },
+        {
+          "name": "Analisis Ulang AI",
+          "left": 161.515625,
+          "right": 300.578125,
+          "width": 139.0625,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M360-backtest",
+    "name": "backtest: kontrol dan isi 360px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 244,
+          "width": 180,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 252,
+          "right": 296,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 304,
+          "right": 348,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M360-screener",
+    "name": "screener: kontrol dan isi 360px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 244,
+          "width": 180,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 252,
+          "right": 296,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 304,
+          "right": 348,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M360-history",
+    "name": "history: kontrol dan isi 360px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 244,
+          "width": 180,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 252,
+          "right": 296,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 304,
+          "right": 348,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M360-monitoring",
+    "name": "monitoring: kontrol dan isi 360px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 244,
+          "width": 180,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 252,
+          "right": 296,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 304,
+          "right": 348,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M360-plans",
+    "name": "plans: kontrol dan isi 360px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 244,
+          "width": 180,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 252,
+          "right": 296,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 304,
+          "right": 348,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M360-settings",
+    "name": "settings: kontrol dan isi 360px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 244,
+          "width": 180,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 252,
+          "right": 296,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 304,
+          "right": 348,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M360-guide",
+    "name": "guide: kontrol dan isi 360px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 244,
+          "width": 180,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 252,
+          "right": 296,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 304,
+          "right": 348,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M360-workflow",
+    "name": "Navigasi, pencarian, candle, watchlist dan kalkulator 360px",
+    "status": "Passed",
+    "detail": {
+      "selected_day": "2025-04-01",
+      "close_display": "Rp 104,9769",
+      "close_expected": "104.9769",
+      "currency": "IDR",
+      "form_20_to_2_lots": true
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M360-spacing",
+    "name": "Padding dan target sentuh tab 360px",
+    "status": "Passed",
+    "detail": {
+      "input_padding": "12px",
+      "tab": {
+        "x": 151.84375,
+        "y": -599,
+        "width": 166.515625,
+        "height": 44
+      }
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M360-dialog",
+    "name": "Modal watchlist dan dropdown akun 360px",
+    "status": "Passed",
+    "detail": {
+      "modal": {
+        "x": 0,
+        "y": 0,
+        "width": 322,
+        "height": 234
+      },
+      "escape_focus": true
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M390-dashboard",
+    "name": "dashboard: kontrol dan isi 390px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 274,
+          "width": 210,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 282,
+          "right": 326,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 334,
+          "right": 378,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M390-watchlist",
+    "name": "watchlist: kontrol dan isi 390px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 274,
+          "width": 210,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 282,
+          "right": 326,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 334,
+          "right": 378,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Tambah Saham",
+          "left": 16,
+          "right": 148.0625,
+          "width": 132.0625,
+          "height": 44
+        },
+        {
+          "name": "Muat Ulang",
+          "left": 156.0625,
+          "right": 261.65625,
+          "width": 105.59375,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M390-detail",
+    "name": "detail: kontrol dan isi 390px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 274,
+          "width": 210,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 282,
+          "right": 326,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 334,
+          "right": 378,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Backtest teknikal",
+          "left": 16,
+          "right": 155.0625,
+          "width": 139.0625,
+          "height": 44
+        },
+        {
+          "name": "Sudah ditambahkan",
+          "left": 163.0625,
+          "right": 321.609375,
+          "width": 158.546875,
+          "height": 44
+        },
+        {
+          "name": "Sinkronkan Data",
+          "left": 16,
+          "right": 153.515625,
+          "width": 137.515625,
+          "height": 44
+        },
+        {
+          "name": "Analisis Ulang AI",
+          "left": 161.515625,
+          "right": 300.578125,
+          "width": 139.0625,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M390-backtest",
+    "name": "backtest: kontrol dan isi 390px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 274,
+          "width": 210,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 282,
+          "right": 326,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 334,
+          "right": 378,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M390-screener",
+    "name": "screener: kontrol dan isi 390px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 274,
+          "width": 210,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 282,
+          "right": 326,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 334,
+          "right": 378,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M390-history",
+    "name": "history: kontrol dan isi 390px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 274,
+          "width": 210,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 282,
+          "right": 326,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 334,
+          "right": 378,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M390-monitoring",
+    "name": "monitoring: kontrol dan isi 390px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 274,
+          "width": 210,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 282,
+          "right": 326,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 334,
+          "right": 378,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M390-plans",
+    "name": "plans: kontrol dan isi 390px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 274,
+          "width": 210,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 282,
+          "right": 326,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 334,
+          "right": 378,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M390-settings",
+    "name": "settings: kontrol dan isi 390px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 274,
+          "width": 210,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 282,
+          "right": 326,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 334,
+          "right": 378,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M390-guide",
+    "name": "guide: kontrol dan isi 390px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 274,
+          "width": 210,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 282,
+          "right": 326,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 334,
+          "right": 378,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M390-workflow",
+    "name": "Navigasi, pencarian, candle, watchlist dan kalkulator 390px",
+    "status": "Passed",
+    "detail": {
+      "selected_day": "2025-05-20",
+      "close_display": "Rp 107,9696",
+      "close_expected": "107.9696",
+      "currency": "IDR",
+      "form_20_to_2_lots": true
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json",
+    "initial_observation": "{\"day\":\"2025-04-01\",\"displayed\":\"Rp 107,9696\",\"source\":\"104.9769\"}",
+    "retest": "evidence/mobile-retest.json",
+    "retest_note": "Pembacaan tanggal dan Close awal dilakukan terpisah saat state crosshair berubah. Retest memakai satu snapshot DOM atomik; nilai sesuai dataset. Bukan bug tanggal/harga."
+  },
+  {
+    "id": "M390-spacing",
+    "name": "Padding dan target sentuh tab 390px",
+    "status": "Passed",
+    "detail": {
+      "input_padding": "12px",
+      "tab": {
+        "x": 16,
+        "y": -575,
+        "width": 166.515625,
+        "height": 44
+      }
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json",
+    "initial_observation": "locator.evaluate: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Harga entry perhitungan', { exact: true })\u001b[22m\n",
+    "retest": "evidence/mobile-retest.json",
+    "retest_note": "Kasus awal tidak mencapai form karena skenario sebelumnya berhenti; retest langsung memverifikasi padding dan tab."
+  },
+  {
+    "id": "M390-dialog",
+    "name": "Modal watchlist dan dropdown akun 390px",
+    "status": "Passed",
+    "detail": {
+      "modal": {
+        "x": 0,
+        "y": 0,
+        "width": 351,
+        "height": 234
+      },
+      "escape_focus": true
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json",
+    "initial_observation": {
+      "modal": {
+        "x": 0,
+        "y": 0,
+        "width": 351,
+        "height": 234
+      },
+      "escape_focus": true
+    },
+    "retest": "evidence/mobile-retest.json"
+  },
+  {
+    "id": "M-landscape",
+    "name": "Perubahan orientasi390→844→390 dan chart",
+    "status": "Passed",
+    "detail": {
+      "landscape": "844x390",
+      "portrait": "390x844",
+      "note": "Emulasi, bukan perangkat fisik."
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json",
+    "initial_observation": {
+      "landscape": "844x390",
+      "portrait": "390x844",
+      "note": "Emulasi, bukan perangkat fisik."
+    },
+    "retest": "evidence/mobile-retest.json"
+  },
+  {
+    "id": "M430-dashboard",
+    "name": "dashboard: kontrol dan isi 430px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 314,
+          "width": 250,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 322,
+          "right": 366,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 374,
+          "right": 418,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M430-watchlist",
+    "name": "watchlist: kontrol dan isi 430px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 314,
+          "width": 250,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 322,
+          "right": 366,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 374,
+          "right": 418,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Tambah Saham",
+          "left": 16,
+          "right": 148.0625,
+          "width": 132.0625,
+          "height": 44
+        },
+        {
+          "name": "Muat Ulang",
+          "left": 156.0625,
+          "right": 261.65625,
+          "width": 105.59375,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M430-detail",
+    "name": "detail: kontrol dan isi 430px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 314,
+          "width": 250,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 322,
+          "right": 366,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 374,
+          "right": 418,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Backtest teknikal",
+          "left": 16,
+          "right": 155.0625,
+          "width": 139.0625,
+          "height": 44
+        },
+        {
+          "name": "Sudah ditambahkan",
+          "left": 163.0625,
+          "right": 321.609375,
+          "width": 158.546875,
+          "height": 44
+        },
+        {
+          "name": "Sinkronkan Data",
+          "left": 16,
+          "right": 153.515625,
+          "width": 137.515625,
+          "height": 44
+        },
+        {
+          "name": "Analisis Ulang AI",
+          "left": 161.515625,
+          "right": 300.578125,
+          "width": 139.0625,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M430-backtest",
+    "name": "backtest: kontrol dan isi 430px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 314,
+          "width": 250,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 322,
+          "right": 366,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 374,
+          "right": 418,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M430-screener",
+    "name": "screener: kontrol dan isi 430px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 314,
+          "width": 250,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 322,
+          "right": 366,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 374,
+          "right": 418,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M430-history",
+    "name": "history: kontrol dan isi 430px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 314,
+          "width": 250,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 322,
+          "right": 366,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 374,
+          "right": 418,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M430-monitoring",
+    "name": "monitoring: kontrol dan isi 430px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 314,
+          "width": 250,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 322,
+          "right": 366,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 374,
+          "right": 418,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M430-plans",
+    "name": "plans: kontrol dan isi 430px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 314,
+          "width": 250,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 322,
+          "right": 366,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 374,
+          "right": 418,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M430-settings",
+    "name": "settings: kontrol dan isi 430px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 314,
+          "width": 250,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 322,
+          "right": 366,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 374,
+          "right": 418,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M430-guide",
+    "name": "guide: kontrol dan isi 430px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 314,
+          "width": 250,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 322,
+          "right": 366,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 374,
+          "right": 418,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M430-workflow",
+    "name": "Navigasi, pencarian, candle, watchlist dan kalkulator 430px",
+    "status": "Passed",
+    "detail": {
+      "selected_day": "2025-04-01",
+      "close_display": "Rp 104,9769",
+      "close_expected": "104.9769",
+      "currency": "IDR",
+      "form_20_to_2_lots": true
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M430-spacing",
+    "name": "Padding dan target sentuh tab 430px",
+    "status": "Passed",
+    "detail": {
+      "input_padding": "12px",
+      "tab": {
+        "x": 16,
+        "y": -575,
+        "width": 166.515625,
+        "height": 44
+      }
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M430-dialog",
+    "name": "Modal watchlist dan dropdown akun 430px",
+    "status": "Passed",
+    "detail": {
+      "modal": {
+        "x": 0,
+        "y": 0,
+        "width": 387,
+        "height": 234
+      },
+      "escape_focus": true
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M768-dashboard",
+    "name": "dashboard: kontrol dan isi 768px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 448,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 660,
+          "right": 704,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 712,
+          "right": 756,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M768-watchlist",
+    "name": "watchlist: kontrol dan isi 768px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 448,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 660,
+          "right": 704,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 712,
+          "right": 756,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Tambah Saham",
+          "left": 506.34375,
+          "right": 638.40625,
+          "width": 132.0625,
+          "height": 60
+        },
+        {
+          "name": "Muat Ulang",
+          "left": 646.40625,
+          "right": 752,
+          "width": 105.59375,
+          "height": 60
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M768-detail",
+    "name": "detail: kontrol dan isi 768px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 448,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 660,
+          "right": 704,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 712,
+          "right": 756,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Backtest teknikal",
+          "left": 16,
+          "right": 155.0625,
+          "width": 139.0625,
+          "height": 44
+        },
+        {
+          "name": "Sudah ditambahkan",
+          "left": 163.0625,
+          "right": 321.609375,
+          "width": 158.546875,
+          "height": 44
+        },
+        {
+          "name": "Sinkronkan Data",
+          "left": 329.609375,
+          "right": 467.125,
+          "width": 137.515625,
+          "height": 44
+        },
+        {
+          "name": "Analisis Ulang AI",
+          "left": 475.125,
+          "right": 614.1875,
+          "width": 139.0625,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M768-backtest",
+    "name": "backtest: kontrol dan isi 768px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 448,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 660,
+          "right": 704,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 712,
+          "right": 756,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M768-screener",
+    "name": "screener: kontrol dan isi 768px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 448,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 660,
+          "right": 704,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 712,
+          "right": 756,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M768-history",
+    "name": "history: kontrol dan isi 768px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 448,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 660,
+          "right": 704,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 712,
+          "right": 756,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M768-monitoring",
+    "name": "monitoring: kontrol dan isi 768px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 448,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 660,
+          "right": 704,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 712,
+          "right": 756,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M768-plans",
+    "name": "plans: kontrol dan isi 768px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 448,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 660,
+          "right": 704,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 712,
+          "right": 756,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M768-settings",
+    "name": "settings: kontrol dan isi 768px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 448,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 660,
+          "right": 704,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 712,
+          "right": 756,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M768-guide",
+    "name": "guide: kontrol dan isi 768px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Buka navigasi",
+          "left": 12,
+          "right": 56,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Cari saham",
+          "left": 64,
+          "right": 448,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 660,
+          "right": 704,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 712,
+          "right": 756,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M768-workflow",
+    "name": "Navigasi, pencarian, candle, watchlist dan kalkulator 768px",
+    "status": "Passed",
+    "detail": {
+      "selected_day": "2025-04-01",
+      "close_display": "Rp 104,9769",
+      "close_expected": "104.9769",
+      "currency": "IDR",
+      "form_20_to_2_lots": true
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M768-spacing",
+    "name": "Padding dan target sentuh tab 768px",
+    "status": "Passed",
+    "detail": {
+      "input_padding": "12px",
+      "tab": {
+        "x": 384.359375,
+        "y": -176,
+        "width": 166.515625,
+        "height": 44
+      }
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M768-dialog",
+    "name": "Modal watchlist dan dropdown akun 768px",
+    "status": "Passed",
+    "detail": {
+      "modal": {
+        "x": 0,
+        "y": 0,
+        "width": 520,
+        "height": 234
+      },
+      "escape_focus": true
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M1440-dashboard",
+    "name": "dashboard: kontrol dan isi 1440px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Cari saham",
+          "left": 284,
+          "right": 668,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 1312,
+          "right": 1356,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 1372,
+          "right": 1416,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M1440-watchlist",
+    "name": "watchlist: kontrol dan isi 1440px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Cari saham",
+          "left": 284,
+          "right": 668,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 1312,
+          "right": 1356,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 1372,
+          "right": 1416,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Tambah Saham",
+          "left": 1162.34375,
+          "right": 1294.40625,
+          "width": 132.0625,
+          "height": 60
+        },
+        {
+          "name": "Muat Ulang",
+          "left": 1302.40625,
+          "right": 1408,
+          "width": 105.59375,
+          "height": 60
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M1440-detail",
+    "name": "detail: kontrol dan isi 1440px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Cari saham",
+          "left": 284,
+          "right": 668,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 1312,
+          "right": 1356,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 1372,
+          "right": 1416,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Backtest teknikal",
+          "left": 809.8125,
+          "right": 948.875,
+          "width": 139.0625,
+          "height": 44
+        },
+        {
+          "name": "Sudah ditambahkan",
+          "left": 956.875,
+          "right": 1115.421875,
+          "width": 158.546875,
+          "height": 44
+        },
+        {
+          "name": "Sinkronkan Data",
+          "left": 1123.421875,
+          "right": 1260.9375,
+          "width": 137.515625,
+          "height": 44
+        },
+        {
+          "name": "Analisis Ulang AI",
+          "left": 1268.9375,
+          "right": 1408,
+          "width": 139.0625,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M1440-backtest",
+    "name": "backtest: kontrol dan isi 1440px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Cari saham",
+          "left": 284,
+          "right": 668,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 1312,
+          "right": 1356,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 1372,
+          "right": 1416,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M1440-screener",
+    "name": "screener: kontrol dan isi 1440px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Cari saham",
+          "left": 284,
+          "right": 668,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 1312,
+          "right": 1356,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 1372,
+          "right": 1416,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M1440-history",
+    "name": "history: kontrol dan isi 1440px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Cari saham",
+          "left": 284,
+          "right": 668,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 1312,
+          "right": 1356,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 1372,
+          "right": 1416,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M1440-monitoring",
+    "name": "monitoring: kontrol dan isi 1440px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Cari saham",
+          "left": 284,
+          "right": 668,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 1312,
+          "right": 1356,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 1372,
+          "right": 1416,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M1440-plans",
+    "name": "plans: kontrol dan isi 1440px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Cari saham",
+          "left": 284,
+          "right": 668,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 1312,
+          "right": 1356,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 1372,
+          "right": 1416,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M1440-settings",
+    "name": "settings: kontrol dan isi 1440px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Cari saham",
+          "left": 284,
+          "right": 668,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 1312,
+          "right": 1356,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 1372,
+          "right": 1416,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M1440-guide",
+    "name": "guide: kontrol dan isi 1440px",
+    "status": "Passed",
+    "detail": {
+      "docOverflow": false,
+      "header": [
+        {
+          "name": "Cari saham",
+          "left": 284,
+          "right": 668,
+          "width": 384,
+          "height": 44
+        },
+        {
+          "name": "Notifikasi",
+          "left": 1312,
+          "right": 1356,
+          "width": 44,
+          "height": 44
+        },
+        {
+          "name": "Menu akun",
+          "left": 1372,
+          "right": 1416,
+          "width": 44,
+          "height": 44
+        }
+      ],
+      "outside": []
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M1440-workflow",
+    "name": "Navigasi, pencarian, candle, watchlist dan kalkulator 1440px",
+    "status": "Passed",
+    "detail": {
+      "selected_day": "2025-07-01",
+      "close_display": "Rp 99,7111",
+      "close_expected": "99.7111",
+      "currency": "IDR",
+      "form_20_to_2_lots": true
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M1440-spacing",
+    "name": "Padding dan target sentuh tab 1440px",
+    "status": "Passed",
+    "detail": {
+      "input_padding": "12px",
+      "tab": {
+        "x": 660.359375,
+        "y": 172,
+        "width": 166.515625,
+        "height": 44
+      }
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "M1440-dialog",
+    "name": "Modal watchlist dan dropdown akun 1440px",
+    "status": "Passed",
+    "detail": {
+      "modal": {
+        "x": 0,
+        "y": 0,
+        "width": 520,
+        "height": 234
+      },
+      "escape_focus": true
+    },
+    "suite": "mobile",
+    "evidence": "evidence/mobile.json"
+  },
+  {
+    "id": "N01",
+    "name": "Hitung lambat tidak mengaktifkan hasil modal lama",
+    "status": "Passed",
+    "detail": "Response untuk10juta tidak menjadi hasil aktif untuk1juta; hitungbaru2lot.",
+    "suite": "negative",
+    "evidence": "evidence/negative.json"
+  },
+  {
+    "id": "N02",
+    "name": "Simpan lambat tidak menimpa draft terbaru",
+    "status": "Passed",
+    "detail": {
+      "draft_capital": 1000000,
+      "saved_snapshot_capital": 10000000,
+      "saved_lots": 20,
+      "active_result": false
+    },
+    "suite": "negative",
+    "evidence": "evidence/negative.json"
+  },
+  {
+    "id": "N03",
+    "name": "Kalkulator inputinvalid dan errorAPI tidak memakai hasil lama",
+    "status": "Passed",
+    "detail": "Stop>entry ditolak;503jelas; retry berhasil tanpa angka pengganti.",
+    "suite": "negative",
+    "evidence": "evidence/negative.json"
+  },
+  {
+    "id": "N04",
+    "name": "Alert sinyalBUY dapat dibuat dari UI",
+    "status": "Failed",
+    "detail": {
+      "http": 422,
+      "request": {
+        "ticker": "BBCA.JK",
+        "kind": "signal",
+        "direction": null,
+        "threshold": null,
+        "signal": "BUY"
+      },
+      "response": {
+        "detail": [
+          {
+            "type": "literal_error",
+            "loc": [
+              "body",
+              "direction"
+            ],
+            "msg": "Input should be 'above' or 'below'",
+            "input": null,
+            "ctx": {
+              "expected": "'above' or 'below'"
+            }
+          }
+        ]
+      },
+      "text": "AI Analyzer\nRiset dan pemantauan\nPanduan dan glosarium\nDashboard\nWatchlist\nSettings\nS\n\nSignal Tester\n\nFree Tier\n\nSign Out\nRiset dan pemantauan\nScreener\nRiwayat AI\nAlert dan job\nRencana transaksi\nPemantauan EOD\n\nAlert memakai penutupan harian dan worker. Evaluasi pertama membentuk baseline; notifikasi berikutnya hanya muncul saat kondisi bertransisi. Data stale atau keterkinian unknown tidak memicu alert.\n\nKode saham alert\nJenis alert\nHarga penutupan\nPerubahan dari sesi sebelumnya (%)\nSinyal AI baru\nSinyal\nBUY\nHOLD\nWAIT\nSimpan alert\n\nInput should be 'above' or 'below'\n\nNotifikasi\n\nBelum ada kejadian alert.\n\nJob analisis terakhir\n\nBelum ada job. Mulai analisis dari halaman saham."
+    },
+    "suite": "negative",
+    "evidence": "evidence/negative.json",
+    "initial_observation": "locator.selectOption: Error: strict mode violation: getByLabel('Sinyal') resolved to 2 elements:\n    1) <select class=\"w-full rounded border border-slate-600 bg-slate-900 p-3\">…</select> aka getByLabel('Jenis alertHarga')\n    2) <select name=\"signal\" class=\"w-full rounded border border-slate-600 bg-slate-900 p-3\">…</select> aka getByLabel('SinyalBUYHOLDWAIT')\n\nCall log:\n\u001b[2m  - waiting for getByLabel('Sinyal')\u001b[22m\n",
+    "retest": "evidence/signal-retest.json",
+    "retest_note": "Selector awal ambigu. Retest mengirim form sebenarnya dan mengonfirmasi422 direction=null. Ini bug aplikasi terkonfirmasi."
+  },
+  {
+    "id": "N05",
+    "name": "Response perbandingan lama tidak muncul setelah ticker diganti",
+    "status": "Failed",
+    "detail": "{\"current_ticker\":\"AAPL\",\"old_comparison_visible\":true,\"text\":\"AI Analyzer\\nRiset dan pemantauan\\nPanduan dan glosarium\\nDashboard\\nWatchlist\\nSettings\\nI\\n\\nInvestor Lanjutan\\n\\nFree Tier\\n\\nSign Out\\nRiset dan pemantauan\\nScreener\\nRiwayat AI\\nAlert dan job\\nRencana transaksi\\nRiwayat analisis\\nKode saham\\nMuat riwayat\\n\\nSkor model bukan peluang profit. Pilih dua hasil sesuai urutan perbandingan; ekspor memakai pilihan atau seluruh hasil bila tidak ada yang dipilih.\\n\\n1 hasil tersimpan\\n\\nPilih BUY · Skor 88%\\n\\n20/10/2026, 07.29.44 WIB · Data 2025-07-01\\n\\nanthropic/claude-sonnet-4-6 · Provenance real\\n\\nRingkasan aktual berdasarkan indikator.\\n\\nRevisi data: 7b630fa71b234ac73fa976624c8a1f5f8a222e6656aa8ffd30e2fd01fcf5074d\\n\\nSebelumnya\\nHalaman 1\\nBerikutnya\\nBandingkan dua hasil\\nEkspor CSV\\nEkspor PDF\\nBUY → BUY\\n\\nPerubahan skor: -10 poin persentase.\\n\\nInput/model/prompt berbeda: Tidak.\\n\\nPerubahan skor dalam poin persentase, bukan return atau peluang profit; hasil dibandingkan sesuai urutan yang dipilih.\\n\\nRingkasan aktual berdasarkan indikator.\\n\\nFixture pembanding khusus BBCA.JK, bukan AAPL\"}",
+    "suite": "negative",
+    "evidence": "evidence/negative.json"
+  },
+  {
+    "id": "N06",
+    "name": "Watchlist: catatan/filter/sorting dengan selector label aktual",
+    "status": "Passed",
+    "detail": "Urutkan harga dan filterIDX berfungsi; catatan tersimpan sesudahreload.",
+    "suite": "negative",
+    "evidence": "evidence/negative.json"
+  },
+  {
+    "id": "N07",
+    "name": "Kegagalanparsial AI mempertahankan chart, retry pulih",
+    "status": "Passed",
+    "detail": "503analisis tidak menghilangkan chart atau mengarang skor.",
+    "suite": "negative",
+    "evidence": "evidence/negative.json"
+  },
+  {
+    "id": "N08",
+    "name": "Badge data lama bertahan walau waktu fetch baru",
+    "status": "Passed",
+    "detail": "Tanggalpenutupan lama dan fetched_at baru terpisah; badge tetapData lama.",
+    "suite": "negative",
+    "evidence": "evidence/negative.json"
+  },
+  {
+    "id": "N09",
+    "name": "Sesi expired tanpa refresh kembali ke login",
+    "status": "Passed",
+    "detail": "Tidak ada loop atau loadingtanpaakhir.",
+    "suite": "negative",
+    "evidence": "evidence/negative.json"
+  },
+  {
+    "id": "B01",
+    "name": "Buat alertharga dan baselinefixture100tanpatrigger",
+    "status": "Passed",
+    "detail": {
+      "log": "controlled_fixture_events=0\n",
+      "unread": 0,
+      "fixture": "Fresh eligibility khususALERTQA.JK disimulasikan; bukan ingestionpasarnyata."
+    },
+    "suite": "notifications",
+    "evidence": "evidence/notifications.json"
+  },
+  {
+    "id": "B02",
+    "name": "Perubahanfixture100→110memicu satu notifikasi dan dedup",
+    "status": "Passed",
+    "detail": {
+      "log": "controlled_fixture_events=1\n",
+      "events": 1,
+      "value": 110
+    },
+    "suite": "notifications",
+    "evidence": "evidence/notifications.json"
+  },
+  {
+    "id": "B03",
+    "name": "Markread mengubah status event dan countAPI",
+    "status": "Passed",
+    "detail": {
+      "unread_api": 0,
+      "header_badge_still_one": true,
+      "note": "Badgeheaderpoll30detik; hasilini observasiUX, bukanlatensiproduksi."
+    },
+    "suite": "notifications",
+    "evidence": "evidence/notifications.json"
+  },
+  {
+    "id": "B04",
+    "name": "Pause/resume/delete alert tersimpan",
+    "status": "Passed",
+    "detail": "Rule dihapus; histori notifikasi dapatdibaca.",
+    "suite": "notifications",
+    "evidence": "evidence/notifications.json"
+  },
+  {
+    "id": "X01",
+    "name": "Harga/currency/tanggal konsisten dashboard-detail-watchlist",
+    "status": "Passed",
+    "detail": [
+      {
+        "ticker": "BBCA.JK",
+        "price": "Rp 99,7111",
+        "day": "2025-07-01",
+        "currency": "IDR",
+        "consistent": true
+      },
+      {
+        "ticker": "AAPL",
+        "price": "US$99,7111",
+        "day": "2025-07-01",
+        "currency": "USD",
+        "consistent": true
+      }
+    ],
+    "suite": "extra",
+    "evidence": "evidence/extra.json"
+  },
+  {
+    "id": "X02",
+    "name": "Perbandingan normal78→88 menyebut poinpersentase",
+    "status": "Passed",
+    "detail": "Normalcomparebenar; racegantiticker diuji terpisahN05.",
+    "suite": "extra",
+    "evidence": "evidence/extra.json"
+  },
+  {
+    "id": "X03",
+    "name": "Kegagalan watchlist lambat dan pemulihan",
+    "status": "Passed",
+    "detail": "Loadingterlihat;503dapatdipahami;retrymengembalikan data.",
+    "suite": "extra",
+    "evidence": "evidence/extra.json"
+  },
+  {
+    "id": "X04",
+    "name": "AlertsignalAPI valid bila direction tidakdikirim",
+    "status": "Passed",
+    "detail": {
+      "http": 201,
+      "direction": "above",
+      "note": "KontrolAPI membuktikan kegagalanUI bukan karena provider/izin."
+    },
+    "suite": "extra",
+    "evidence": "evidence/extra.json"
+  },
+  {
+    "id": "X-mobile-320",
+    "name": "Simpan/edit rencana dan jalankanbacktest pada320px",
+    "status": "Passed",
+    "detail": "Formrencana dan backtestselesai padalayar320px;fixturebacktestnoltrade.",
+    "suite": "extra",
+    "evidence": "evidence/extra.json"
+  },
+  {
+    "id": "X-mobile-390",
+    "name": "Simpan/edit rencana dan jalankanbacktest pada390px",
+    "status": "Passed",
+    "detail": "Formrencana dan backtestselesai padalayar390px;fixturebacktestnoltrade.",
+    "suite": "extra",
+    "evidence": "evidence/extra.json"
+  },
+  {
+    "id": "F01",
+    "name": "Oracle independen dua transaksi dengan biaya/slippage pada engine target",
+    "status": "Passed",
+    "detail": {
+      "oracle": [
+        {
+          "quantity": 99,
+          "buy": 100.1,
+          "sell": 119.88,
+          "profit_pct": 19.401317962756526
+        },
+        {
+          "quantity": 99,
+          "buy": 120.12,
+          "sell": 89.91,
+          "profit_pct": -25.374176273277172
+        }
+      ],
+      "final_cash_expected": 8904.0898,
+      "final_equity": 8904.0898,
+      "fees": 63.3402,
+      "drawdown": 25.329912,
+      "win_rate_pct": 50.0
+    },
+    "suite": "financial-sample",
+    "evidence": "evidence/financial-sample.json"
+  },
+  {
+    "id": "F02",
+    "name": "Renderdua trade ledger dan persen di320/390/768/1440px",
+    "status": "Passed",
+    "detail": "Responsrenderer terkontrol dari engine targetF01;winrate50%,dua trade,scrolltabeltersedia. Bukan backtestprovider nyata.",
+    "suite": "filled-backtest",
+    "evidence": "evidence/filled-backtest.json"
+  },
+  {
+    "id": "G01",
+    "name": "Integrasi AI Anthropic/Gemini nyata",
+    "status": "Blocked",
+    "detail": "Tidak tersedia kredensial siap pakai; hasilAI pada audit berasal fixture, tidak ada biayaAPI.",
+    "suite": "limitations",
+    "evidence": "evidence/market-status.json"
+  },
+  {
+    "id": "G02",
+    "name": "Integrasi pasar Yahoo/EODHD nyata IDX+AS",
+    "status": "Blocked",
+    "detail": "Sumberpasar nyata tidak tersedia dalam konfigurasi runtime; OHLCV berasal fixture130bar.",
+    "suite": "limitations",
+    "evidence": "evidence/market-status.json"
+  },
+  {
+    "id": "G03",
+    "name": "Ingestion/trigger alert pasar nyata",
+    "status": "Blocked",
+    "detail": "Kalender belum terverifikasi dan ingestion nonaktif. Crossing yang diuji adalah fixture terkontrol.",
+    "suite": "limitations",
+    "evidence": "evidence/market-status.json"
+  },
+  {
+    "id": "G04",
+    "name": "Email reset nyata",
+    "status": "Blocked",
+    "detail": "SMTP tidak dikonfigurasi; tidak mengirim email nyata.",
+    "suite": "limitations",
+    "evidence": "evidence/market-status.json"
+  },
+  {
+    "id": "G05",
+    "name": "Android/iPhone fisik",
+    "status": "Blocked",
+    "detail": "Hanya emulasi Chromium dan CDP touch tersedia.",
+    "suite": "limitations",
+    "evidence": "evidence/market-status.json"
+  },
+  {
+    "id": "T01",
+    "name": "Pilot manusia investor pemula/trader dan screen reader lengkap",
+    "status": "Not Tested",
+    "detail": "Persona disimulasikan auditor. Tidak ada klaim usability lima peserta atau audit screen reader manual lengkap.",
+    "suite": "limitations",
+    "evidence": "evidence/market-status.json"
+  },
+  {
+    "id": "T02",
+    "name": "Firefox/WebKit, virtual keyboard fisik dan variasi zoom penuh",
+    "status": "Not Tested",
+    "detail": "Cakupanbrowser Chromium154; ukuranviewport/orientasi diuji, bukan seluruhperangkat/OS.",
+    "suite": "limitations",
+    "evidence": "evidence/market-status.json"
+  },
+  {
+    "id": "T03",
+    "name": "Staging, soak tujuh hari, load dan PostgreSQL pada audit ini",
+    "status": "Not Tested",
+    "detail": "Tidak mengadopsi hasilbenchmark historis sebagai hasilrun ini; tidak melakukan load agresif.",
+    "suite": "limitations",
+    "evidence": "evidence/market-status.json"
+  },
+  {
+    "id": "T04",
+    "name": "Validitas pola Wyckoff/SMC pada dataset pasar nyata",
+    "status": "Not Tested",
+    "detail": "Panel OHLCV/EMA/RSI/MACD diuji; polaWyckoff/SMC aktual dan kualitasalasan AI memerlukan data/provider nyata.",
+    "suite": "limitations",
+    "evidence": "evidence/market-status.json"
+  }
+]

@@ -1,0 +1,9 @@
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 3d9f007bf6ad, Alembic migration script template.
+INFO  [alembic.runtime.migration] Running upgrade 3d9f007bf6ad -> 0710d5281e45, Alembic migration script template.
+INFO  [alembic.runtime.migration] Running upgrade 0710d5281e45 -> abcd1234efgh, add refresh tokens table
+INFO  [alembic.runtime.migration] Running upgrade abcd1234efgh -> ijkl5678mnop, add analyzed by to ai_analyses
+INFO  [alembic.runtime.migration] Running upgrade ijkl5678mnop -> r1_integrity, Add provenance and durable quota reservations without rewriting existing data.
+INFO  [alembic.runtime.migration] Running upgrade r1_integrity -> r2_product, Add provider provenance and durable product workflows; preserve legacy users/data.
+INFO  [alembic.runtime.migration] Running upgrade r2_product -> r3_read_paths, Index the per-stock session reads; no data or column changes.
