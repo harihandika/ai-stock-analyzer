@@ -35,6 +35,7 @@ interface StockChartProps {
   width?: number;
   height?: number;
   currency?: string | null;
+  focusDate?: string | null;
 }
 
 export function StockChart({
@@ -42,6 +43,7 @@ export function StockChart({
   width = 0,
   height = 400,
   currency,
+  focusDate,
 }: StockChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const rsiContainerRef = useRef<HTMLDivElement>(null);
@@ -51,7 +53,10 @@ export function StockChart({
     source: ChartData[];
     point: ChartData;
   } | null>(null);
-  const legendData = hover?.source === data ? hover.point : data.at(-1) || null;
+  const legendData =
+    hover?.source === data
+      ? hover.point
+      : data.find((point) => point.time === focusDate) || data.at(-1) || null;
   const hasRsi = data.some((d) => d.rsi != null);
   const hasMacd = data.some((d) => d.macd != null);
 

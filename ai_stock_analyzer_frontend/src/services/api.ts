@@ -26,7 +26,8 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const config = error.config as
-      (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | undefined;
     const authRequest = /\/auth\/(token|register|refresh|logout)$/.test(
       config?.url || "",
     );
@@ -86,7 +87,29 @@ export function errorMessage(error: unknown): string {
     const detail = error.response?.data?.detail;
     if (typeof detail === "string") return detail;
     if (detail?.message) return detail.message;
-    if (Array.isArray(detail)) return detail.map((item) => item.msg).join("; ");
+    if (Array.isArray(detail)) {
+      const labels: Record<string, string> = {
+        direction: "arah alert",
+        threshold: "ambang harga/perubahan",
+        signal: "sinyal",
+        kind: "jenis alert",
+        ticker: "kode saham",
+        rsi_min: "RSI minimum",
+        rsi_max: "RSI maksimum",
+      };
+      return detail
+        .map((item) => {
+          const field = item.loc?.at(-1);
+          return labels[field]
+            ? "Periksa " +
+                labels[field] +
+                ": nilai belum sesuai ketentuan atau pilihan yang tersedia."
+            : typeof item.msg === "string"
+              ? item.msg.replace(/^Value error, /, "")
+              : "Periksa input yang belum sesuai ketentuan.";
+        })
+        .join("; ");
+    }
     return error.code === "ECONNABORTED"
       ? "Permintaan melewati batas waktu."
       : "Layanan tidak dapat dihubungi. Silakan coba lagi.";

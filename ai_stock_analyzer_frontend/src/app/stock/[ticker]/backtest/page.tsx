@@ -168,12 +168,12 @@ export default function BacktestPage() {
           </label>
         )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Configuration Form */}
+          {/* Pengaturan simulasi Form */}
           <div className="lg:col-span-1">
             <div className="bg-dark-800/50 backdrop-blur-md border border-dark-600 rounded-xl p-6 sticky top-24">
               <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
                 <Settings width={20} height={20} className="text-primary-400" />
-                Configuration
+                Pengaturan simulasi
               </h2>
 
               <form onSubmit={handleRunBacktest} className="space-y-6">
@@ -182,7 +182,7 @@ export default function BacktestPage() {
                     htmlFor="backtest-years"
                     className="block text-sm font-medium text-gray-300 mb-2"
                   >
-                    Period (Years): {years}
+                    Periode (tahun): {years}
                   </label>
                   <input
                     id="backtest-years"
@@ -205,7 +205,7 @@ export default function BacktestPage() {
                     className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
                   >
                     <Target width={16} height={16} className="text-green-400" />
-                    Target Profit (%)
+                    Target keuntungan (%)
                   </label>
                   <input
                     id="backtest-target"
@@ -231,7 +231,7 @@ export default function BacktestPage() {
                       height={16}
                       className="text-red-400"
                     />
-                    Stop Loss (%)
+                    Batas kerugian (%)
                   </label>
                   <input
                     id="backtest-stop"
@@ -247,8 +247,24 @@ export default function BacktestPage() {
 
                 <p className="text-sm text-slate-400">
                   Modal memakai currency instrumen. Biaya 0 adalah asumsi awal;
-                  10 bps = 0,1%. Lot mengikuti input.
+                  1 bps = 0,01%; 10 bps = 0,1%. Lot mengikuti input.
                 </p>
+                <details className="text-sm text-slate-300 space-y-2">
+                  <summary className="cursor-pointer min-h-11 py-2">
+                    Memahami hasil dan biaya
+                  </summary>
+                  <p>
+                    Tingkat kemenangan adalah persentase transaksi yang untung.
+                    Rata-rata hasil mencakup seluruh transaksi. Penurunan modal
+                    maksimum mengukur turunnya equity dari puncaknya, bukan
+                    hanya kerugian satu transaksi.
+                  </p>
+                  <p>
+                    Fee adalah biaya transaksi; slippage adalah asumsi selisih
+                    harga eksekusi. Hasil historis tidak menjamin profit di masa
+                    depan.
+                  </p>
+                </details>
                 {(
                   [
                     ["initial_capital", "Modal awal"],
@@ -289,7 +305,7 @@ export default function BacktestPage() {
                   ) : (
                     <>
                       <Play width={18} height={18} />
-                      Run Backtest
+                      Jalankan backtest
                     </>
                   )}
                 </button>
@@ -316,8 +332,8 @@ export default function BacktestPage() {
                   className="text-dark-500 mb-4 opacity-50"
                 />
                 <p className="text-lg">
-                  Configure your strategy parameters and run the backtest to see
-                  the results.
+                  Atur parameter strategi lalu jalankan backtest untuk melihat
+                  hasil.
                 </p>
               </div>
             )}
@@ -383,7 +399,9 @@ export default function BacktestPage() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                   <div className="bg-dark-800/50 backdrop-blur-md border border-dark-600 rounded-xl p-4">
-                    <p className="text-sm text-gray-400 mb-1">Win Rate</p>
+                    <p className="text-sm text-gray-400 mb-1">
+                      Tingkat kemenangan
+                    </p>
                     <p
                       className={clsx(
                         "text-2xl font-bold",
@@ -396,11 +414,15 @@ export default function BacktestPage() {
                     </p>
                   </div>
                   <div className="bg-dark-800/50 backdrop-blur-md border border-dark-600 rounded-xl p-4">
-                    <p className="text-sm text-gray-400 mb-1">Total Trades</p>
+                    <p className="text-sm text-gray-400 mb-1">
+                      Jumlah transaksi
+                    </p>
                     <p className="text-2xl font-bold">{result.total_trades}</p>
                   </div>
                   <div className="bg-dark-800/50 backdrop-blur-md border border-dark-600 rounded-xl p-4">
-                    <p className="text-sm text-gray-400 mb-1">Avg Profit</p>
+                    <p className="text-sm text-gray-400 mb-1">
+                      Rata-rata hasil
+                    </p>
                     <p
                       className={clsx(
                         "text-2xl font-bold",
@@ -413,29 +435,33 @@ export default function BacktestPage() {
                     </p>
                   </div>
                   <div className="bg-dark-800/50 backdrop-blur-md border border-dark-600 rounded-xl p-4">
-                    <p className="text-sm text-gray-400 mb-1">Max Drawdown</p>
+                    <p className="text-sm text-gray-400 mb-1">
+                      Penurunan modal maksimum
+                    </p>
                     <p className="text-2xl font-bold text-red-400">
                       {result.max_drawdown_pct.toFixed(2)}%
                     </p>
                   </div>
                 </div>
 
-                {/* Trade History */}
-                <h3 className="text-xl font-semibold mb-4">Trade History</h3>
+                {/* Riwayat transaksi */}
+                <h3 className="text-xl font-semibold mb-4">
+                  Riwayat transaksi
+                </h3>
                 <div className="bg-dark-800/50 backdrop-blur-md border border-dark-600 rounded-xl overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="bg-dark-700/50 text-gray-300 text-sm border-b border-dark-600">
-                          <th className="p-4 font-medium">Buy Date</th>
-                          <th className="p-4 font-medium">Sell Date</th>
+                          <th className="p-4 font-medium">Tanggal beli</th>
+                          <th className="p-4 font-medium">Tanggal jual</th>
                           <th className="p-4 font-medium text-right">
-                            Profit %
+                            Hasil (%)
                           </th>
                           <th className="p-4 font-medium text-center">
                             Status
                           </th>
-                          <th className="p-4 font-medium">Reason</th>
+                          <th className="p-4 font-medium">Alasan keluar</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-dark-600/50">
@@ -466,7 +492,11 @@ export default function BacktestPage() {
                                       : "bg-red-500/20 text-red-400 border border-red-500/30",
                                   )}
                                 >
-                                  {trade.status}
+                                  {trade.status === "WIN"
+                                    ? "Untung"
+                                    : trade.status === "BREAKEVEN"
+                                      ? "Impas"
+                                      : "Rugi"}
                                 </span>
                               </td>
                               <td className="p-4 text-sm text-gray-400">
@@ -480,7 +510,7 @@ export default function BacktestPage() {
                               colSpan={5}
                               className="p-8 text-center text-gray-500"
                             >
-                              No trades executed based on this strategy.
+                              Tidak ada transaksi yang memenuhi strategi ini.
                             </td>
                           </tr>
                         )}

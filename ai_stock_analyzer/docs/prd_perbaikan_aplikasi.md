@@ -1,6 +1,6 @@
 # PRD dan Rencana Perbaikan AI Stock Analyzer
 
-Tindak lanjut aktif setelah merge `d17f260` ke `main`: [PRD 1.2 pasca-audit](prd_perbaikan_pasca_audit_d17f260.md), berdasarkan [audit terbaru sesi Edit ai-stock-analyzer](review_audit_d17f260_2026-10-19.md). Gunakan dokumen tersebut untuk empat bug baru dan penerimaan operasional. PRD 1.1 di bawah tetap menjadi acuan kontrak dan jejak perencanaan sebelumnya.
+Tindak lanjut saat ini: [PRD 1.3 perbaikan audit dan kesiapan pilot](prd_kesiapan_pilot_8d9645d.md), berdasarkan kandidat `8d9645d` dan [paket audit terbaru pada 9c36fcf](review_audit_8d9645d_2026-10-20.md) yang sudah dibaca. Prioritas: BUG-005–007, peningkatan UX, lalu penerimaan operasional. [PRD 1.2 pasca-audit](prd_perbaikan_pasca_audit_d17f260.md) dan [audit d17f260](review_audit_d17f260_2026-10-19.md) tetap menjadi jejak empat bug yang sudah fixed and verified. PRD 1.1 di bawah tetap menjadi acuan kontrak dan perencanaan sebelumnya.
 
 Versi: 1.1 — tindak lanjut feedback sesi “Edit ai-stock-analyzer”
 

@@ -1393,6 +1393,9 @@ components:
             $ref: '#/components/schemas/AlertResponse'
           type: array
           title: Data
+        worker:
+          type: object
+          title: Worker
       type: object
       required:
       - data
@@ -1448,6 +1451,31 @@ components:
         baseline_established:
           type: boolean
           title: Baseline Established
+        evaluation_state:
+          type: string
+          enum:
+          - unverified
+          - paused
+          - notifications_disabled
+          - waiting_for_data
+          - waiting_for_analysis
+          - waiting_for_previous_session
+          - waiting_for_worker
+          - waiting_for_baseline
+          - ready
+          title: Evaluation State
+          default: unverified
+        market_as_of:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Market As Of
+        data_state:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Data State
       additionalProperties: false
       type: object
       required:

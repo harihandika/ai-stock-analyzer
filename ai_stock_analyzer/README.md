@@ -2,7 +2,7 @@
 
 Perbaikan R1 tersedia pada checkout: [laporan implementasi dan cara menjalankan](docs/implementasi_r1.md), [PRD perbaikan](docs/prd_perbaikan_aplikasi.md). Gunakan Alembic untuk schema baru/upgrade; jangan mengandalkan create_tables.py untuk memigrasikan database lama.
 
-Platform analisis saham berbasis AI yang menggunakan **Volume Price Analysis (VPA)**, **Wyckoff Theory**, dan **Smart Money Concepts (SMC)** untuk mengidentifikasi peluang investasi dengan probabilitas tinggi.
+Platform riset saham yang menggabungkan data teknikal, **Volume Price Analysis (VPA)**, **Wyckoff Theory**, **Smart Money Concepts (SMC)**, analisis AI, watchlist dan rencana transaksi.
 
 ---
 
@@ -11,14 +11,14 @@ Platform analisis saham berbasis AI yang menggunakan **Volume Price Analysis (VP
 | Layer | Teknologi |
 |---|---|
 | **Backend API** | Python 3.12, FastAPI |
-| **Frontend UI** | Next.js 14 (App Router), React, Tailwind CSS, Lucide Icons |
+| **Frontend UI** | Next.js 16.2.10 (App Router), React 19, Tailwind CSS 4, Lucide Icons |
 | **Database** | PostgreSQL / SQLite (Development) |
 | **ORM & Migration** | SQLAlchemy 2.0 (Async), Alembic |
 | **Authentication** | JWT (python-jose), bcrypt (passlib), One-Time Refresh Token Rotation |
 | **Cache & Observability** | Redis (dengan InMemory Fallback), Correlation ID Middleware |
-| **AI Engine** | Claude 3.5 Sonnet (Anthropic SDK) |
+| **AI Engine** | Anthropic atau Gemini, dipilih melalui konfigurasi server |
 | **Analysis Engine** | pandas, pandas-ta, scipy, yfinance |
-| **Background Worker** | Celery + Redis |
+| **Background Worker** | Worker produk dengan antrean database; Celery lama terpisah |
 
 ---
 
@@ -45,9 +45,9 @@ Platform analisis saham berbasis AI yang menggunakan **Volume Price Analysis (VP
 
 ### 1. Prerequisites
 - Python 3.12
-- Node.js 18+ (untuk Frontend Next.js)
+- Node.js 24 (sesuai CI)
 - Docker Desktop (opsional untuk PostgreSQL + Redis)
-- Akun Anthropic (untuk API Key Claude)
+- API key provider AI yang dipilih untuk analisis nyata; kredensial/paket pasar sesuai sumber dan hak penggunaan. Pengujian fixture tidak memerlukannya.
 
 ### 2. Backend Setup (`ai_stock_analyzer`)
 
@@ -65,6 +65,11 @@ source .venv/bin/activate
 
 # Install dependencies
 uv pip install -r requirements.txt
+
+# Siapkan .env dari .env.example bila belum ada; isi konfigurasi database
+# dan secret melalui environment privat. Pertahankan file yang sudah ada.
+# Terapkan migrasi sebelum API/worker dijalankan.
+.venv/bin/alembic upgrade head
 
 # Jalankan server FastAPI
 uvicorn app.main:app --reload --port 8000
@@ -103,6 +108,12 @@ cd ai_stock_analyzer
 - **[CHANGELOG.md](CHANGELOG.md)**: Catatan rilis lengkap dari Sprint 1 hingga Sprint 10.
 - **[OpenAPI Spec](docs/openapi.yaml)**: Kontrak API yang diekspor dari runtime.
 ## Implementasi tindak lanjut PRD
+
+Rencana lanjutan: [PRD 1.3 perbaikan audit dan kesiapan pilot](docs/prd_kesiapan_pilot_8d9645d.md), berdasarkan kandidat `8d9645d` dan [audit yang dipublikasikan pada 9c36fcf](docs/review_audit_8d9645d_2026-10-20.md). Prioritas awal: konteks perbandingan, alert sinyal dan pemulihan filter screener. [Catatan baseline](docs/status_baseline_8d9645d_2026-10-20.md) membedakan pekerjaan selesai, penerimaan yang masih terbuka dan status branch.
+
+Operasional kandidat berikutnya: [runbook pilot](docs/operasional_pilot.md). Migrasi `r4_operations` menambahkan heartbeat worker dan riwayat ingestion; jalankan Alembic sebelum memperbarui API/worker. CLI status membedakan heartbeat/progres dari kredensial atau koneksi provider.
+
+Pelaksanaan PRD 1.3, bukti tes/migrasi/restore dan gerbang eksternal yang masih terbuka dicatat pada [laporan 20 Oktober](docs/implementasi_prd_1_3_20261020.md). Gunakan [lembar penerimaan pilot](docs/pilot_acceptance_template.md) untuk pengukuran perangkat/responden dan layanan nyata.
 
 Rencana setelah audit commit `d17f260`: [PRD 1.2 pasca-audit](docs/prd_perbaikan_pasca_audit_d17f260.md). Perbaikan kalkulator/header/CSS/chart, formulir bertahap, informasi data serta alat operasional dicatat dalam [laporan implementasi pasca-audit](docs/implementasi_pasca_audit_20261019.md), termasuk gerbang provider/email/pilot yang belum selesai.
 

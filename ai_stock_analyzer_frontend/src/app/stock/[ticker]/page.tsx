@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AIReportCard } from "@/components/stock/AIReportCard";
 import { DataStatus } from "@/components/stock/DataStatus";
+import { PatternEvidence } from "@/components/stock/PatternEvidence";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { ChartData } from "@/components/charts/StockChart";
@@ -61,6 +62,8 @@ function StockDetail({ ticker }: { ticker: string }) {
   const [loading, setLoading] = useState(true);
   const [stage, setStage] = useState("");
   const [range, setRange] = useState("1Y");
+  const [focusDate, setFocusDate] = useState<string | null>(null);
+  const [focusRequest, setFocusRequest] = useState(0);
   const [adding, setAdding] = useState(false);
   const load = useCallback(
     (signal?: AbortSignal) => {
@@ -347,7 +350,7 @@ function StockDetail({ ticker }: { ticker: string }) {
                     <button
                       key={r}
                       aria-pressed={range === r}
-                      className="border border-slate-600 rounded px-3 py-2"
+                      className="min-h-11 border border-slate-600 rounded px-3 py-2"
                       onClick={() => setRange(r)}
                     >
                       {r}
@@ -363,7 +366,9 @@ function StockDetail({ ticker }: { ticker: string }) {
                   <p role="status">Memuat grafik…</p>
                 ) : visible.length ? (
                   <StockChart
+                    key={range + (focusDate || "") + focusRequest}
                     data={visible}
+                    focusDate={focusDate}
                     currency={quote?.metadata.currency || metadata?.currency}
                   />
                 ) : (
@@ -376,6 +381,17 @@ function StockDetail({ ticker }: { ticker: string }) {
           </div>
           <AIReportCard analysis={analysis} />
         </div>
+        <PatternEvidence
+          analysis={analysis}
+          canSelect={visible.some(
+            (point) =>
+              point.time === analysis?.technical_indicators?.trading_date,
+          )}
+          onSelect={(date) => {
+            setFocusDate(date);
+            setFocusRequest((n) => n + 1);
+          }}
+        />
       </div>
     </AppLayout>
   );

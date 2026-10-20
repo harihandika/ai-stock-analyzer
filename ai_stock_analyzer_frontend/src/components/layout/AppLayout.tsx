@@ -18,6 +18,7 @@ import Link from "next/link";
 import clsx from "clsx";
 import { apiClient, errorMessage } from "@/services/api";
 import { Stock } from "@/services/market";
+import { NOTIFICATIONS_UPDATED } from "@/services/notifications";
 import styles from "./layout.module.css";
 
 interface AppLayoutProps {
@@ -40,29 +41,55 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [unread, setUnread] = useState(0);
+  const [notificationState, setNotificationState] = useState({
+    user: "",
+    unread: 0,
+  });
+  const unread =
+    notificationState.user === user?.id ? notificationState.unread : 0;
   useEffect(() => {
     if (!isAuthenticated) return;
     let active = true;
+    let revision = 0;
     const controller = new AbortController();
-    const refresh = () =>
-      apiClient
+    const refresh = () => {
+      const snapshot = ++revision;
+      return apiClient
         .get("/notifications", {
           signal: controller.signal,
           skipAuthRefresh: true,
         })
         .then((r) => {
-          if (active) setUnread(r.data.unread);
+          if (active && snapshot === revision)
+            setNotificationState({
+              user: user?.id || "",
+              unread: r.data.unread,
+            });
         })
         .catch(() => undefined);
+    };
+    const changed = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (
+        active &&
+        detail?.userId === user?.id &&
+        Number.isSafeInteger(detail.unread) &&
+        detail.unread >= 0
+      ) {
+        revision++;
+        setNotificationState({ user: detail.userId, unread: detail.unread });
+      }
+    };
+    window.addEventListener(NOTIFICATIONS_UPDATED, changed);
     void refresh();
     const timer = setInterval(refresh, 30000);
     return () => {
       active = false;
       controller.abort();
       clearInterval(timer);
+      window.removeEventListener(NOTIFICATIONS_UPDATED, changed);
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.id]);
 
   const searchRef = useRef<HTMLFormElement>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -486,7 +513,9 @@ export function AppLayout({ children }: AppLayoutProps) {
         </header>
 
         {/* Scrollable Page Content */}
-        <div className={styles.pageContent}>{children}</div>
+        <div className={styles.pageContent} data-page-scroll>
+          {children}
+        </div>
       </main>
     </div>
   );

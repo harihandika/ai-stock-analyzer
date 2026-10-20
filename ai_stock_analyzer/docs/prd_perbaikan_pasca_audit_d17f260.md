@@ -1,5 +1,7 @@
 # PRD 1.2 — Perbaikan pasca-audit AI Stock Analyzer
 
+Tindak lanjut 20 Oktober 2026: [PRD 1.3 perbaikan audit dan kesiapan pilot](prd_kesiapan_pilot_8d9645d.md), berdasarkan [audit terbaru 8d9645d](review_audit_8d9645d_2026-10-20.md) yang sudah dibaca. Empat bug lama fixed and verified; BUG-005–007 dan penerimaan operasional menjadi tindak lanjut. Persyaratan di bawah tetap menjadi acuan historis implementasi PRD 1.2.
+
 Tanggal: 19 Oktober 2026, Asia/Jakarta (WIB). Status: **rencana implementasi**, belum merupakan perbaikan source atau keputusan rilis. Baseline: `d17f260`, sudah berada di `main`.
 
 Pembaruan pelaksanaan: [laporan implementasi pasca-audit](implementasi_pasca_audit_20261019.md) mencatat perbaikan PA-01–06, CLI ingestion/status, pengujian dan gerbang nyata/manual yang masih terbuka. Acceptance dan estimasi di bawah tetap menjadi acuan rencana, bukan klaim semua gerbang selesai.

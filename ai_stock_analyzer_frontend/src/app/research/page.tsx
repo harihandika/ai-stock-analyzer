@@ -1,26 +1,36 @@
 "use client";
 
 import {
+  cloneElement,
+  isValidElement,
   FormEvent,
+  ReactElement,
   ReactNode,
   Suspense,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { AnalysisHistory } from "@/components/research/AnalysisHistory";
+import {
+  Criteria,
+  readScreener,
+  screenerParams,
+} from "@/services/screener-state";
+import { publishUnread } from "@/services/notifications";
 import { TradePlans } from "@/components/TradePlans";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { DataStatus } from "@/components/stock/DataStatus";
 import { apiClient, errorMessage } from "@/services/api";
-import { downloadResult } from "@/services/download";
 import { MarketMetadata, formatPrice } from "@/services/market";
 
 const inputClass = "w-full rounded border border-slate-600 bg-slate-900 p-3";
 const actionClass =
   "inline-flex min-h-11 items-center justify-center rounded border border-sky-500 px-4 py-2 disabled:opacity-50";
-type Criteria = Record<string, string | number | boolean | null>;
 type Preset = {
   id: string;
   name: string;
@@ -38,19 +48,6 @@ type ScreenRow = {
   volume: number | null;
   metadata: MarketMetadata;
 };
-type AnalysisRow = {
-  id: string;
-  ticker: string;
-  generated_at: string;
-  analysis_date: string;
-  recommendation: string | null;
-  confidence_score: number | null;
-  ai_summary: string | null;
-  provider_name: string;
-  model_name: string | null;
-  data_revision: string | null;
-  provenance: string;
-};
 
 function Field({
   name,
@@ -67,11 +64,23 @@ function Field({
   required?: boolean;
   children?: ReactNode;
 }) {
+  const id = "research-field-" + name;
+  const labelId = id + "-label";
   return (
-    <label className="block space-y-1">
-      <span>{label}</span>
-      {children || (
+    <label className="block space-y-1" htmlFor={id}>
+      <span id={labelId}>{label}</span>
+      {isValidElement(children) ? (
+        cloneElement(
+          children as ReactElement<{
+            id: string;
+            name: string;
+            "aria-labelledby": string;
+          }>,
+          { id, name, "aria-labelledby": labelId },
+        )
+      ) : (
         <input
+          id={id}
           name={name}
           type={type}
           defaultValue={defaultValue}
@@ -107,9 +116,15 @@ const dateLabel = (value: string) =>
   " WIB";
 
 function Screener() {
-  const [criteria, setCriteria] = useState<Criteria>({});
-  const [page, setPage] = useState(1);
-  const [result, setResult] = useState<{
+  const params = useSearchParams();
+  const { user } = useAuth();
+  const {
+    criteria,
+    page,
+    error: urlError,
+  } = readScreener(new URLSearchParams(params.toString()));
+  const [loaded, setResult] = useState<{
+    requestKey: string;
     data: ScreenRow[];
     pagination: { total: number; total_pages: number };
     coverage: {
@@ -122,26 +137,80 @@ function Screener() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [presetName, setPresetName] = useState("");
+  const [notice, setNotice] = useState("");
+  const restored = useRef("");
   const encoded = asParams(criteria);
+  const requestKey = (user?.id || "") + ":" + encoded + "&page=" + page;
+  const result = !urlError && loaded?.requestKey === requestKey ? loaded : null;
+  const navigate = (values: Criteria, nextPage = 1) => {
+    const next = screenerParams(
+      new URLSearchParams(params.toString()),
+      values,
+      nextPage,
+    );
+    const checked = readScreener(next);
+    if (checked.error) {
+      setError(checked.error);
+      return;
+    }
+    setError("");
+    setNotice("");
+    window.history.pushState(null, "", "?" + next.toString());
+  };
   useEffect(() => {
     const c = new AbortController();
+    if (urlError) return () => c.abort();
     apiClient
       .get("/screener?" + encoded + "&page=" + page + "&per_page=6", {
         signal: c.signal,
       })
       .then((r) => {
-        setResult(r.data);
+        if (c.signal.aborted) return;
+        const last = Math.max(1, r.data.pagination.total_pages);
+        if (page > last) {
+          setNotice(
+            "Cakupan data berubah; halaman disesuaikan ke hasil yang tersedia.",
+          );
+          const next = screenerParams(
+            new URLSearchParams(window.location.search),
+            Object.fromEntries(new URLSearchParams(encoded)),
+            last,
+          );
+          window.history.replaceState(null, "", "?" + next.toString());
+          return;
+        }
+        setResult({ ...r.data, requestKey });
         setError("");
       })
       .catch((e) => {
         if (!c.signal.aborted) setError(errorMessage(e));
       });
     return () => c.abort();
-  }, [encoded, page]);
+  }, [encoded, page, requestKey, urlError]);
+  useEffect(() => {
+    if (!result || restored.current === requestKey) return;
+    const saved = window.history.state?.stockScreenerReturn;
+    if (!saved || saved.query !== requestKey || saved.user !== user?.id) return;
+    const frame = requestAnimationFrame(() => {
+      const anchor = document.getElementById("screener-" + saved.anchor);
+      const container =
+        document.querySelector<HTMLElement>("[data-page-scroll]");
+      if (anchor) {
+        anchor.querySelector("a")?.focus({ preventScroll: true });
+        if (container && Number.isFinite(saved.top))
+          container.scrollTop = saved.top;
+      } else
+        setNotice(
+          "Kandidat sebelumnya tidak ada dalam hasil terbaru. Filter tetap dipertahankan.",
+        );
+      restored.current = requestKey;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [result, requestKey, user?.id]);
   const loadPresets = useCallback(
     () =>
       apiClient.get("/screener/presets").then((r) => setPresets(r.data.data)),
-    [],
+    [setPresets],
   );
   useEffect(() => {
     void loadPresets().catch((e) => setError(errorMessage(e)));
@@ -152,8 +221,7 @@ function Screener() {
     new FormData(e.currentTarget).forEach((v, k) => {
       if (v !== "") values[k] = String(v);
     });
-    setPage(1);
-    setCriteria(values);
+    navigate(values);
   };
   const save = async () => {
     setBusy(true);
@@ -262,8 +330,16 @@ function Screener() {
           Hanya data belum lengkap
         </label>
         <button className={actionClass}>Terapkan filter</button>
+        <button
+          type="button"
+          className={actionClass}
+          onClick={() => navigate({})}
+        >
+          Reset filter
+        </button>
       </form>
-      <Status error={error} busy={busy} />
+      <Status error={urlError || error} busy={busy} />
+      {notice && <p role="status">{notice}</p>}
       {result ? (
         <>
           <p role="status">
@@ -275,11 +351,29 @@ function Screener() {
             {result.data.map((r) => (
               <article
                 key={r.ticker}
+                id={"screener-" + r.ticker}
                 className="rounded border border-slate-700 p-4 space-y-2"
               >
                 <Link
                   className="text-xl underline"
                   href={"/stock/" + encodeURIComponent(r.ticker)}
+                  onNavigate={() => {
+                    const container =
+                      document.querySelector<HTMLElement>("[data-page-scroll]");
+                    window.history.replaceState(
+                      {
+                        ...window.history.state,
+                        stockScreenerReturn: {
+                          query: requestKey,
+                          user: user?.id,
+                          anchor: r.ticker,
+                          top: container?.scrollTop || 0,
+                        },
+                      },
+                      "",
+                      window.location.href,
+                    );
+                  }}
                 >
                   {r.ticker} · {r.company_name}
                 </Link>
@@ -306,7 +400,7 @@ function Screener() {
             <button
               className={actionClass}
               disabled={page === 1}
-              onClick={() => setPage((v) => v - 1)}
+              onClick={() => navigate(criteria, page - 1)}
             >
               Sebelumnya
             </button>
@@ -316,14 +410,14 @@ function Screener() {
             <button
               className={actionClass}
               disabled={page >= result.pagination.total_pages}
-              onClick={() => setPage((v) => v + 1)}
+              onClick={() => navigate(criteria, page + 1)}
             >
               Berikutnya
             </button>
           </div>
         </>
       ) : (
-        <p role="status">Memuat screener…</p>
+        !urlError && !error && <p role="status">Memuat screener…</p>
       )}
       <div className="space-y-3 border-t border-slate-700 pt-4">
         <label className="block">
@@ -348,8 +442,7 @@ function Screener() {
               className={actionClass}
               disabled={p.schema_version !== 1}
               onClick={() => {
-                setCriteria(p.criteria);
-                setPage(1);
+                navigate(p.criteria);
               }}
             >
               {p.name}
@@ -375,199 +468,6 @@ function Screener() {
   );
 }
 
-function History({ initialTicker }: { initialTicker: string }) {
-  const [ticker, setTicker] = useState(initialTicker);
-  const [activeTicker, setActiveTicker] = useState(initialTicker);
-  const [rows, setRows] = useState<AnalysisRow[]>([]);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [comparison, setComparison] = useState<{
-    confidence_change_points: number | null;
-    inputs_differ: boolean;
-    explanation: string;
-    first: AnalysisRow;
-    second: AnalysisRow;
-  } | null>(null);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    const c = new AbortController();
-    apiClient
-      .get("/stocks/" + encodeURIComponent(activeTicker) + "/analyses", {
-        params: { page },
-        signal: c.signal,
-      })
-      .then((r) => {
-        setRows(r.data.data);
-        setTotal(r.data.pagination.total);
-      })
-      .catch((e) => {
-        if (!c.signal.aborted) setError(errorMessage(e));
-      });
-    return () => c.abort();
-  }, [activeTicker, page]);
-  const exportFile = async (format: "csv" | "pdf") => {
-    setError("");
-    setBusy(true);
-    try {
-      await downloadResult(
-        "/stocks/" +
-          encodeURIComponent(activeTicker) +
-          "/analyses/export?format=" +
-          format +
-          (selected.length ? "&ids=" + selected.join(",") : ""),
-        "analyses." + format,
-      );
-    } catch (e) {
-      setError(errorMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <section className="space-y-4">
-      <h2 className="text-2xl font-semibold">Riwayat analisis</h2>
-      <form
-        className="flex flex-wrap gap-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setActiveTicker(ticker.toUpperCase());
-          setSelected([]);
-          setComparison(null);
-          setPage(1);
-          setError("");
-        }}
-      >
-        <label>
-          Kode saham
-          <input
-            value={ticker}
-            required
-            maxLength={20}
-            onChange={(e) => setTicker(e.target.value)}
-            className={inputClass}
-          />
-        </label>
-        <button className={actionClass}>Muat riwayat</button>
-      </form>
-      <p>
-        Skor model bukan peluang profit. Pilih dua hasil sesuai urutan
-        perbandingan; ekspor memakai pilihan atau seluruh hasil bila tidak ada
-        yang dipilih.
-      </p>
-      <Status busy={busy} error={error} />
-      <p>{total} hasil tersimpan</p>
-      {rows.map((r) => (
-        <article
-          className="rounded border border-slate-700 p-4 space-y-2"
-          key={r.id}
-        >
-          <label className="flex gap-3">
-            <input
-              type="checkbox"
-              checked={selected.includes(r.id)}
-              onChange={(e) =>
-                setSelected((s) =>
-                  e.target.checked
-                    ? [...s, r.id]
-                    : s.filter((id) => id !== r.id),
-                )
-              }
-            />
-            Pilih {r.recommendation || "Belum tersedia"} · Skor{" "}
-            {r.confidence_score ?? "—"}%
-          </label>
-          <p>
-            {dateLabel(r.generated_at)} · Data {r.analysis_date}
-          </p>
-          <p>
-            {r.provider_name}/{r.model_name || "Belum diketahui"} · Provenance{" "}
-            {r.provenance}
-          </p>
-          <p>{r.ai_summary}</p>
-          <p className="text-xs break-all">
-            Revisi data: {r.data_revision || "Belum terverifikasi"}
-          </p>
-        </article>
-      ))}
-      {!rows.length && (
-        <p>Belum ada hasil analisis tersimpan untuk saham ini.</p>
-      )}
-      <div className="flex flex-wrap gap-3">
-        <button
-          className={actionClass}
-          disabled={page === 1}
-          onClick={() => setPage((v) => v - 1)}
-        >
-          Sebelumnya
-        </button>
-        <span>Halaman {page}</span>
-        <button
-          className={actionClass}
-          disabled={page * 20 >= total}
-          onClick={() => setPage((v) => v + 1)}
-        >
-          Berikutnya
-        </button>
-        <button
-          className={actionClass}
-          disabled={selected.length !== 2 || busy}
-          onClick={async () => {
-            setBusy(true);
-            try {
-              const r = await apiClient.get("/analyses/compare", {
-                params: { first: selected[0], second: selected[1] },
-              });
-              setComparison(r.data);
-            } catch (e) {
-              setError(errorMessage(e));
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          Bandingkan dua hasil
-        </button>
-        <button
-          className={actionClass}
-          disabled={busy || !total}
-          onClick={() => exportFile("csv")}
-        >
-          Ekspor CSV
-        </button>
-        <button
-          className={actionClass}
-          disabled={busy || !total}
-          onClick={() => exportFile("pdf")}
-        >
-          Ekspor PDF
-        </button>
-      </div>
-      {comparison && (
-        <div className="rounded border border-sky-600 p-4">
-          <h3 className="font-semibold">
-            {comparison.first.recommendation} →{" "}
-            {comparison.second.recommendation}
-          </h3>
-          <p>
-            Perubahan skor:{" "}
-            {comparison.confidence_change_points ?? "Belum tersedia"} poin
-            persentase.
-          </p>
-          <p>
-            Input/model/prompt berbeda:{" "}
-            {comparison.inputs_differ ? "Ya" : "Tidak"}.
-          </p>
-          <p>{comparison.explanation}</p>
-          <p>{comparison.first.ai_summary}</p>
-          <p>{comparison.second.ai_summary}</p>
-        </div>
-      )}
-    </section>
-  );
-}
-
 type Rule = {
   id: string;
   ticker: string;
@@ -577,6 +477,8 @@ type Rule = {
   direction: string;
   enabled: boolean;
   baseline_established: boolean;
+  evaluation_state: string;
+  market_as_of: string | null;
 };
 type Notice = {
   id: string;
@@ -596,24 +498,50 @@ type Job = {
   created_at: string;
 };
 function Monitoring({ initialTicker }: { initialTicker: string }) {
+  const { user } = useAuth();
   const [rules, setRules] = useState<Rule[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [kind, setKind] = useState("price");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const load = useCallback(async (signal?: AbortSignal) => {
-    const options = signal ? { signal, skipAuthRefresh: true } : {};
-    const r = await Promise.all([
-      apiClient.get("/alerts", options),
-      apiClient.get("/notifications", options),
-      apiClient.get("/analysis/jobs", options),
-    ]);
-    if (signal?.aborted) return;
-    setRules(r[0].data.data);
-    setNotices(r[1].data.data);
-    setJobs(r[2].data.data);
-  }, []);
+  const [worker, setWorker] = useState<{
+    state: string;
+    last_heartbeat_at: string | null;
+  } | null>(null);
+  const loadVersion = useRef(0);
+  const load = useCallback(
+    async (signal?: AbortSignal) => {
+      const version = ++loadVersion.current;
+      const current = () => !signal?.aborted && version === loadVersion.current;
+      const options = signal ? { signal, skipAuthRefresh: true } : {};
+      const r = await Promise.allSettled([
+        apiClient.get("/alerts", options).then((response) => {
+          if (current()) {
+            setRules(response.data.data);
+            setWorker(response.data.worker);
+          }
+        }),
+        apiClient.get("/notifications", options).then((response) => {
+          if (current()) {
+            setNotices(response.data.data);
+            publishUnread(user?.id, response.data.unread);
+          }
+        }),
+        apiClient.get("/analysis/jobs", options).then((response) => {
+          if (current()) setJobs(response.data.data);
+        }),
+      ]);
+      if (!current()) return;
+      const failed = r.find((item) => item.status === "rejected");
+      if (failed?.status === "rejected")
+        throw new Error(
+          "Sebagian data pemantauan belum diperbarui. " +
+            errorMessage(failed.reason),
+        );
+    },
+    [user?.id],
+  );
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
@@ -627,6 +555,7 @@ function Monitoring({ initialTicker }: { initialTicker: string }) {
     const timer = setInterval(refresh, 5000);
     return () => {
       active = false;
+      loadVersion.current++;
       controller.abort();
       clearInterval(timer);
     };
@@ -634,11 +563,13 @@ function Monitoring({ initialTicker }: { initialTicker: string }) {
   const act = async (action: () => Promise<unknown>) => {
     setBusy(true);
     setError("");
+    let persisted = false;
     try {
       await action();
+      persisted = true;
       await load();
     } catch (e) {
-      setError(errorMessage(e));
+      setError((persisted ? "Perubahan tersimpan. " : "") + errorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -650,9 +581,12 @@ function Monitoring({ initialTicker }: { initialTicker: string }) {
       apiClient.post("/alerts", {
         ticker: String(f.get("ticker")).toUpperCase(),
         kind,
-        direction: f.get("direction"),
-        threshold: kind === "signal" ? null : Number(f.get("threshold")),
-        signal: kind === "signal" ? f.get("signal") : null,
+        ...(kind === "signal"
+          ? { signal: f.get("signal") }
+          : {
+              direction: f.get("direction"),
+              threshold: Number(f.get("threshold")),
+            }),
       }),
     );
   };
@@ -663,6 +597,20 @@ function Monitoring({ initialTicker }: { initialTicker: string }) {
         Alert memakai penutupan harian dan worker. Evaluasi pertama membentuk
         baseline; notifikasi berikutnya hanya muncul saat kondisi bertransisi.
         Data stale atau keterkinian unknown tidak memicu alert.
+      </p>
+      <p>
+        Worker:{" "}
+        {worker?.state === "healthy"
+          ? "Heartbeat terukur"
+          : worker?.state === "degraded"
+            ? "Proses hidup, evaluasi mengalami kegagalan"
+            : "Belum tersedia heartbeat aktif"}
+        .
+        {worker?.last_heartbeat_at && (
+          <> Terakhir {dateLabel(worker.last_heartbeat_at)}.</>
+        )}{" "}
+        Heartbeat tidak membuktikan koneksi provider atau ketersediaan data
+        pasar terbaru.
       </p>
       <form onSubmit={create} className="grid gap-3 sm:grid-cols-2">
         <Field
@@ -723,13 +671,35 @@ function Monitoring({ initialTicker }: { initialTicker: string }) {
           className="rounded border border-slate-700 p-4 space-y-2"
         >
           <p>
-            {r.ticker} · {r.kind} · {r.direction} · {r.signal || r.threshold} ·{" "}
-            {r.enabled ? "Aktif" : "Dijeda"}
+            {r.ticker} ·{" "}
+            {r.kind === "signal"
+              ? "Sinyal " + r.signal
+              : (r.kind === "price" ? "Harga " : "Perubahan (%) ") +
+                (r.direction === "above"
+                  ? "naik mencapai "
+                  : "turun mencapai ") +
+                r.threshold}{" "}
+            · {r.enabled ? "Aktif" : "Dijeda"}
           </p>
           <p>
-            {r.baseline_established
-              ? "Baseline tersimpan"
-              : "Menunggu data lengkap dan kalender terverifikasi"}
+            {(
+              {
+                paused: "Dijeda",
+                notifications_disabled: "Notifikasi akun dinonaktifkan",
+                waiting_for_data:
+                  "Menunggu data lengkap dan kalender terverifikasi",
+                waiting_for_analysis:
+                  "Menunggu analisis yang sesuai revisi data",
+                waiting_for_previous_session:
+                  "Menunggu data sesi bursa sebelumnya",
+                waiting_for_worker: "Menunggu worker dengan heartbeat sehat",
+                waiting_for_baseline:
+                  "Menunggu evaluasi pertama untuk membentuk baseline",
+                ready:
+                  "Baseline tersimpan; siap untuk evaluasi sesi berikutnya",
+              } as Record<string, string>
+            )[r.evaluation_state] || "Kesiapan evaluasi belum terverifikasi"}
+            {r.market_as_of && <> · Sesi data {r.market_as_of}</>}
           </p>
           <div className="flex gap-3">
             <button
@@ -812,9 +782,12 @@ function Workbench() {
               className={actionClass + (tab === key ? " bg-sky-900" : "")}
               aria-current={tab === key ? "page" : undefined}
               key={key}
-              href={
-                "/research?tab=" + key + "&ticker=" + encodeURIComponent(ticker)
-              }
+              href={(() => {
+                const next = new URLSearchParams(params.toString());
+                next.set("tab", key);
+                next.set("ticker", ticker);
+                return "/research?" + next.toString();
+              })()}
             >
               {label}
             </Link>
@@ -822,7 +795,7 @@ function Workbench() {
         </nav>
         <div key={tab + ticker}>
           {tab === "history" ? (
-            <History initialTicker={ticker} />
+            <AnalysisHistory initialTicker={ticker} />
           ) : tab === "monitoring" ? (
             <Monitoring initialTicker={ticker} />
           ) : tab === "plans" ? (

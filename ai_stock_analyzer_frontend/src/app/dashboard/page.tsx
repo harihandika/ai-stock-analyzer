@@ -5,6 +5,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent } from "@/components/ui/Card";
 import { DataStatus } from "@/components/stock/DataStatus";
 import { useAuth } from "@/contexts/AuthContext";
+import { FirstSteps } from "@/components/FirstSteps";
 import { apiClient, errorMessage } from "@/services/api";
 import { Quote, Stock, formatPrice } from "@/services/market";
 interface Pick {
@@ -24,53 +25,56 @@ export default function DashboardPage() {
   const [picks, setPicks] = useState<Pick[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const load = useCallback((signal?: AbortSignal) => {
-    return Promise.allSettled([
-      apiClient.get("/stocks/watchlist", { signal }),
-      apiClient.get("/stocks?per_page=6&page=" + page, { signal }),
-      apiClient.get("/stocks/recommendations", { signal }),
-    ]).then(async (results) => {
-      if (signal?.aborted) return;
-      const issues: string[] = [];
-      const w = results[0];
-      if (w.status === "fulfilled") setCount(w.value.data.length);
-      else issues.push("Watchlist: " + errorMessage(w.reason));
-      const s = results[1];
-      if (s.status === "fulfilled") {
-        setStocks(s.value.data.data);
-        setTotal(s.value.data.pagination.total);
-        const values = await Promise.allSettled(
-          (s.value.data.data as Stock[]).map(
-            async (stock) =>
-              (
-                await apiClient.get<Quote>(
-                  "/stocks/" + encodeURIComponent(stock.ticker) + "/price",
-                  { signal },
-                )
-              ).data,
-          ),
-        );
+  const load = useCallback(
+    (signal?: AbortSignal) => {
+      return Promise.allSettled([
+        apiClient.get("/stocks/watchlist", { signal }),
+        apiClient.get("/stocks?per_page=6&page=" + page, { signal }),
+        apiClient.get("/stocks/recommendations", { signal }),
+      ]).then(async (results) => {
         if (signal?.aborted) return;
-        setQuotes((previous) => ({
-          ...previous,
-          ...Object.fromEntries(
-            values.flatMap((v) =>
-              v.status === "fulfilled" ? [[v.value.ticker, v.value]] : [],
+        const issues: string[] = [];
+        const w = results[0];
+        if (w.status === "fulfilled") setCount(w.value.data.length);
+        else issues.push("Watchlist: " + errorMessage(w.reason));
+        const s = results[1];
+        if (s.status === "fulfilled") {
+          setStocks(s.value.data.data);
+          setTotal(s.value.data.pagination.total);
+          const values = await Promise.allSettled(
+            (s.value.data.data as Stock[]).map(
+              async (stock) =>
+                (
+                  await apiClient.get<Quote>(
+                    "/stocks/" + encodeURIComponent(stock.ticker) + "/price",
+                    { signal },
+                  )
+                ).data,
             ),
-          ),
-        }));
-        if (values.some((v) => v.status === "rejected"))
-          issues.push(
-            "Sebagian harga gagal dimuat; nilai yang tersedia ditampilkan.",
           );
-      } else issues.push("Daftar saham: " + errorMessage(s.reason));
-      const a = results[2];
-      if (a.status === "fulfilled") setPicks(a.value.data.data);
-      else issues.push("Rekomendasi: " + errorMessage(a.reason));
-      setErrors(issues);
-      setLoading(false);
-    });
-  }, [page]);
+          if (signal?.aborted) return;
+          setQuotes((previous) => ({
+            ...previous,
+            ...Object.fromEntries(
+              values.flatMap((v) =>
+                v.status === "fulfilled" ? [[v.value.ticker, v.value]] : [],
+              ),
+            ),
+          }));
+          if (values.some((v) => v.status === "rejected"))
+            issues.push(
+              "Sebagian harga gagal dimuat; nilai yang tersedia ditampilkan.",
+            );
+        } else issues.push("Daftar saham: " + errorMessage(s.reason));
+        const a = results[2];
+        if (a.status === "fulfilled") setPicks(a.value.data.data);
+        else issues.push("Rekomendasi: " + errorMessage(a.reason));
+        setErrors(issues);
+        setLoading(false);
+      });
+    },
+    [page],
+  );
   useEffect(() => {
     const c = new AbortController();
     void load(c.signal);
@@ -87,6 +91,7 @@ export default function DashboardPage() {
             Pantau harga penutupan harian dan analisis teknikal saham.
           </p>
         </header>
+        <FirstSteps />
         <button
           className="underline"
           onClick={() => {
@@ -190,7 +195,37 @@ export default function DashboardPage() {
               </Link>
             ))}
           </div>
-          <nav aria-label="Halaman daftar saham" className="flex flex-wrap gap-3 items-center"><button className="border rounded p-2" disabled={loading || page === 1} onClick={() => {setLoading(true); setPage(v => v - 1);}}>Saham sebelumnya</button><span>Halaman {page} / {Math.max(1, Math.ceil((total || 0) / 6))}</span><button className="border rounded p-2" disabled={loading || page * 6 >= (total || 0)} onClick={() => {setLoading(true); setPage(v => v + 1);}}>Saham berikutnya</button><Link className="underline p-2" href="/research">Buka screener</Link></nav>
+          <nav
+            aria-label="Halaman daftar saham"
+            className="flex flex-wrap gap-3 items-center"
+          >
+            <button
+              className="border rounded p-2"
+              disabled={loading || page === 1}
+              onClick={() => {
+                setLoading(true);
+                setPage((v) => v - 1);
+              }}
+            >
+              Saham sebelumnya
+            </button>
+            <span>
+              Halaman {page} / {Math.max(1, Math.ceil((total || 0) / 6))}
+            </span>
+            <button
+              className="border rounded p-2"
+              disabled={loading || page * 6 >= (total || 0)}
+              onClick={() => {
+                setLoading(true);
+                setPage((v) => v + 1);
+              }}
+            >
+              Saham berikutnya
+            </button>
+            <Link className="underline p-2" href="/research">
+              Buka screener
+            </Link>
+          </nav>
           {!loading && total === 0 && (
             <p>
               Belum ada saham tersimpan. Cari ticker lalu sinkronkan data pada

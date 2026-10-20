@@ -152,10 +152,18 @@ class AlertResponse(AlertCreate):
     enabled: bool
     last_market_date: date | None
     baseline_established: bool
+    evaluation_state: Literal[
+        "unverified", "paused", "notifications_disabled", "waiting_for_data",
+        "waiting_for_analysis", "waiting_for_previous_session", "waiting_for_worker",
+        "waiting_for_baseline", "ready",
+    ] = "unverified"
+    market_as_of: date | None = None
+    data_state: str | None = None
 
 
 class AlertList(BaseModel):
     data: list[AlertResponse]
+    worker: dict = Field(default_factory=dict)
 
 
 class ScreenRow(BaseModel):

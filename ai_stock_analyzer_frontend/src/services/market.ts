@@ -29,6 +29,11 @@ export interface Stock {
   sector: string | null;
 }
 export interface Analysis {
+  technical_indicators?: {
+    trading_date: string;
+    wyckoff_phase: string | null;
+    smc_patterns: Record<string, unknown> | null;
+  } | null;
   analysis_id: string | null;
   company_name: string;
   ai_recommendation: "BUY" | "HOLD" | "WAIT" | null;

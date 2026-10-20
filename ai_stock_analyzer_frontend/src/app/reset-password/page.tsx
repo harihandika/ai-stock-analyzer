@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { apiClient, errorMessage } from "@/services/api";
 import { Input } from "@/components/ui/Input";
@@ -9,6 +9,17 @@ export default function PasswordResetPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  useEffect(() => {
+    const updateMode = () => {
+      const hasToken = !!new URLSearchParams(window.location.hash.slice(1)).get(
+        "token",
+      );
+      setReset(hasToken);
+    };
+    updateMode();
+    window.addEventListener("hashchange", updateMode);
+    return () => window.removeEventListener("hashchange", updateMode);
+  }, []);
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
@@ -42,8 +53,8 @@ export default function PasswordResetPage() {
     <main className="max-w-lg mx-auto my-12 p-6 space-y-6">
       <h1 className="text-3xl">Pemulihan password</h1>
       <p>
-        Untuk meminta tautan, isi email. Jika membuka tautan reset dari email,
-        pilih Ganti password dari tautan.
+        Isi email untuk meminta tautan. Tautan dari email langsung membuka form
+        password baru.
       </p>
       <div className="flex flex-wrap gap-3">
         <button

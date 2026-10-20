@@ -9,22 +9,25 @@ import asyncio
 import hashlib
 import json
 import re
+import uuid
 from contextlib import contextmanager
+from datetime import timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
 from fastapi import HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select, update
 
 from app.api.routers.stocks import do_sync_stock
 from app.core.config import settings
 from app.core.errors import AnalysisError
-from app.domain.models.models import AnalysisJob, DailyPrice, Stock
+from app.domain.models.models import AnalysisJob, DailyPrice, IngestionRun, Stock
 from app.infrastructure.ai_client import ai_configured
 from app.infrastructure.database import AsyncSessionLocal, engine
 from app.infrastructure.market_data import market_identity
 from app.services.jobs import ACTIVE
-from app.services.market_metadata import session_status, utcnow
+from app.services.market_metadata import as_utc, session_status, utcnow
+from app.services.operations import worker_status
 
 
 def universe(value):
@@ -61,6 +64,11 @@ async def readiness(factory):
                 .order_by(Stock.ticker)
             )
         ).all()
+        runs = (
+            await db.scalars(
+                select(IngestionRun).order_by(IngestionRun.started_at.desc()).limit(20)
+            )
+        ).all()
         return {
             "ai_provider": settings.AI_PROVIDER,
             "ai_credential_configured": ai_configured(),
@@ -73,6 +81,25 @@ async def readiness(factory):
             "ingestion_enabled": settings.EOD_INGESTION_ENABLED,
             "live_provider_and_delivery": "not_verified_by_this_read_only_command",
             "jobs": counts,
+            "oldest_queued_at": await db.scalar(
+                select(func.min(AnalysisJob.created_at)).where(AnalysisJob.status == "queued")
+            ),
+            "worker": await worker_status(db),
+            "ingestion_runs": [
+                {
+                    "id": str(run.id),
+                    "status": run.status,
+                    "provider": run.provider,
+                    "started_at": as_utc(run.started_at),
+                    "finished_at": as_utc(run.finished_at),
+                    "overdue": run.status == "running"
+                    and (utcnow() - as_utc(run.started_at)).total_seconds()
+                    > 120 * len(run.tickers) + 30,
+                    "tickers": run.tickers,
+                    "result": run.result,
+                }
+                for run in runs
+            ],
             "stocks": [
                 {
                     "ticker": stock.ticker,
@@ -95,10 +122,22 @@ async def ingest(factory, tickers, *, now=None, refresh=False):
         return {"status": "blocked", "code": "MARKET_NOT_CONFIGURED", "results": []}
     results = []
     for ticker in tickers:
+        ticker_started, expected = utcnow(), None
+
+        def record(payload):
+            results.append(
+                {
+                    **payload,
+                    "expected_market_date": expected,
+                    "started_at": ticker_started.isoformat(),
+                    "finished_at": utcnow().isoformat(),
+                }
+            )
+
         async with factory() as db:
             stock = await db.get(Stock, ticker)
             if not stock or not stock.is_active:
-                results.append(
+                record(
                     {
                         "ticker": ticker,
                         "status": "blocked",
@@ -115,7 +154,7 @@ async def ingest(factory, tickers, *, now=None, refresh=False):
             )
             expected = session_status(policy, day, now=now).get("expected_market_date")
             if not expected:
-                results.append({"ticker": ticker, "status": "blocked", "code": "SESSION_UNKNOWN"})
+                record({"ticker": ticker, "status": "blocked", "code": "SESSION_UNKNOWN"})
                 continue
             if (
                 not refresh
@@ -125,9 +164,7 @@ async def ingest(factory, tickers, *, now=None, refresh=False):
                 and stock.data_revision
                 and stock.publication_delay_minutes == settings.EOD_PUBLICATION_DELAY_MINUTES
             ):
-                results.append(
-                    {"ticker": ticker, "status": "current", "market_as_of": day, "attempts": 0}
-                )
+                record({"ticker": ticker, "status": "current", "market_as_of": day, "attempts": 0})
                 continue
         attempts = 0
         try:
@@ -137,7 +174,7 @@ async def ingest(factory, tickers, *, now=None, refresh=False):
                         async with factory() as db:
                             result = await do_sync_stock(ticker, db)
                         current = result["metadata"]
-                        results.append(
+                        record(
                             {
                                 "ticker": ticker,
                                 "status": "synced"
@@ -156,7 +193,7 @@ async def ingest(factory, tickers, *, now=None, refresh=False):
                         await asyncio.sleep(1)
         except Exception as exc:
             # Never emit provider URLs, exception messages, credentials or payloads.
-            results.append(
+            record(
                 {
                     "ticker": ticker,
                     "status": "failed",
@@ -168,6 +205,47 @@ async def ingest(factory, tickers, *, now=None, refresh=False):
             )
     okay = all(r["status"] in ("synced", "current") for r in results)
     return {"status": "completed" if okay else "incomplete", "results": results}
+
+
+async def run_ingestion(factory, tickers, *, refresh=False, now=None):
+    """Persist sanitized run evidence, including blocked/failed attempts.
+
+    This does not enable ingestion, install a scheduler or prove provider access.
+    The designated scheduler must hold ingestion_lock while calling this wrapper.
+    """
+    tickers = universe(",".join(tickers))
+    run_id, started = uuid.uuid4(), utcnow()
+    async with factory() as db:
+        await db.execute(
+            delete(IngestionRun).where(IngestionRun.started_at < started - timedelta(days=30))
+        )
+        db.add(
+            IngestionRun(
+                id=run_id,
+                started_at=started,
+                status="running",
+                provider=settings.MARKET_DATA_PROVIDER,
+                tickers=tickers,
+            )
+        )
+        await db.commit()
+    try:
+        result = await ingest(factory, tickers, refresh=refresh, now=now)
+    except Exception:
+        result = {"status": "failed", "code": "INGESTION_RUN_FAILED", "results": []}
+    safe = json.loads(json.dumps(result, default=str))
+    async with factory() as db:
+        await db.execute(
+            update(IngestionRun)
+            .where(IngestionRun.id == run_id)
+            .values(
+                finished_at=utcnow(),
+                status=result["status"],
+                result=safe,
+            )
+        )
+        await db.commit()
+    return {**result, "run_id": str(run_id)}
 
 
 @contextmanager
@@ -199,7 +277,7 @@ async def main():
             identity = hashlib.sha256(settings.DATABASE_URL.encode()).hexdigest()[:16]
             try:
                 with ingestion_lock(f"/tmp/stock-eod-{identity}.lock"):
-                    result = await ingest(
+                    result = await run_ingestion(
                         AsyncSessionLocal, universe(args.tickers), refresh=args.refresh
                     )
             except BlockingIOError:

@@ -4,10 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
 
 from app.api.dependencies import get_current_active_user, get_db
-from app.domain.models.models import AlertEvent, AlertRule, Stock
+from app.domain.models.models import AIAnalysis, AlertEvent, AlertRule, DailyPrice, Stock
 from app.domain.schemas.product import AlertCreate, AlertList, AlertResponse, AlertToggle
 from app.services.alerts import rule_payload
-from app.services.market_metadata import as_utc
+from app.services.market_metadata import as_utc, exchange_calendar, metadata
+from app.services.operations import worker_status
 
 router = APIRouter(tags=["Monitoring"])
 
@@ -21,18 +22,87 @@ async def owned(db, model, key, user):
 
 @router.get("/alerts", response_model=AlertList)
 async def list_alerts(db=Depends(get_db), user=Depends(get_current_active_user)):
-    return {
-        "data": [
-            rule_payload(r)
-            for r in (
+    worker = await worker_status(db)
+    rows = (
+        await db.scalars(
+            select(AlertRule)
+            .where(AlertRule.user_id == user.id)
+            .order_by(AlertRule.created_at.desc())
+        )
+    ).all()
+    data, market = [], {}
+    for rule in rows:
+        if rule.ticker not in market:
+            stock = await db.get(Stock, rule.ticker)
+            days = (
                 await db.scalars(
-                    select(AlertRule)
-                    .where(AlertRule.user_id == user.id)
-                    .order_by(AlertRule.created_at.desc())
+                    select(DailyPrice.trading_date)
+                    .where(DailyPrice.stock_ticker == rule.ticker)
+                    .order_by(DailyPrice.trading_date.desc())
+                    .limit(2)
                 )
             ).all()
-        ]
-    }
+            day = days[0] if days else None
+            state = metadata(stock, day)["data_state"] if stock else "unavailable"
+            signal = await db.scalar(
+                select(AIAnalysis.id)
+                .where(
+                    AIAnalysis.stock_ticker == rule.ticker,
+                    AIAnalysis.data_revision == stock.data_revision if stock else False,
+                    AIAnalysis.provenance == "real",
+                    AIAnalysis.recommendation.is_not(None),
+                )
+                .limit(1)
+            )
+            previous_ok = False
+            if state == "fresh" and stock and len(days) > 1:
+                aliases = {
+                    "IDX": "XIDX",
+                    "JK": "XIDX",
+                    "JKT": "XIDX",
+                    "NYSE": "XNYS",
+                    "NASDAQ": "XNYS",
+                    "US": "XNYS",
+                    "NYQ": "XNYS",
+                    "NMS": "XNYS",
+                }
+                calendar = aliases.get((stock.exchange or "").upper())
+                if calendar:
+                    try:
+                        previous_ok = (
+                            exchange_calendar(calendar, day.year).previous_session(str(day)).date()
+                            == days[1]
+                        )
+                    except (ValueError, KeyError, IndexError):
+                        pass
+            market[rule.ticker] = (day, state, bool(signal), previous_ok)
+        day, state, signal, previous_ok = market[rule.ticker]
+        evaluation = (
+            "paused"
+            if not rule.enabled
+            else "notifications_disabled"
+            if not user.notifications_enabled
+            else "waiting_for_data"
+            if state != "fresh"
+            else "waiting_for_analysis"
+            if rule.kind == "signal" and not signal
+            else "waiting_for_previous_session"
+            if rule.kind == "change_pct" and not previous_ok
+            else "waiting_for_worker"
+            if worker["state"] != "healthy"
+            else "waiting_for_baseline"
+            if rule.previous_met is None
+            else "ready"
+        )
+        data.append(
+            {
+                **rule_payload(rule),
+                "market_as_of": day,
+                "data_state": state,
+                "evaluation_state": evaluation,
+            }
+        )
+    return {"data": data, "worker": worker}
 
 
 @router.post("/alerts", status_code=201, response_model=AlertResponse)
